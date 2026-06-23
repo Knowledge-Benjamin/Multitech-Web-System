@@ -1,0 +1,313 @@
+@import url('https://fonts.googleapis.com/css2?family=Rosario:wght@300;400;600;700&display=swap');
+
+:root {
+  /* Primary Colors */
+  --color-primary: #0052CC;
+  --color-primary-dark: #0042A1;
+  --color-primary-light: #0066FF;
+  
+  /* Secondary Colors */
+  --color-secondary: #1a2654;
+  --color-secondary-light: #2a3f7f;
+  
+  /* Accent Colors */
+  --color-accent-yellow: #F4E4B3;
+  --color-accent-blue: #0099CC;
+  --color-accent-blue-dark: #0077AA;
+  
+  /* Neutrals */
+  --color-text-primary: #1a2654;
+  --color-text-secondary: #666666;
+  --color-text-light: #999999;
+  
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F5F5F5;
+  --color-bg-tertiary: #EEEEEE;
+  
+  /* Status Colors */
+  --color-success: #28a745;
+  --color-error: #dc3545;
+  --color-warning: #ffc107;
+  --color-info: #17a2b8;
+  
+  /* Typography */
+  --font-family-sans: 'Candara', 'Chandara', 'Rosario', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+  
+  /* Borders */
+  --border-radius-sm: 0.25rem;
+  --border-radius-md: 0.5rem;
+  --border-radius-lg: 1rem;
+  --border-radius-xl: 1.5rem;
+  
+  --border-color: #E5E7EB;
+  --border-width: 1px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+  
+  /* Z-index */
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1100;
+  --z-index-fixed: 1200;
+  --z-index-modal-backdrop: 1300;
+  --z-index-modal: 1400;
+  --z-index-tooltip: 1500;
+}
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  color: var(--color-secondary);
+}
+
+h1 {
+  font-size: var(--font-size-4xl);
+}
+
+h2 {
+  font-size: var(--font-size-3xl);
+}
+
+h3 {
+  font-size: var(--font-size-2xl);
+}
+
+h4 {
+  font-size: var(--font-size-xl);
+}
+
+h5 {
+  font-size: var(--font-size-lg);
+}
+
+h6 {
+  font-size: var(--font-size-base);
+}
+
+p {
+  margin-bottom: var(--spacing-md);
+}
+
+a {
+  color: var(--color-accent-blue);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-accent-blue-dark);
+  text-decoration: underline;
+}
+
+/* Buttons */
+button, .button {
+  display: inline-block;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.button-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.button-primary:hover {
+  background-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-md);
+}
+
+.button-secondary {
+  background-color: var(--color-accent-blue);
+  color: white;
+}
+
+.button-secondary:hover {
+  background-color: var(--color-accent-blue-dark);
+  box-shadow: var(--shadow-md);
+}
+
+.button-accent {
+  background-color: var(--color-accent-yellow);
+  color: var(--color-text-primary);
+}
+
+.button-accent:hover {
+  background-color: #e8d499;
+  box-shadow: var(--shadow-md);
+}
+
+.button-outline {
+  background-color: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.button-outline:hover {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Forms */
+input, textarea, select {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  width: 100%;
+  transition: border-color var(--transition-fast);
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+}
+
+label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+/* Lists */
+ul, ol {
+  margin-left: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+li {
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Utility Classes */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid {
+  display: grid;
+}
+
+.gap-sm {
+  gap: var(--spacing-sm);
+}
+
+.gap-md {
+  gap: var(--spacing-md);
+}
+
+.gap-lg {
+  gap: var(--spacing-lg);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.visible {
+  display: block !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  :root {
+    --font-size-4xl: 1.875rem;
+    --font-size-3xl: 1.5rem;
+    --font-size-2xl: 1.25rem;
+  }
+  
+  h1 {
+    font-size: var(--font-size-3xl);
+  }
+  
+  .container {
+    padding: 0 var(--spacing-md);
+  }
+}

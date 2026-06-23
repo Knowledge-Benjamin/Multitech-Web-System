@@ -1,0 +1,280 @@
+/* AdminProgrammes.css */
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg-light);
+}
+
+.admin-content {
+  flex: 1;
+  padding: var(--spacing-2xl);
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-3xl);
+}
+
+.content-header h1 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: var(--font-size-3xl);
+}
+
+.btn-primary {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-fast);
+}
+
+.btn-primary:hover {
+  background: var(--color-secondary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-border);
+  color: var(--color-text-primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background: var(--color-text-secondary);
+  color: white;
+}
+
+.form-container {
+  background: white;
+  border-radius: 12px;
+  padding: var(--spacing-2xl);
+  margin-bottom: var(--spacing-2xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-container h2 {
+  margin: 0 0 var(--spacing-2xl) 0;
+  color: var(--color-primary);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  transition: border-color var(--transition-fast);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+}
+
+.form-actions button {
+  flex: 1;
+}
+
+.programmes-table {
+  background: white;
+  border-radius: 12px;
+  padding: var(--spacing-2xl);
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+}
+
+.programmes-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.programmes-table th {
+  background: var(--color-bg-light);
+  padding: var(--spacing-md);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.programmes-table td {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+}
+
+.programmes-table tbody tr:hover {
+  background: rgba(0, 82, 204, 0.05);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.btn-edit {
+  padding: 4px 12px;
+  background: var(--color-accent-blue);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  transition: all var(--transition-fast);
+}
+
+.btn-edit:hover {
+  background: var(--color-primary);
+}
+
+.btn-delete {
+  padding: 4px 12px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  transition: all var(--transition-fast);
+}
+
+.btn-delete:hover {
+  background: #dc2626;
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-3xl);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 768px) {
+  .admin-content {
+    padding: var(--spacing-lg);
+  }
+
+  .content-header {
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    align-items: flex-start;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .programmes-table {
+    padding: var(--spacing-lg);
+  }
+}
+
+/* Extended Form Styles */
+.extended-form {
+  max-width: 900px !important;
+}
+
+.form-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #eee;
+}
+
+.form-tabs button {
+  background: none;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.form-tabs button.active {
+  color: var(--color-primary);
+}
+
+.form-tabs button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-primary);
+}
+
+.tab-pane {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.curriculum-builder input:focus {
+  outline: none;
+  border-color: var(--color-accent-blue) !important;
+}
+
+.checkbox-align {
+  display: flex;
+  align-items: center;
+  margin-top: 1.5rem;
+}

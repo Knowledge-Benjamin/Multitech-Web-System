@@ -1,0 +1,141 @@
+.announcements-container {
+  margin-left: 250px;
+  padding: var(--spacing-2xl);
+}
+
+.announcements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-2xl);
+}
+
+.announcement-card {
+  background: white;
+  border-radius: 12px;
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-fast);
+}
+
+.announcement-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.ann-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ann-header h3 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: var(--font-size-lg);
+  flex: 1;
+  margin-right: var(--spacing-md);
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge.published {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.badge.draft {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.ann-meta {
+  display: flex;
+  gap: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.ann-content {
+  flex: 1;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  margin: 0 0 var(--spacing-lg) 0;
+}
+
+.ann-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: auto;
+}
+
+.btn-edit,
+.btn-delete {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.btn-edit {
+  background: var(--color-accent-blue);
+  color: white;
+}
+
+.btn-edit:hover {
+  background: var(--color-primary);
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-delete:hover {
+  background: #dc2626;
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-3xl);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 768px) {
+  .announcements-container {
+    margin-left: 0;
+    padding: var(--spacing-lg);
+  }
+
+  .announcements-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ann-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .ann-header h3 {
+    margin-right: 0;
+  }
+}

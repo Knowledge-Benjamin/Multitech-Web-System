@@ -1,0 +1,209 @@
+.programme-details-page {
+  min-height: 80vh;
+  background-color: var(--background);
+}
+
+.programme-hero {
+  position: relative;
+  background-color: var(--primary);
+  background-size: cover;
+  background-position: center;
+  color: white;
+  padding: 6rem 0 4rem;
+  min-height: 400px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to top, rgba(0, 51, 102, 0.95), rgba(0, 51, 102, 0.4));
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.hero-tags {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.type-tag, .level-tag {
+  background: rgba(255,255,255,0.2);
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+  backdrop-filter: blur(4px);
+}
+
+.programme-hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+.status-badge {
+  padding: 0.4rem 1rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.status-badge.open { background-color: #2ecc71; color: white; }
+.status-badge.scheduled { background-color: #f39c12; color: white; }
+.status-badge.closed { background-color: #e74c3c; color: white; }
+
+.apply-btn {
+  font-size: 1.1rem;
+  padding: 0.8rem 2rem;
+}
+
+.details-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3rem;
+  padding: 4rem 1rem;
+}
+
+.details-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.detail-section h2 {
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--accent);
+}
+
+.rich-text {
+  line-height: 1.8;
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.curriculum-list {
+  list-style: none;
+  padding: 0;
+}
+
+.curriculum-list li {
+  padding: 1rem;
+  background: white;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  border-left: 4px solid var(--accent);
+}
+
+.details-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sidebar-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.sidebar-card h3 {
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.fee-group {
+  margin-bottom: 2rem;
+}
+
+.fee-group h4 {
+  color: var(--text);
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.fee-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+  color: #555;
+}
+
+.fee-row.sub-total {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+.fee-breakdown {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 2rem;
+}
+
+.fee-breakdown h4 {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.8rem;
+}
+
+.fee-list {
+  list-style: none;
+  padding: 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.fee-list li {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.assistance p {
+  color: #666;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .details-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .programme-hero h1 {
+    font-size: 2rem;
+  }
+  .hero-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

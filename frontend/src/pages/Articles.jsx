@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import axios from 'axios'
-import './Home.css' // using existing styles for simplicity
+import './Articles.css'
+import ArticleCard from '../components/ArticleCard'
+import SkeletonCard from '../components/SkeletonCard'
 
 export default function Articles() {
   const [articles, setArticles] = useState([])
   const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const perPage = 8
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -21,43 +24,47 @@ export default function Articles() {
     fetchArticles()
   }, [])
 
-  if (loading) {
-    return <div className="container" style={{ padding: '4rem 2rem' }}><h2>Loading...</h2></div>
+  const totalPages = Math.max(1, Math.ceil(articles.length / perPage))
+  const start = (currentPage - 1) * perPage
+  const displayItems = articles.slice(start, start + perPage)
+
+  const gotoPage = (n) => {
+    if (n < 1 || n > totalPages) return
+    setCurrentPage(n)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
-    <div className="container" style={{ padding: '4rem 2rem' }}>
+    <div className="articles-page container">
       <h1>Latest News & Articles</h1>
-      <p style={{ marginBottom: '2rem' }}>Stay updated with the latest from Multitech Business School.</p>
-      
-      <div className="programmes-grid">
-        {articles.map(article => (
-          <div key={article.id} className="programme-card" style={{ display: 'flex', flexDirection: 'column' }}>
-            {article.featured_image_url && (
-              <img 
-                src={article.featured_image_url} 
-                alt={article.title} 
-                style={{ width: '100%', height: '200px', objectFit: 'cover' }}
-              />
-            )}
-            <div className="card-header bg-secondary" style={{ flexGrow: 0 }}>
-              <h3 style={{ margin: 0, fontSize: '1.2rem' }}>{article.title}</h3>
-            </div>
-            <div className="card-body" style={{ flexGrow: 1 }}>
-              <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1rem' }}>
-                {new Date(article.published_at).toLocaleDateString()}
-              </p>
-              <p>{article.excerpt}</p>
-              <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>
-                <Link to={`/articles/${article.id}`} className="button button-small button-primary">Read More</Link>
-              </div>
-            </div>
-          </div>
-        ))}
-        {articles.length === 0 && (
+      <p className="article-intro">Stay updated with the latest from Multitech Business School.</p>
+
+      <div className="articles-grid">
+        {loading ? (
+          // Show 8 skeleton cards while loading
+          Array.from({ length: 8 }).map((_, idx) => <SkeletonCard key={`skeleton-${idx}`} />)
+        ) : articles.length > 0 ? (
+          displayItems.map(article => <ArticleCard key={article.id} article={article} />)
+        ) : (
           <p>No articles published yet.</p>
         )}
       </div>
+
+      {!loading && articles.length > perPage && (
+        <div className="pagination" style={{ marginTop: '2rem', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+          <button className="button" onClick={() => gotoPage(currentPage - 1)} disabled={currentPage === 1}>Prev</button>
+          {Array.from({ length: totalPages }).map((_, i) => (
+            <button
+              key={i}
+              className={`button ${currentPage === i + 1 ? 'button-accent' : ''}`}
+              onClick={() => gotoPage(i + 1)}
+            >
+              {i + 1}
+            </button>
+          ))}
+          <button className="button" onClick={() => gotoPage(currentPage + 1)} disabled={currentPage === totalPages}>Next</button>
+        </div>
+      )}
     </div>
   )
 }

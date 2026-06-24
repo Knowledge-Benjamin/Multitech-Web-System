@@ -1,0 +1,75 @@
+.articles-page {
+  padding: 2rem 2rem 4rem 2rem;
+  scroll-margin-top: var(--header-height, 110px);
+}
+
+.articles-page h1 {
+  margin-bottom: 0.5rem;
+  color: var(--color-secondary);
+}
+
+.articles-page p.article-intro {
+  margin-bottom: 2rem;
+  color: var(--color-text-secondary);
+  max-width: 720px;
+}
+
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-xl);
+  align-items: start;
+  min-height: 600px;
+}
+
+/* Ensure consistent two-row layout (up to 8 cards) on wide screens */
+@media (max-width: 1200px) {
+  .articles-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .articles-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .articles-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.article-card-meta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.article-card-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  border-radius: var(--border-radius-md);
+}
+
+@media (max-width: 600px) {
+  .articles-page {
+    padding: 2rem 1.5rem 3rem 1.5rem;
+  }
+}
+
+.pagination .button {
+  min-width: 42px;
+}

@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import HeaderMenu from './HeaderMenu'
 import './Header.css'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const headerRef = useRef(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,8 +16,20 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  useEffect(() => {
+    const setHeaderHeight = () => {
+      const el = headerRef.current
+      const h = el ? el.offsetHeight : 110
+      document.documentElement.style.setProperty('--header-height', `${h}px`)
+    }
+
+    setHeaderHeight()
+    window.addEventListener('resize', setHeaderHeight)
+    return () => window.removeEventListener('resize', setHeaderHeight)
+  }, [isMenuOpen])
+
   return (
-    <header className={`header ${scrolled ? 'scrolled' : ''}`}>
+    <header ref={headerRef} className={`header ${scrolled ? 'scrolled' : ''}`}>
       <div className="header-container container">
         <div className="header-logo">
           <Link to="/" className="logo-link">
@@ -33,20 +47,7 @@ export default function Header() {
           <span></span>
         </button>
 
-        <nav className={`header-nav ${isMenuOpen ? 'active' : ''}`}>
-          <Link to="/" className="nav-link" onClick={() => setIsMenuOpen(false)}>
-            Home
-          </Link>
-          <Link to="/programmes" className="nav-link" onClick={() => setIsMenuOpen(false)}>
-            Programmes
-          </Link>
-          <Link to="/student/login" className="nav-link button button-outline" onClick={() => setIsMenuOpen(false)}>
-            Student Login
-          </Link>
-          <Link to="/programmes" className="nav-link button button-accent" onClick={() => setIsMenuOpen(false)}>
-            Apply Now
-          </Link>
-        </nav>
+        <HeaderMenu isMenuOpen={isMenuOpen} onLinkClick={() => setIsMenuOpen(false)} />
       </div>
     </header>
   )

@@ -107,6 +107,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Reserve space for fixed header using measured header height */
+body {
+  padding-top: var(--header-height, 110px);
+}
+
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-weight: var(--font-weight-bold);

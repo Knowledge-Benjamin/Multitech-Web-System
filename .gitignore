@@ -24,4 +24,7 @@ desktop.ini
 *.tmp
 *.pid
 *.seed
+backend/src/scripts/seed.js
+backend/src/scripts/seedAdmin.js
+backend/src/scripts/seedCategories.js
 .DS_Store

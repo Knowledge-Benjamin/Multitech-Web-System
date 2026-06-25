@@ -59,6 +59,46 @@ const initializeDatabase = async () => {
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_applications_programme_id ON applications(programme_id)`)
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_announcements_published ON announcements(published)`)
 
+    // About hero table (single record managed by admin)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS about_hero (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255),
+        excerpt TEXT,
+        content TEXT,
+        featured_image_url TEXT,
+        file_id TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    // About page sections managed by admin
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS about_sections (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        description TEXT,
+        content TEXT,
+        section_type VARCHAR(50) DEFAULT 'standard',
+        metadata JSONB DEFAULT '{}',
+        status VARCHAR(50) DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+        display_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    await pool.query(`
+      ALTER TABLE about_sections
+      ADD COLUMN IF NOT EXISTS section_type VARCHAR(50) DEFAULT 'standard'
+    `)
+    await pool.query(`
+      ALTER TABLE about_sections
+      ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'
+    `)
+
     console.log('Database schema initialized successfully!')
     return true
   } catch (error) {
@@ -68,3 +108,4 @@ const initializeDatabase = async () => {
 }
 
 export default initializeDatabase
+

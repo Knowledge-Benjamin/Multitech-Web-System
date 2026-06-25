@@ -16,9 +16,12 @@ import AdminCalendar from './pages/AdminCalendar'
 import AdminStudents from './pages/AdminStudents'
 import AdminAnnouncements from './pages/AdminAnnouncements'
 import AdminArticles from './pages/AdminArticles'
+import AdminAbout from './pages/AdminAbout'
+import AdminAboutSections from './pages/AdminAboutSections'
 import AdminSettings from './pages/AdminSettings'
 import Articles from './pages/Articles'
 import ArticleView from './pages/ArticleView'
+import About from './pages/About'
 import StudentLogin from './pages/StudentLogin'
 import StudentDashboard from './pages/StudentDashboard'
 import StudentFinances from './pages/StudentFinances'
@@ -96,6 +99,22 @@ function App() {
           }
         />
         <Route
+          path="/admin/about"
+          element={
+            <ProtectedRoute>
+              <AdminAbout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/about-sections"
+          element={
+            <ProtectedRoute>
+              <AdminAboutSections />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/settings"
           element={
             <ProtectedRoute>
@@ -122,6 +141,7 @@ function App() {
                   <Route path="/programmes" element={<Programmes />} />
                   <Route path="/programmes/:id" element={<ProgrammeDetails />} />
                   <Route path="/apply" element={<Apply />} />
+                  <Route path="/about" element={<About />} />
                   <Route path="/articles" element={<Articles />} />
                   <Route path="/articles/:id" element={<ArticleView />} />
                   <Route path="*" element={<NotFound />} />

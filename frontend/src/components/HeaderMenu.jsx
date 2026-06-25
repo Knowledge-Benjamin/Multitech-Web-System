@@ -9,6 +9,9 @@ export default function HeaderMenu({ isMenuOpen, onLinkClick }) {
       <Link to="/programmes" className="nav-link" onClick={onLinkClick}>
         Programmes
       </Link>
+      <Link to="/about" className="nav-link" onClick={onLinkClick}>
+        About
+      </Link>
       <Link to="/articles" className="nav-link" onClick={onLinkClick}>
         Articles
       </Link>

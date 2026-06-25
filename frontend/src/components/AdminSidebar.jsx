@@ -73,6 +73,14 @@ export default function AdminSidebar() {
           <span className="nav-icon">📝</span>
           <span className="sidebar-text">Articles & Posts</span>
         </Link>
+        <Link to="/admin/about" className={`nav-item ${isActive('/admin/about') ? 'active' : ''}`}>
+          <span className="nav-icon">ℹ️</span>
+          <span className="sidebar-text">About Page Hero</span>
+        </Link>
+        <Link to="/admin/about-sections" className={`nav-item ${isActive('/admin/about-sections') ? 'active' : ''}`}>
+          <span className="nav-icon">📑</span>
+          <span className="sidebar-text">About Sections</span>
+        </Link>
         {admin.role === 'superadmin' && (
           <Link to="/admin/settings" className={`nav-item ${isActive('/admin/settings') ? 'active' : ''}`}>
             <span className="nav-icon">⚙️</span>

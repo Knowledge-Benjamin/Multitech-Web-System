@@ -100,7 +100,7 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
 
   // Get recent applications
   const recentApps = await pool.query(
-    'SELECT * FROM applications ORDER BY created_at DESC LIMIT 5'
+    'SELECT * FROM applications ORDER BY applied_at DESC LIMIT 5'
   )
 
   // Get application stats by status

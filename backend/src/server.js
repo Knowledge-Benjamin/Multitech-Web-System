@@ -12,6 +12,7 @@ dns.setDefaultResultOrder('ipv4first')
 import errorHandler from './middleware/errorHandler.js'
 import requestLogger from './middleware/requestLogger.js'
 import initAdmin from './config/initAdmin.js'
+import initializeDatabase from './config/migrate.js'
 
 import authRoutes from './routes/auth.js'
 import adminRoutes from './routes/admin.js'
@@ -23,6 +24,7 @@ import articleRoutes from './routes/articles.js'
 import imageRoutes from './routes/images.js'
 import functionalFeesRoutes from './routes/functionalFees.js'
 import programmeFeesRoutes from './routes/programmeFees.js'
+import aboutRoutes from './routes/about.js'
 import studentAuthRoutes from './routes/studentAuth.js'
 import calendarRoutes from './routes/calendar.js'
 import studentsRoutes from './routes/students.js'
@@ -65,52 +67,60 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }))
 // Request logging
 app.use(requestLogger)
 
-// Initialize admin on startup
-initAdmin()
+const initializeApp = async () => {
+  await initializeDatabase()
+  await initAdmin()
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() })
-})
-
-// API Routes
-app.use('/api/auth', authRoutes)
-app.use('/api/admin', adminRoutes)
-app.use('/api/programmes', programmeRoutes)
-app.use('/api/programme-categories', programmeCategoriesRoutes)
-app.use('/api/applications', applicationRoutes)
-app.use('/api/announcements', announcementRoutes)
-app.use('/api/articles', articleRoutes)
-app.use('/api/images', imageRoutes)
-app.use('/api/functional-fees', functionalFeesRoutes)
-app.use('/api/programme-fees', programmeFeesRoutes)
-app.use('/api/student-auth', studentAuthRoutes)
-app.use('/api/calendar', calendarRoutes)
-app.use('/api/students', studentsRoutes)
-app.use('/api/student-profile', studentProfileRoutes)
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found',
-    path: req.originalUrl
+  // Health check
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() })
   })
-})
 
-// Error handling middleware
-app.use(errorHandler)
+  // API Routes
+  app.use('/api/auth', authRoutes)
+  app.use('/api/admin', adminRoutes)
+  app.use('/api/programmes', programmeRoutes)
+  app.use('/api/programme-categories', programmeCategoriesRoutes)
+  app.use('/api/applications', applicationRoutes)
+  app.use('/api/announcements', announcementRoutes)
+  app.use('/api/articles', articleRoutes)
+  app.use('/api/about', aboutRoutes)
+  app.use('/api/images', imageRoutes)
+  app.use('/api/functional-fees', functionalFeesRoutes)
+  app.use('/api/programme-fees', programmeFeesRoutes)
+  app.use('/api/student-auth', studentAuthRoutes)
+  app.use('/api/calendar', calendarRoutes)
+  app.use('/api/students', studentsRoutes)
+  app.use('/api/student-profile', studentProfileRoutes)
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`
-  ╔════════════════════════════════════════════╗
-  ║   Multitech Business School API Server     ║
-  ║   Running on: http://localhost:${PORT}      ║
-  ║   Environment: ${process.env.NODE_ENV || 'development'}              ║
-  ║   CORS Origin: ${process.env.CORS_ORIGIN}   ║
-  ╚════════════════════════════════════════════╝
-  `)
+  // 404 handler
+  app.use('*', (req, res) => {
+    res.status(404).json({
+      success: false,
+      message: 'Route not found',
+      path: req.originalUrl
+    })
+  })
+
+  // Error handling middleware
+  app.use(errorHandler)
+
+  // Start server
+  app.listen(PORT, () => {
+    console.log(`
+    ╔════════════════════════════════════════════╗
+    ║   Multitech Business School API Server     ║
+    ║   Running on: http://localhost:${PORT}      ║
+    ║   Environment: ${process.env.NODE_ENV || 'development'}              ║
+    ║   CORS Origin: ${process.env.CORS_ORIGIN}   ║
+    ╚════════════════════════════════════════════╝
+    `)
+  })
+}
+
+initializeApp().catch((error) => {
+  console.error('Failed to initialize app:', error)
+  process.exit(1)
 })
 
 export default app

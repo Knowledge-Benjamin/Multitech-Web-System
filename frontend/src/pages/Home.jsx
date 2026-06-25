@@ -4,6 +4,8 @@ import axios from 'axios'
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
 import ProgrammeCard from '../components/ProgrammeCard'
+import ArticleCard from '../components/ArticleCard'
+import SkeletonCard from '../components/SkeletonCard'
 import ReasonsCarousel from '../components/ReasonsCarousel'
 import './Home.css'
 
@@ -18,6 +20,8 @@ export default function Home() {
   const [scrollSnaps, setScrollSnaps] = useState([])
   const [reasons, setReasons] = useState([])
   const [reasonsLoading, setReasonsLoading] = useState(true)
+  const [latestArticles, setLatestArticles] = useState([])
+  const [latestLoading, setLatestLoading] = useState(true)
 
   const getCategoryLink = (title) => {
     const lowerTitle = title.toLowerCase();
@@ -79,9 +83,20 @@ export default function Home() {
         setReasonsLoading(false)
       }
     }
+    const fetchLatestArticles = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/articles`)
+        setLatestArticles((res.data.data || []).slice(0, 4))
+      } catch (err) {
+        console.error('Failed to load latest articles', err)
+      } finally {
+        setLatestLoading(false)
+      }
+    }
     fetchHeroArticles()
     fetchCategories()
     fetchReasons()
+    fetchLatestArticles()
   }, [])
 
   return (
@@ -183,28 +198,57 @@ export default function Home() {
       </section>
 
       {/* Why Multitech Reasons Section (dynamic carousel) */}
-      {reasonsLoading ? (
-        <section className="hero-skeleton">
-          <div className="hero-skeleton-shimmer" />
-          <div className="hero-skeleton-content">
-            <div className="skeleton-line skeleton-title" />
-            <div className="skeleton-line skeleton-subtitle" />
-            <div className="skeleton-line skeleton-subtitle short" />
-            <div className="skeleton-btn" />
-          </div>
-        </section>
-      ) : reasons.length > 0 ? (
-        <ReasonsCarousel reasons={reasons} />
-      ) : (
-        <section className="about-section">
+      <section className="reasons-section">
+        <div className="reasons-header">
           <div className="container">
             <h2>Why Multitech Business School?</h2>
-            <p className="about-intro">Your gateway to the heart of many businesses</p>
-            <p>Multitech Business School provides studies that are a popular choice for students looking to move directly into a professional career as well as those whose ambitions lie in broader ICT and Business Administration.</p>
-            <Link to="/apply" className="button button-primary">Start Your Journey</Link>
+            <p className="about-intro">Built for ambitious students seeking practical business education.</p>
           </div>
-        </section>
-      )}
+        </div>
+
+        {reasonsLoading ? (
+          <section className="hero-skeleton">
+            <div className="hero-skeleton-shimmer" />
+            <div className="hero-skeleton-content">
+              <div className="skeleton-line skeleton-title" />
+              <div className="skeleton-line skeleton-subtitle" />
+              <div className="skeleton-line skeleton-subtitle short" />
+              <div className="skeleton-btn" />
+            </div>
+          </section>
+        ) : reasons.length > 0 ? (
+          <ReasonsCarousel reasons={reasons} />
+        ) : (
+          <div className="reasons-empty">
+            <div className="container">
+              <p>No reasons have been published yet. Please check back soon.</p>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="latest-articles-section">
+        <div className="latest-articles-container">
+          <div className="latest-articles-copy">
+            <span className="section-label">Latest News & Articles</span>
+            <h2>Stay up to date</h2>
+          </div>
+
+          <div className="latest-articles-grid">
+            {latestLoading ? (
+              Array.from({ length: 4 }).map((_, idx) => <SkeletonCard key={`latest-skeleton-${idx}`} />)
+            ) : latestArticles.length > 0 ? (
+              latestArticles.map(article => <ArticleCard key={article.id} article={article} />)
+            ) : (
+              <p className="latest-empty">No recent articles available yet.</p>
+            )}
+          </div>
+
+          <div className="latest-articles-action">
+            <Link to="/articles" className="button button-secondary">Explore more articles</Link>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

@@ -25,6 +25,7 @@ import imageRoutes from './routes/images.js'
 import functionalFeesRoutes from './routes/functionalFees.js'
 import programmeFeesRoutes from './routes/programmeFees.js'
 import aboutRoutes from './routes/about.js'
+import homeReasonsRoutes from './routes/homeReasons.js'
 import studentAuthRoutes from './routes/studentAuth.js'
 import calendarRoutes from './routes/calendar.js'
 import studentsRoutes from './routes/students.js'
@@ -85,6 +86,7 @@ const initializeApp = async () => {
   app.use('/api/announcements', announcementRoutes)
   app.use('/api/articles', articleRoutes)
   app.use('/api/about', aboutRoutes)
+  app.use('/api/home/reasons', homeReasonsRoutes)
   app.use('/api/images', imageRoutes)
   app.use('/api/functional-fees', functionalFeesRoutes)
   app.use('/api/programme-fees', programmeFeesRoutes)

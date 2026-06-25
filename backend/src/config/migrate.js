@@ -90,6 +90,20 @@ const initializeDatabase = async () => {
       )
     `)
 
+    // Homepage 'Why Multitech' cards managed by admin
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS home_cards (
+        id SERIAL PRIMARY KEY,
+        icon VARCHAR(255),
+        title VARCHAR(255) NOT NULL,
+        points JSONB DEFAULT '[]',
+        status VARCHAR(50) DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+        display_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
     await pool.query(`
       ALTER TABLE about_sections
       ADD COLUMN IF NOT EXISTS section_type VARCHAR(50) DEFAULT 'standard'
@@ -97,6 +111,20 @@ const initializeDatabase = async () => {
     await pool.query(`
       ALTER TABLE about_sections
       ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'
+    `)
+
+    // Home reasons/cards for the homepage "Why Multitech Business School"
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS home_reasons (
+        id SERIAL PRIMARY KEY,
+        icon VARCHAR(255),
+        title VARCHAR(255) NOT NULL,
+        points JSONB DEFAULT '[]',
+        status VARCHAR(50) DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+        display_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
     `)
 
     console.log('Database schema initialized successfully!')

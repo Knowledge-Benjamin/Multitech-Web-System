@@ -4,6 +4,7 @@ import axios from 'axios'
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
 import ProgrammeCard from '../components/ProgrammeCard'
+import ReasonsCarousel from '../components/ReasonsCarousel'
 import './Home.css'
 
 export default function Home() {
@@ -15,6 +16,8 @@ export default function Home() {
   const [heroVisible, setHeroVisible] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [scrollSnaps, setScrollSnaps] = useState([])
+  const [reasons, setReasons] = useState([])
+  const [reasonsLoading, setReasonsLoading] = useState(true)
 
   const getCategoryLink = (title) => {
     const lowerTitle = title.toLowerCase();
@@ -66,8 +69,19 @@ export default function Home() {
         setLoadingCategories(false)
       }
     }
+    const fetchReasons = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/home/reasons`)
+        setReasons(res.data.data || [])
+      } catch (err) {
+        console.error('Failed to load home reasons', err)
+      } finally {
+        setReasonsLoading(false)
+      }
+    }
     fetchHeroArticles()
     fetchCategories()
+    fetchReasons()
   }, [])
 
   return (
@@ -168,15 +182,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="about-section">
-        <div className="container">
-          <h2>Why Multitech Business School?</h2>
-          <p className="about-intro">Your gateway to the heart of many businesses</p>
-          <p>Multitech Business School provides studies that are a popular choice for students looking to move directly into a professional career as well as those whose ambitions lie in broader ICT and Business Administration. Our programmes are designed to equip you with practical skills and theoretical knowledge required in today's competitive market.</p>
-          <Link to="/apply" className="button button-primary">Start Your Journey</Link>
-        </div>
-      </section>
+      {/* Why Multitech Reasons Section (dynamic carousel) */}
+      {reasonsLoading ? (
+        <section className="hero-skeleton">
+          <div className="hero-skeleton-shimmer" />
+          <div className="hero-skeleton-content">
+            <div className="skeleton-line skeleton-title" />
+            <div className="skeleton-line skeleton-subtitle" />
+            <div className="skeleton-line skeleton-subtitle short" />
+            <div className="skeleton-btn" />
+          </div>
+        </section>
+      ) : reasons.length > 0 ? (
+        <ReasonsCarousel reasons={reasons} />
+      ) : (
+        <section className="about-section">
+          <div className="container">
+            <h2>Why Multitech Business School?</h2>
+            <p className="about-intro">Your gateway to the heart of many businesses</p>
+            <p>Multitech Business School provides studies that are a popular choice for students looking to move directly into a professional career as well as those whose ambitions lie in broader ICT and Business Administration.</p>
+            <Link to="/apply" className="button button-primary">Start Your Journey</Link>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

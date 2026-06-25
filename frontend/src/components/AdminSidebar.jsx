@@ -81,6 +81,10 @@ export default function AdminSidebar() {
           <span className="nav-icon">📑</span>
           <span className="sidebar-text">About Sections</span>
         </Link>
+        <Link to="/admin/home-reasons" className={`nav-item ${isActive('/admin/home-reasons') ? 'active' : ''}`}>
+          <span className="nav-icon">⭐</span>
+          <span className="sidebar-text">Home Reasons</span>
+        </Link>
         {admin.role === 'superadmin' && (
           <Link to="/admin/settings" className={`nav-item ${isActive('/admin/settings') ? 'active' : ''}`}>
             <span className="nav-icon">⚙️</span>

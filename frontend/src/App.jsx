@@ -18,6 +18,7 @@ import AdminAnnouncements from './pages/AdminAnnouncements'
 import AdminArticles from './pages/AdminArticles'
 import AdminAbout from './pages/AdminAbout'
 import AdminAboutSections from './pages/AdminAboutSections'
+import AdminHomeReasons from './pages/AdminHomeReasons'
 import AdminSettings from './pages/AdminSettings'
 import Articles from './pages/Articles'
 import ArticleView from './pages/ArticleView'
@@ -111,6 +112,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminAboutSections />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/home-reasons"
+          element={
+            <ProtectedRoute>
+              <AdminHomeReasons />
             </ProtectedRoute>
           }
         />

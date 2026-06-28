@@ -30,6 +30,7 @@ import studentAuthRoutes from './routes/studentAuth.js'
 import calendarRoutes from './routes/calendar.js'
 import studentsRoutes from './routes/students.js'
 import studentProfileRoutes from './routes/studentProfile.js'
+import emailRoutes from './routes/emails.js'
 
 dotenv.config()
 
@@ -94,6 +95,7 @@ const initializeApp = async () => {
   app.use('/api/calendar', calendarRoutes)
   app.use('/api/students', studentsRoutes)
   app.use('/api/student-profile', studentProfileRoutes)
+  app.use('/api/emails', emailRoutes)
 
   // 404 handler
   app.use('*', (req, res) => {

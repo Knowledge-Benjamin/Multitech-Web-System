@@ -7,6 +7,7 @@ import ProgrammeCard from '../components/ProgrammeCard'
 import ArticleCard from '../components/ArticleCard'
 import SkeletonCard from '../components/SkeletonCard'
 import ReasonsCarousel from '../components/ReasonsCarousel'
+import ContactForm from '../components/ContactForm'
 import './Home.css'
 
 export default function Home() {
@@ -247,6 +248,17 @@ export default function Home() {
           <div className="latest-articles-action">
             <Link to="/articles" className="button button-secondary">Explore more articles</Link>
           </div>
+        </div>
+      </section>
+
+      <section className="home-contact-section">
+        <div className="container home-contact-inner">
+          <div className="home-contact-copy">
+            <span className="section-label">Contact Us</span>
+            <h2>Have a question? Reach out to our team.</h2>
+            <p>Send us your inquiry and our admissions team will reply as soon as possible.</p>
+          </div>
+          <ContactForm pageUrl="/" />
         </div>
       </section>
     </div>

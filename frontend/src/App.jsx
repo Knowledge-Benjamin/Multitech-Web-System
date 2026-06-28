@@ -19,10 +19,13 @@ import AdminArticles from './pages/AdminArticles'
 import AdminAbout from './pages/AdminAbout'
 import AdminAboutSections from './pages/AdminAboutSections'
 import AdminHomeReasons from './pages/AdminHomeReasons'
+import AdminMessages from './pages/AdminMessages'
+import AdminCommunications from './pages/AdminCommunications'
 import AdminSettings from './pages/AdminSettings'
 import Articles from './pages/Articles'
 import ArticleView from './pages/ArticleView'
 import About from './pages/About'
+import ContactUs from './pages/ContactUs'
 import StudentLogin from './pages/StudentLogin'
 import StudentDashboard from './pages/StudentDashboard'
 import StudentFinances from './pages/StudentFinances'
@@ -131,6 +134,30 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/messages"
+          element={
+            <ProtectedRoute>
+              <AdminMessages />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/messages/:id"
+          element={
+            <ProtectedRoute>
+              <AdminMessages />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/communications"
+          element={
+            <ProtectedRoute>
+              <AdminCommunications />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Student Routes */}
         <Route path="/student/login" element={<StudentLogin />} />
@@ -151,6 +178,7 @@ function App() {
                   <Route path="/programmes/:id" element={<ProgrammeDetails />} />
                   <Route path="/apply" element={<Apply />} />
                   <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<ContactUs />} />
                   <Route path="/articles" element={<Articles />} />
                   <Route path="/articles/:id" element={<ArticleView />} />
                   <Route path="*" element={<NotFound />} />

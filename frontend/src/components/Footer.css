@@ -41,6 +41,17 @@
   color: white;
 }
 
+.footer-contact-link {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  color: var(--color-accent-yellow);
+  text-decoration: underline;
+}
+
+.footer-contact-link:hover {
+  color: white;
+}
+
 .footer-links {
   list-style: none;
   padding: 0;

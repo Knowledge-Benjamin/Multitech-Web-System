@@ -1,6 +1,10 @@
 import pool from '../config/database.js'
 import { asyncHandler } from '../utils/helpers.js'
 import { createApplicationFolders, uploadToFolder, deleteFromDrive } from '../utils/googleDriveService.js'
+import { getSetting } from '../utils/settingsService.js'
+import { queueEmailDispatch } from '../services/emailDispatcher.js'
+import { renderApplicationAcknowledgementEmail } from '../utils/emailTemplates.js'
+import { generateApplicationAcknowledgementPdf } from '../utils/pdfService.js'
 import bcrypt from 'bcryptjs'
 
 /**
@@ -221,6 +225,51 @@ export const createApplication = asyncHandler(async (req, res) => {
     )
 
     await client.query('COMMIT')
+
+    const acknowledgementTemplate = await getSetting('application_acknowledgement_template')
+    const acknowledgementEmail = renderApplicationAcknowledgementEmail({
+      template: acknowledgementTemplate,
+      name: `${first_name} ${last_name}`,
+      applicationReference: referenceNumber,
+      programmeName: programme.name,
+      status: 'pending',
+      loginEmail: email,
+      loginPassword: referenceNumber,
+      applicationDate: new Date().toLocaleDateString(),
+      email,
+      phone
+    })
+
+    try {
+      const receiptBuffer = await generateApplicationAcknowledgementPdf({
+        referenceNumber,
+        fullName: `${first_name} ${last_name}`,
+        programmeName: programme.name,
+        applicationDate: new Date().toLocaleDateString(),
+        email,
+        phone,
+        loginEmail: email,
+        loginPassword: referenceNumber,
+        status: 'pending'
+      })
+
+      const pdfAttachment = {
+        filename: `${referenceNumber}-acknowledgement.pdf`,
+        type: 'application/pdf',
+        disposition: 'attachment',
+        content: receiptBuffer.toString('base64')
+      }
+
+      queueEmailDispatch({
+        to: email,
+        subject: acknowledgementEmail.subject,
+        text: acknowledgementEmail.text,
+        html: acknowledgementEmail.html,
+        attachments: [pdfAttachment]
+      })
+    } catch (emailError) {
+      console.error('Application acknowledgement email failed:', emailError.message || emailError)
+    }
 
     res.status(201).json({
       success: true,

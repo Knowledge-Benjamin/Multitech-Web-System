@@ -10,6 +10,10 @@ export default function AdminSettings() {
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(true)
   const [driveStatus, setDriveStatus] = useState(false)
+  const [emailDestination, setEmailDestination] = useState('')
+  const [acknowledgementTemplate, setAcknowledgementTemplate] = useState('')
+  const [emailLoading, setEmailLoading] = useState(true)
+  const [emailSaving, setEmailSaving] = useState(false)
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -38,6 +42,8 @@ export default function AdminSettings() {
       fetchLogs()
     } else if (activeTab === 'integrations') {
       fetchDriveStatus()
+    } else if (activeTab === 'email') {
+      fetchEmailSettings()
     }
   }, [activeTab])
 
@@ -111,6 +117,53 @@ export default function AdminSettings() {
     }
   }
 
+  const fetchEmailSettings = async () => {
+    setEmailLoading(true)
+    try {
+      const response = await axios.get('/api/emails/settings', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setEmailDestination(response.data.data.contact_destination_email || '')
+      setAcknowledgementTemplate(response.data.data.application_acknowledgement_template || '')
+    } catch (error) {
+      console.error('Error fetching email settings:', error)
+    } finally {
+      setEmailLoading(false)
+    }
+  }
+
+  const handleSaveEmailSettings = async (e) => {
+    e.preventDefault()
+    setEmailSaving(true)
+    try {
+      await axios.put(
+        '/api/emails/settings',
+        {
+          contact_destination_email: emailDestination,
+          application_acknowledgement_template: acknowledgementTemplate
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      alert('Email settings saved successfully.')
+    } catch (error) {
+      console.error('Error saving email settings:', error)
+      alert(error.response?.data?.message || 'Could not save email settings.')
+    } finally {
+      setEmailSaving(false)
+    }
+  }
+
+  const renderTemplatePreview = (template) => {
+    const sample = template || `Dear {{name}},\n\nThank you for submitting your application to Multitech Business School for the {{programmeName}} programme.\n\nYour application reference is {{applicationReference}}.\n\nApplication status: {{status}}\n\nYou can sign in to track your application with the details below:\nLogin email: {{loginEmail}}\nPassword: {{loginPassword}}\n\nIf you have questions, please reply to this email or contact our admissions team.\n\nBest regards,\nMultitech Business School Admissions Team`
+    return sample
+      .replace(/{{\s*name\s*}}/gi, 'Jane Doe')
+      .replace(/{{\s*programmeName\s*}}/gi, 'Business Administration')
+      .replace(/{{\s*applicationReference\s*}}/gi, 'MBS-20260628-001')
+      .replace(/{{\s*status\s*}}/gi, 'pending')
+      .replace(/{{\s*loginEmail\s*}}/gi, 'jane.doe@example.com')
+      .replace(/{{\s*loginPassword\s*}}/gi, 'MBS-20260628-001')
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -179,6 +232,12 @@ export default function AdminSettings() {
             className={`tab-btn ${activeTab === 'integrations' ? 'active' : ''}`}
           >
             Integrations
+          </button>
+          <button
+            onClick={() => setActiveTab('email')}
+            className={`tab-btn ${activeTab === 'email' ? 'active' : ''}`}
+          >
+            Email Settings
           </button>
         </div>
 
@@ -333,6 +392,63 @@ export default function AdminSettings() {
                 </div>
               ) : (
                 <p className="empty-state">No activity logs found</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'email' && (
+          <div className="tab-content">
+            <div className="settings-card">
+              <div className="settings-card-header">
+                <h2>Contact Form Destination</h2>
+                <p>Incoming website contact messages will be delivered to this email address.</p>
+              </div>
+              {emailLoading ? (
+                <p>Loading email settings...</p>
+              ) : (
+                <form onSubmit={handleSaveEmailSettings} className="email-settings-form">
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Destination email address *</label>
+                      <input
+                        type="email"
+                        value={emailDestination}
+                        onChange={(e) => setEmailDestination(e.target.value)}
+                        placeholder="admin@multitech.ac.ug"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Application acknowledgement template</label>
+                    <textarea
+                      value={acknowledgementTemplate}
+                      onChange={(e) => setAcknowledgementTemplate(e.target.value)}
+                      rows={10}
+                      placeholder="Dear {{name}},\n\nThank you for applying..."
+                      className="form-control"
+                    />
+                    <small>
+                      Use placeholders: <code>{{name}}</code>, <code>{{programmeName}}</code>, <code>{{applicationReference}}</code>, <code>{{status}}</code>, <code>{{loginEmail}}</code>, <code>{{loginPassword}}</code>.
+                    </small>
+                  </div>
+
+                  <div className="template-preview-card">
+                    <div className="template-preview-header">
+                      <h3>Preview</h3>
+                    </div>
+                    <pre className="template-preview-body">
+{renderTemplatePreview(acknowledgementTemplate)}
+                    </pre>
+                  </div>
+
+                  <div className="form-actions">
+                    <button type="submit" className="btn-primary" disabled={emailSaving}>
+                      {emailSaving ? 'Saving...' : 'Save Email'}
+                    </button>
+                  </div>
+                </form>
               )}
             </div>
           </div>

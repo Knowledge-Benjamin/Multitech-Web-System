@@ -1,0 +1,39 @@
+.contact-page {
+  padding: 4rem 0;
+  background: var(--color-bg-secondary);
+}
+
+.contact-page-inner {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.contact-page-copy .section-label {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-accent-yellow);
+  letter-spacing: 0.16em;
+}
+
+.contact-page-copy h1 {
+  margin: 0 0 1rem;
+  font-size: clamp(2rem, 3vw, 3.5rem);
+  color: var(--color-secondary);
+}
+
+.contact-page-copy p {
+  margin: 0;
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+  max-width: 620px;
+}
+
+@media (max-width: 960px) {
+  .contact-page-inner {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import './Footer.css'
 
 export default function Footer() {
@@ -12,7 +13,10 @@ export default function Footer() {
             <strong>Kampala Campus:</strong><br />
             Plot 345 Bukesa, off Sir Apollo Kaggwa Road<br />
             P.O Box 3211 Kampala, Uganda<br />
-            Phone: +256 774 461 072 / +256 756 779 900<br />
+            Phone: +256 774 461 072 / +256 756 779 900
+          </p>
+          <p>
+            <Link to="/contact" className="footer-contact-link">Send us a message</Link><br />
             <a href="mailto:inquiries@multitech.ac.ug">inquiries@multitech.ac.ug</a>
           </p>
         </div>

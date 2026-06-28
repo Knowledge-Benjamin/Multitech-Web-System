@@ -414,6 +414,43 @@
   }
 }
 
+.home-contact-section {
+  padding: 4rem 0;
+  background: white;
+}
+
+.home-contact-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.home-contact-copy {
+  max-width: 520px;
+}
+
+.home-contact-copy h2 {
+  font-size: clamp(2rem, 2.5vw, 2.75rem);
+  margin-top: 0.5rem;
+  color: var(--color-secondary);
+}
+
+.home-contact-copy p {
+  color: var(--color-text-secondary);
+  line-height: 1.8;
+  margin-top: 1rem;
+}
+
+@media (max-width: 960px) {
+  .home-contact-inner {
+    grid-template-columns: 1fr;
+  }
+}
+
 .skeleton-title {
   height: 48px;
   width: 560px;

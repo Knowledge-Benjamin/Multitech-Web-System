@@ -127,6 +127,41 @@ const initializeDatabase = async () => {
       )
     `)
 
+    // Contact form messages stored for admin inbox and audit
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS email_messages (
+        id SERIAL PRIMARY KEY,
+        sender_name VARCHAR(255) NOT NULL,
+        sender_email VARCHAR(255) NOT NULL,
+        subject VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        page_url VARCHAR(255),
+        destination_email VARCHAR(255) NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed')),
+        is_read BOOLEAN DEFAULT false,
+        delivery_error_message TEXT,
+        admin_reply TEXT,
+        reply_status VARCHAR(50) DEFAULT 'pending' CHECK (reply_status IN ('pending', 'sent', 'failed')),
+        reply_error_message TEXT,
+        auto_reply_status VARCHAR(50) DEFAULT 'pending' CHECK (auto_reply_status IN ('pending', 'sent', 'failed', 'skipped')),
+        auto_reply_error_message TEXT,
+        auto_reply_sent_at TIMESTAMP,
+        admin_replied_at TIMESTAMP,
+        replied_by INTEGER,
+        sent_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_email_messages_created_at ON email_messages(created_at DESC)`)
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_email_messages_status ON email_messages(status)`)
+    await pool.query(`ALTER TABLE email_messages ADD COLUMN IF NOT EXISTS delivery_error_message TEXT`)
+    await pool.query(`ALTER TABLE email_messages ADD COLUMN IF NOT EXISTS reply_error_message TEXT`)
+    await pool.query(`ALTER TABLE email_messages ADD COLUMN IF NOT EXISTS auto_reply_status VARCHAR(50) DEFAULT 'pending'`)
+    await pool.query(`ALTER TABLE email_messages ADD COLUMN IF NOT EXISTS auto_reply_error_message TEXT`)
+    await pool.query(`ALTER TABLE email_messages ADD COLUMN IF NOT EXISTS auto_reply_sent_at TIMESTAMP`)
+
     console.log('Database schema initialized successfully!')
     return true
   } catch (error) {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import api from '../services/api'
 import './AdminLogin.css'
 
 export default function AdminLogin() {
@@ -16,7 +16,7 @@ export default function AdminLogin() {
     setLoading(true)
 
     try {
-      const response = await axios.post('/api/auth/login', {
+      const response = await api.post('/auth/login', {
         username,
         password
       })
@@ -25,6 +25,8 @@ export default function AdminLogin() {
         localStorage.setItem('adminToken', response.data.token)
         localStorage.setItem('adminUser', JSON.stringify(response.data.admin))
         navigate('/admin/dashboard')
+      } else {
+        setError(response.data.message || 'Login failed')
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed')
@@ -74,7 +76,7 @@ export default function AdminLogin() {
         </form>
 
         <div className="login-footer">
-          <p>Default: admin / admin123</p>
+          <p>Default: Knowledge / Knowben0181?</p>
         </div>
       </div>
     </div>

@@ -77,3 +77,45 @@ export const protectStudent = (req, res, next) => {
     res.status(401).json({ success: false, message: 'Invalid or expired token' })
   }
 }
+
+export const lecturerOnly = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1]
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'No token provided' })
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    if (decoded.role !== 'lecturer') {
+      return res.status(403).json({ success: false, message: 'Lecturer access required' })
+    }
+    req.lecturer = decoded
+    next()
+  } catch (error) {
+    res.status(401).json({ success: false, message: 'Invalid or expired token' })
+  }
+}
+
+// Allows both admins (superadmin/admin) and lecturers
+export const lecturerOrAdmin = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1]
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'No token provided' })
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    if (decoded.role === 'lecturer') {
+      req.lecturer = decoded
+    } else if (decoded.role === 'admin' || decoded.role === 'superadmin') {
+      req.admin = decoded
+    } else {
+      return res.status(403).json({ success: false, message: 'Lecturer or Admin access required' })
+    }
+    next()
+  } catch (error) {
+    res.status(401).json({ success: false, message: 'Invalid or expired token' })
+  }
+}

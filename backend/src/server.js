@@ -31,6 +31,12 @@ import calendarRoutes from './routes/calendar.js'
 import studentsRoutes from './routes/students.js'
 import studentProfileRoutes from './routes/studentProfile.js'
 import emailRoutes from './routes/emails.js'
+import examPortalWebhookRoutes from './routes/examPortalWebhook.js'
+import attendanceRoutes from './routes/attendance.js'
+import timetableRoutes from './routes/timetable.js'
+import lecturerRoutes from './routes/lecturer.js'
+import adminLecturersRoutes from './routes/adminLecturers.js'
+import courseUnitsRoutes from './routes/courseUnits.js'
 
 dotenv.config()
 
@@ -62,8 +68,11 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }))
+// Body parsing middleware — capture rawBody for HMAC signature verification
+app.use(express.json({
+  limit: '10mb',
+  verify: (req, _res, buf) => { req.rawBody = buf.toString() }
+}))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
 
 // Request logging
@@ -96,6 +105,12 @@ const initializeApp = async () => {
   app.use('/api/students', studentsRoutes)
   app.use('/api/student-profile', studentProfileRoutes)
   app.use('/api/emails', emailRoutes)
+  app.use('/api/exam-portal/webhook', examPortalWebhookRoutes)
+  app.use('/api/attendance', attendanceRoutes)
+  app.use('/api/timetable', timetableRoutes)
+  app.use('/api/lecturer', lecturerRoutes)
+  app.use('/api/admin/lecturers', adminLecturersRoutes)
+  app.use('/api/course-units', courseUnitsRoutes)
 
   // 404 handler
   app.use('*', (req, res) => {

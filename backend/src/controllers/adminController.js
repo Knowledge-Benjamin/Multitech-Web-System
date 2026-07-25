@@ -50,10 +50,37 @@ export const createAdminUser = asyncHandler(async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 10)
 
   try {
+    const assignedRole = role || 'admin';
     const result = await pool.query(
       'INSERT INTO admin_users (username, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, username, email, role, status',
-      [username, email, hashedPassword, role || 'admin']
+      [username, email, hashedPassword, assignedRole]
     )
+
+    // Admin Sync: Provision teacher in Exam Portal
+    if (assignedRole === 'teacher' || assignedRole === 'admin') {
+      import('crypto').then((crypto) => {
+        const payload = JSON.stringify({
+          name: username,
+          email: email,
+          password: password, // Send plaintext password to be hashed by Exam Portal
+          role: assignedRole,
+        });
+
+        const secret = process.env.EXAM_PORTAL_WEBHOOK_SECRET;
+        if (secret) {
+          const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+          // Exam Portal runs on 3001 locally
+          fetch('http://localhost:3001/api/webhooks/provision-teacher', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-erp-signature': signature,
+            },
+            body: payload,
+          }).catch(err => console.warn('[adminSync] Failed to provision teacher in Exam Portal:', err.message));
+        }
+      });
+    }
 
     res.status(201).json({
       success: true,

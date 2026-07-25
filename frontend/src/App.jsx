@@ -29,7 +29,21 @@ import ContactUs from './pages/ContactUs'
 import StudentLogin from './pages/StudentLogin'
 import StudentDashboard from './pages/StudentDashboard'
 import StudentFinances from './pages/StudentFinances'
+import StudentCourses from './pages/StudentCourses'
 import StudentProfile from './pages/StudentProfile'
+import StudentExams from './pages/StudentExams'
+import StudentResults from './pages/StudentResults'
+import StudentAttendance from './pages/StudentAttendance'
+import StudentTimetable from './pages/StudentTimetable'
+import StudentAnnouncements from './pages/StudentAnnouncements'
+import LecturerAttendance from './pages/LecturerAttendance'
+import LecturerLogin from './pages/LecturerLogin'
+import LecturerDashboard from './pages/LecturerDashboard'
+import LecturerCourseDetails from './pages/LecturerCourseDetails'
+import LecturerTimetable from './pages/LecturerTimetable'
+import AdminAttendanceReports from './pages/AdminAttendanceReports'
+import AdminTimetable from './pages/AdminTimetable'
+import AdminLecturers from './pages/AdminLecturers'
 import './App.css'
 
 function App() {
@@ -135,6 +149,23 @@ function App() {
           }
         />
         <Route
+          path="/admin/timetable"
+          element={
+            <ProtectedRoute>
+              <AdminTimetable />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/attendance/reports"
+          element={
+            <ProtectedRoute>
+              <AdminAttendanceReports />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/messages"
           element={
             <ProtectedRoute>
@@ -158,12 +189,33 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/lecturers"
+          element={
+            <ProtectedRoute>
+              <AdminLecturers />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Lecturer Routes */}
+        <Route path="/lecturer/login" element={<LecturerLogin />} />
+        <Route path="/lecturer/dashboard" element={<LecturerDashboard />} />
+        <Route path="/lecturer/courses/:courseId" element={<LecturerCourseDetails />} />
+        <Route path="/lecturer/timetable" element={<LecturerTimetable />} />
+        <Route path="/lecturer/attendance" element={<LecturerAttendance />} />
 
         {/* Student Routes */}
         <Route path="/student/login" element={<StudentLogin />} />
         <Route path="/student/dashboard" element={<StudentDashboard />} />
         <Route path="/student/finances" element={<StudentFinances />} />
+        <Route path="/student/courses" element={<StudentCourses />} />
         <Route path="/student/profile" element={<StudentProfile />} />
+        <Route path="/student/exams" element={<StudentExams />} />
+        <Route path="/student/results" element={<StudentResults />} />
+        <Route path="/student/attendance" element={<StudentAttendance />} />
+        <Route path="/student/timetable" element={<StudentTimetable />} />
+        <Route path="/student/announcements" element={<StudentAnnouncements />} />
 
         {/* Public Routes with Header/Footer */}
         <Route

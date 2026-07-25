@@ -46,14 +46,13 @@ const handleDriveError = async (error) => {
   }
 }
 
-const ensureFolder = async (drive, subfolderName = null) => {
+const ensureFolder = async (drive, subfolderPath = null) => {
   let rootFolderId
 
   // 1. Check database for stored root folder ID
   try {
     const dbResult = await pool.query("SELECT setting_value FROM settings WHERE setting_key = 'gdrive_folder_id'")
     if (dbResult.rows.length > 0 && dbResult.rows[0].setting_value) {
-      // Verify the folder still exists in Drive
       try {
         await drive.files.get({ fileId: dbResult.rows[0].setting_value, supportsAllDrives: true })
         rootFolderId = dbResult.rows[0].setting_value
@@ -100,47 +99,49 @@ const ensureFolder = async (drive, subfolderName = null) => {
     }
   }
 
-  // 2. If subfolder requested, ensure it exists within rootFolder
-  if (subfolderName) {
-    try {
-      const search = await drive.files.list({
-        q: `name='${subfolderName}' and '${rootFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-        fields: 'files(id)'
-      })
+  // 2. If subfolderPath requested, iteratively ensure it exists
+  if (subfolderPath) {
+    // If it's a string, convert to array for backwards compatibility
+    const pathArray = Array.isArray(subfolderPath) ? subfolderPath : [subfolderPath]
+    let currentParentId = rootFolderId
 
-      if (search.data.files.length > 0) {
-        return search.data.files[0].id
-      } else {
-        const subfolder = await drive.files.create({
-          requestBody: {
-            name: subfolderName,
-            parents: [rootFolderId],
-            mimeType: 'application/vnd.google-apps.folder'
-          },
-          fields: 'id'
+    for (const folderName of pathArray) {
+      try {
+        const search = await drive.files.list({
+          q: `name='${folderName}' and '${currentParentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+          fields: 'files(id)'
         })
-        // Subfolders usually inherit permissions, but just in case:
-        await drive.permissions.create({
-          fileId: subfolder.data.id,
-          requestBody: { role: 'reader', type: 'anyone' }
-        })
-        return subfolder.data.id
+
+        if (search.data.files.length > 0) {
+          currentParentId = search.data.files[0].id
+        } else {
+          const subfolder = await drive.files.create({
+            requestBody: {
+              name: folderName,
+              parents: [currentParentId],
+              mimeType: 'application/vnd.google-apps.folder'
+            },
+            fields: 'id'
+          })
+          currentParentId = subfolder.data.id
+        }
+      } catch (err) {
+        console.error(`Folder ${folderName} creation failed:`, err)
+        break // Return the deepest successfully created folder
       }
-    } catch (err) {
-      console.error(`Subfolder ${subfolderName} creation failed:`, err)
-      return rootFolderId // fallback to root
     }
+    return currentParentId
   }
 
   return rootFolderId
 }
 
-export const uploadToDrive = async (fileObject, subfolderName = null) => {
+export const uploadToDrive = async (fileObject, subfolderPath = null) => {
   try {
     const authClient = await getAuthClient()
     const drive = google.drive({ version: 'v3', auth: authClient })
 
-    const folderId = await ensureFolder(drive, subfolderName)
+    const folderId = await ensureFolder(drive, subfolderPath)
 
     const bufferStream = new Readable()
     bufferStream.push(fileObject.buffer)
@@ -289,5 +290,48 @@ export const uploadToFolder = async (fileObject, folderId) => {
     await handleDriveError(error)
     console.error('Drive uploadToFolder error:', error?.response?.data || error)
     throw new Error('Failed to upload file to Google Drive: ' + (error?.response?.data?.error?.message || error.message))
+  }
+}
+
+/**
+ * Upload a document (PDF, DOCX, etc.) to a nested folder path.
+ * Returns { id, webViewLink } suitable for storing course materials.
+ *
+ * folderPath is an array, e.g. ['Lecturers', 'John Doe', 'Semester 1', 'BBA101']
+ */
+export const uploadDocumentToDrive = async (fileObject, folderPath = null) => {
+  try {
+    const authClient = await getAuthClient()
+    const drive = google.drive({ version: 'v3', auth: authClient })
+
+    const folderId = await ensureFolder(drive, folderPath)
+
+    const bufferStream = new Readable()
+    bufferStream.push(fileObject.buffer)
+    bufferStream.push(null)
+
+    const response = await drive.files.create({
+      requestBody: {
+        name: `${Date.now()}_${fileObject.originalname}`,
+        parents: [folderId]
+      },
+      media: { mimeType: fileObject.mimetype, body: bufferStream },
+      fields: 'id, webViewLink',
+      supportsAllDrives: true
+    })
+
+    await drive.permissions.create({
+      fileId: response.data.id,
+      requestBody: { role: 'reader', type: 'anyone' }
+    })
+
+    return {
+      id: response.data.id,
+      webViewLink: response.data.webViewLink
+    }
+  } catch (error) {
+    await handleDriveError(error)
+    console.error('Drive uploadDocumentToDrive error:', error?.response?.data || error)
+    throw new Error('Failed to upload document to Google Drive: ' + (error?.response?.data?.error?.message || error.message))
   }
 }

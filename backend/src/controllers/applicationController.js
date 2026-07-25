@@ -305,14 +305,61 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'Invalid status' })
   }
 
-  const result = await pool.query(
-    `UPDATE applications SET status = $1, admin_notes = $2, updated_at = NOW() WHERE id = $3 RETURNING *`,
-    [status, admin_notes || null, id]
-  )
-  if (result.rows.length === 0) {
-    return res.status(404).json({ success: false, message: 'Application not found' })
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+
+    const result = await client.query(
+      `UPDATE applications SET status = $1, admin_notes = $2, updated_at = NOW() WHERE id = $3 RETURNING *`,
+      [status, admin_notes || null, id]
+    )
+    
+    if (result.rows.length === 0) {
+      await client.query('ROLLBACK')
+      return res.status(404).json({ success: false, message: 'Application not found' })
+    }
+
+    const application = result.rows[0]
+
+    // If admitted, create a student record if it doesn't exist
+    if (status === 'admitted') {
+      // Find the linked student_account_id
+      const accountRes = await client.query('SELECT id FROM student_accounts WHERE application_id = $1', [application.id])
+      
+      if (accountRes.rows.length > 0) {
+        const accountId = accountRes.rows[0].id
+        
+        // Check if student already exists
+        const studentExists = await client.query('SELECT id FROM students WHERE student_account_id = $1', [accountId])
+        
+        if (studentExists.rows.length === 0) {
+          // Determine intake term (the most recent/current active term)
+          const termRes = await client.query("SELECT id FROM academic_terms ORDER BY start_date DESC LIMIT 1")
+          const intakeTermId = termRes.rows.length > 0 ? termRes.rows[0].id : null
+
+          // Generate a student number: YY/U/XXXX/PS
+          const year = new Date().getFullYear().toString().slice(-2)
+          const randomNum = Math.floor(1000 + Math.random() * 9000)
+          const studentNumber = `${year}/U/${randomNum}/PS`
+
+          await client.query(
+            `INSERT INTO students (student_account_id, application_id, student_number, programme_id, intake_term_id) 
+             VALUES ($1, $2, $3, $4, $5)`,
+            [accountId, application.id, studentNumber, application.programme_id, intakeTermId]
+          )
+        }
+      }
+    }
+
+    await client.query('COMMIT')
+    res.json({ success: true, data: application })
+  } catch (err) {
+    await client.query('ROLLBACK')
+    console.error('Error updating application status:', err)
+    res.status(500).json({ success: false, message: 'Server error' })
+  } finally {
+    client.release()
   }
-  res.json({ success: true, data: result.rows[0] })
 })
 
 // Delete application (admin)

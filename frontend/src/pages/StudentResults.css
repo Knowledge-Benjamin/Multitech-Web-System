@@ -1,0 +1,169 @@
+/* ── Student Results Page ─────────────────────────────────────────────────── */
+
+.results-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.results-header h2 {
+  font-size: 1.8rem;
+  color: var(--color-secondary);
+  margin-bottom: 0.3rem;
+}
+
+/* Summary Cards */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cgpa-card {
+  background: linear-gradient(135deg, #1e3a5f, #2d5986);
+  color: white;
+  border: none;
+}
+
+.summary-label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+  font-weight: 600;
+}
+.cgpa-card .summary-label { color: #c9deff; }
+
+.summary-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.summary-value small {
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+/* Terms List & Tables */
+.terms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.term-title {
+  font-size: 1.25rem;
+  color: var(--color-secondary);
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.results-table th {
+  background: #f8fafc;
+  padding: 1rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 700;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.results-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.results-table tr:last-child td {
+  border-bottom: none;
+}
+
+.course-code {
+  font-weight: 700;
+  color: var(--color-secondary);
+  font-size: 0.9rem;
+}
+
+.course-name {
+  color: #334155;
+  font-weight: 500;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.grade-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  color: white;
+  font-weight: 800;
+  font-size: 0.9rem;
+  min-width: 32px;
+  text-align: center;
+}
+
+/* Print Styles */
+@media print {
+  .admin-sidebar, 
+  .results-header button, 
+  .sidebar-toggle {
+    display: none !important;
+  }
+  
+  .admin-layout {
+    display: block;
+  }
+
+  .admin-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .summary-cards {
+    page-break-inside: avoid;
+  }
+
+  .term-section {
+    page-break-inside: avoid;
+    margin-bottom: 2rem;
+  }
+}

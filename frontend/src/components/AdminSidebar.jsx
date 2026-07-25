@@ -61,6 +61,10 @@ export default function AdminSidebar() {
           <span className="nav-icon">🎓</span>
           <span className="sidebar-text">Students</span>
         </Link>
+        <Link to="/admin/lecturers" className={`nav-item ${isActive('/admin/lecturers') ? 'active' : ''}`}>
+          <span className="nav-icon">👩‍🏫</span>
+          <span className="sidebar-text">Lecturers</span>
+        </Link>
         <Link to="/admin/calendar" className={`nav-item ${isActive('/admin/calendar') ? 'active' : ''}`}>
           <span className="nav-icon">📅</span>
           <span className="sidebar-text">Academic Calendar</span>
@@ -93,6 +97,23 @@ export default function AdminSidebar() {
           <span className="nav-icon">🧾</span>
           <span className="sidebar-text">Communications</span>
         </Link>
+
+        {/* Academic Operations Group */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '0.5rem 0', paddingTop: '0.5rem' }}>
+          <Link to="/admin/timetable" className={`nav-item ${isActive('/admin/timetable') ? 'active' : ''}`}>
+            <span className="nav-icon">📅</span>
+            <span className="sidebar-text">Timetable</span>
+          </Link>
+          <Link to="/admin/attendance" className={`nav-item ${isActive('/admin/attendance') ? 'active' : ''}`}>
+            <span className="nav-icon">📡</span>
+            <span className="sidebar-text">Live Session</span>
+          </Link>
+          <Link to="/admin/attendance/reports" className={`nav-item ${isActive('/admin/attendance/reports') ? 'active' : ''}`}>
+            <span className="nav-icon">📊</span>
+            <span className="sidebar-text">Reports</span>
+          </Link>
+        </div>
+
         {admin.role === 'superadmin' && (
           <Link to="/admin/settings" className={`nav-item ${isActive('/admin/settings') ? 'active' : ''}`}>
             <span className="nav-icon">⚙️</span>
@@ -100,6 +121,7 @@ export default function AdminSidebar() {
           </Link>
         )}
       </nav>
+
 
       <button onClick={handleLogout} className="btn-logout">
         <span className="nav-icon">🚪</span>

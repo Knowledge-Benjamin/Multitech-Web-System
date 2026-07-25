@@ -1,0 +1,251 @@
+@import './LecturerDashboard.css';
+
+/* ── Course Detail Header ─────────────────────────────────────────────────── */
+.course-detail-header {
+  background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 28px;
+  color: white;
+}
+
+.course-header-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.course-detail-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+
+.course-header-meta {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.75);
+  margin: 0 0 12px;
+}
+
+/* ── Materials Section ────────────────────────────────────────────────────── */
+.materials-section {
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.materials-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.materials-header h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e1b4b;
+  margin: 0;
+}
+
+.btn-upload-toggle {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-upload-toggle:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+/* ── Upload Form ──────────────────────────────────────────────────────────── */
+.upload-form {
+  background: #f8f8ff;
+  border: 2px dashed #c7d2fe;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.upload-form h3 {
+  margin: 0 0 8px;
+  color: #1e1b4b;
+  font-size: 1rem;
+}
+
+.upload-note {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.upload-note code {
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-group input {
+  padding: 10px 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-group input:focus { border-color: #6366f1; }
+
+.file-drop-zone {
+  border: 2px dashed #a5b4fc;
+  border-radius: 12px;
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: all 0.2s;
+  background: #eef2ff;
+}
+.file-drop-zone:hover {
+  border-color: #6366f1;
+  background: #e0e7ff;
+}
+
+.file-drop-icon { font-size: 2rem; display: block; margin-bottom: 8px; }
+.file-drop-zone p { font-size: 0.88rem; color: #4b5563; margin: 0; }
+
+.btn-upload {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+.btn-upload:hover:not(:disabled) { filter: brightness(1.1); }
+.btn-upload:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Alerts ───────────────────────────────────────────────────────────────── */
+.alert-success {
+  background: #d1fae5;
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.alert-error {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+/* ── Materials List ───────────────────────────────────────────────────────── */
+.materials-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.material-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8f8ff;
+  border-radius: 12px;
+  border: 1px solid #e0e7ff;
+  transition: all 0.2s;
+}
+.material-item:hover {
+  background: #eef2ff;
+  border-color: #a5b4fc;
+}
+
+.material-icon { font-size: 2rem; flex-shrink: 0; }
+
+.material-info { flex: 1; min-width: 0; }
+.material-title { font-weight: 600; color: #1e1b4b; font-size: 0.95rem; margin-bottom: 2px; }
+.material-desc { font-size: 0.82rem; color: #6b7280; margin-bottom: 4px; }
+.material-meta { font-size: 0.78rem; color: #9ca3af; }
+
+.material-actions { display: flex; gap: 10px; flex-shrink: 0; }
+
+.btn-view {
+  text-decoration: none;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: #e0e7ff;
+  color: #3730a3;
+  transition: all 0.2s;
+}
+.btn-view:hover { background: #c7d2fe; }
+
+.btn-delete {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: #fee2e2;
+  color: #991b1b;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-delete:hover { background: #fca5a5; }
+
+.materials-empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: #9ca3af;
+}
+.materials-empty span { font-size: 3rem; display: block; margin-bottom: 12px; }
+.materials-empty p { font-size: 0.9rem; }
+
+@media (max-width: 768px) {
+  .form-row { grid-template-columns: 1fr; }
+  .material-item { flex-wrap: wrap; }
+  .material-actions { width: 100%; justify-content: flex-end; }
+}

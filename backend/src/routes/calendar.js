@@ -9,11 +9,12 @@ import {
   updateAcademicTerm,
   deleteAcademicTerm
 } from '../controllers/calendarController.js'
-import { adminOnly } from '../middleware/authMiddleware.js'
+import { authMiddleware, adminOnly } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
 // All calendar endpoints require Admin privileges
+router.use(authMiddleware)
 router.use(adminOnly)
 
 // Academic Years

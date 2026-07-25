@@ -30,14 +30,14 @@ export default function StudentSidebar() {
   const isActive = (path) => location.pathname === path
 
   return (
-    <aside className={`admin-sidebar ${isCollapsed ? 'collapsed' : ''}`} style={{ background: 'var(--color-surface)' }}>
+    <aside className={`admin-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <button className="sidebar-toggle" onClick={() => setIsCollapsed(!isCollapsed)}>
         {isCollapsed ? '❯' : '❮'}
       </button>
 
       <div className="sidebar-header">
         <h2>{isCollapsed ? 'SP' : 'STUDENT'}</h2>
-        <p className="sidebar-text" style={{ color: 'var(--color-primary)' }}>{student.name}</p>
+        <p className="sidebar-text">{student.name}</p>
       </div>
 
       <nav className="sidebar-nav">
@@ -52,6 +52,26 @@ export default function StudentSidebar() {
         <Link to="/student/courses" className={`nav-item ${isActive('/student/courses') ? 'active' : ''}`}>
           <span className="nav-icon">📚</span>
           <span className="sidebar-text">My Courses</span>
+        </Link>
+        <Link to="/student/timetable" className={`nav-item ${isActive('/student/timetable') ? 'active' : ''}`}>
+          <span className="nav-icon">📅</span>
+          <span className="sidebar-text">Timetable</span>
+        </Link>
+        <Link to="/student/announcements" className={`nav-item ${isActive('/student/announcements') ? 'active' : ''}`}>
+          <span className="nav-icon">📢</span>
+          <span className="sidebar-text">Announcements</span>
+        </Link>
+        <Link to="/student/results" className={`nav-item ${isActive('/student/results') ? 'active' : ''}`}>
+          <span className="nav-icon">🏆</span>
+          <span className="sidebar-text">Results & Transcript</span>
+        </Link>
+        <Link to="/student/attendance" className={`nav-item ${isActive('/student/attendance') ? 'active' : ''}`}>
+          <span className="nav-icon">📈</span>
+          <span className="sidebar-text">My Attendance</span>
+        </Link>
+        <Link to="/student/exams" className={`nav-item ${isActive('/student/exams') ? 'active' : ''}`}>
+          <span className="nav-icon">📝</span>
+          <span className="sidebar-text">Exams</span>
         </Link>
         <Link to="/student/profile" className={`nav-item ${isActive('/student/profile') ? 'active' : ''}`}>
           <span className="nav-icon">👤</span>

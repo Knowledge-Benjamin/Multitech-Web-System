@@ -5,7 +5,7 @@ import AdminSidebar from '../components/AdminSidebar'
 import './AdminProgrammes.css'
 
 export default function AdminProgrammes() {
-  const [activeMainTab, setActiveMainTab] = useState('courses')
+  const [activeMainTab, setActiveMainTab] = useState('programmes')
   const [programmes, setProgrammes] = useState([])
   const [categories, setCategories] = useState([])
   const [showForm, setShowForm] = useState(false)
@@ -39,11 +39,22 @@ export default function AdminProgrammes() {
   const [curriculumItems, setCurriculumItems] = useState([])
   const [newCurriculumItem, setNewCurriculumItem] = useState('')
 
+  // ── Course Units state ────────────────────────────────────────────────────
+  const [courseUnits, setCourseUnits] = useState([])
+  const [cuLoading, setCuLoading] = useState(false)
+  const [cuError, setCuError] = useState('')
+  const [cuSuccess, setCuSuccess] = useState('')
+  const [cuForm, setCuForm] = useState({ programme_id: '', course_code: '', name: '', credits: 3, target_year: 1, target_semester: 1 })
+  const [cuEditId, setCuEditId] = useState(null)
+
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (activeMainTab === 'courses') {
+    if (activeMainTab === 'programmes') {
       fetchProgrammes()
+    } else if (activeMainTab === 'course_units') {
+      fetchProgrammes()
+      fetchCourseUnits()
     } else {
       fetchCategories()
     }
@@ -194,6 +205,59 @@ export default function AdminProgrammes() {
     }
   }
 
+  const fetchCourseUnits = async () => {
+    setCuLoading(true)
+    const token = localStorage.getItem('adminToken')
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/course-units`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setCourseUnits(res.data.data || [])
+    } catch (err) {
+      setCuError('Failed to load course units.')
+    } finally {
+      setCuLoading(false)
+    }
+  }
+
+  const handleCUSubmit = async (e) => {
+    e.preventDefault()
+    setCuError(''); setCuSuccess('')
+    const token = localStorage.getItem('adminToken')
+    try {
+      if (cuEditId) {
+        await axios.put(`${import.meta.env.VITE_API_URL}/course-units/${cuEditId}`, cuForm, { headers: { Authorization: `Bearer ${token}` } })
+        setCuSuccess('Course unit updated.')
+      } else {
+        await axios.post(`${import.meta.env.VITE_API_URL}/course-units`, cuForm, { headers: { Authorization: `Bearer ${token}` } })
+        setCuSuccess('Course unit created.')
+      }
+      setCuForm({ programme_id: cuForm.programme_id, course_code: '', name: '', credits: 3, target_year: 1, target_semester: 1 })
+      setCuEditId(null)
+      fetchCourseUnits()
+    } catch (err) {
+      setCuError(err.response?.data?.message || 'Failed to save course unit.')
+    }
+  }
+
+  const handleCUEdit = (unit) => {
+    setCuEditId(unit.id)
+    setCuForm({ programme_id: unit.programme_id, course_code: unit.course_code, name: unit.name, credits: unit.credits, target_year: unit.target_year, target_semester: unit.target_semester })
+    setCuError(''); setCuSuccess('')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleCUDelete = async (id) => {
+    if (!window.confirm('Delete this course unit?')) return
+    const token = localStorage.getItem('adminToken')
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/course-units/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+      fetchCourseUnits()
+    } catch (err) {
+      setCuError('Failed to delete course unit.')
+    }
+  }
+
   const handleProgrammeImageUpload = async (e, programmeId) => {
     const file = e.target.files[0]
     if (!file) return
@@ -254,7 +318,7 @@ export default function AdminProgrammes() {
       <main className="admin-content">
         <header className="content-header">
           <h1>Manage Programmes</h1>
-          {activeMainTab === 'courses' && !showForm && (
+          {activeMainTab === 'programmes' && !showForm && (
             <button onClick={() => setShowForm(true)} className="btn-primary">
               + Add Programme
             </button>
@@ -264,11 +328,18 @@ export default function AdminProgrammes() {
         {!showForm && (
           <div className="settings-tabs" style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', borderBottom: '1px solid var(--color-border)' }}>
             <button
-              onClick={() => setActiveMainTab('courses')}
-              className={`tab-btn ${activeMainTab === 'courses' ? 'active' : ''}`}
-              style={{ padding: '0.75rem 1.5rem', background: 'none', border: 'none', borderBottom: activeMainTab === 'courses' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeMainTab === 'courses' ? 'var(--color-primary)' : 'var(--color-text)', cursor: 'pointer', fontWeight: activeMainTab === 'courses' ? '600' : '400' }}
+              onClick={() => setActiveMainTab('programmes')}
+              className={`tab-btn ${activeMainTab === 'programmes' ? 'active' : ''}`}
+              style={{ padding: '0.75rem 1.5rem', background: 'none', border: 'none', borderBottom: activeMainTab === 'programmes' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeMainTab === 'programmes' ? 'var(--color-primary)' : 'var(--color-text)', cursor: 'pointer', fontWeight: activeMainTab === 'programmes' ? '600' : '400' }}
             >
-              Courses Data
+              Programmes
+            </button>
+            <button
+              onClick={() => setActiveMainTab('course_units')}
+              className={`tab-btn ${activeMainTab === 'course_units' ? 'active' : ''}`}
+              style={{ padding: '0.75rem 1.5rem', background: 'none', border: 'none', borderBottom: activeMainTab === 'course_units' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeMainTab === 'course_units' ? 'var(--color-primary)' : 'var(--color-text)', cursor: 'pointer', fontWeight: activeMainTab === 'course_units' ? '600' : '400' }}
+            >
+              📚 Course Units
             </button>
             <button
               onClick={() => setActiveMainTab('categories')}
@@ -280,7 +351,7 @@ export default function AdminProgrammes() {
           </div>
         )}
 
-        {activeMainTab === 'courses' ? (
+        {activeMainTab === 'programmes' ? (
           <>
             {showForm ? (
               <div className="form-container extended-form">
@@ -512,6 +583,115 @@ export default function AdminProgrammes() {
               </div>
             )}
           </>
+        ) : activeMainTab === 'course_units' ? (
+          <div style={{ maxWidth: '900px' }}>
+            <h2 style={{ marginBottom: '1.5rem', color: '#1e1b4b' }}>📚 Course Units Management</h2>
+            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>Add individual course units (subjects) that belong to a programme. These are what lecturers teach, exams are created for, and students are registered in.</p>
+
+            {cuError && <div style={{ background: '#fee2e2', color: '#991b1b', padding: '12px 16px', borderRadius: '8px', marginBottom: '1rem' }}>{cuError}</div>}
+            {cuSuccess && <div style={{ background: '#d1fae5', color: '#065f46', padding: '12px 16px', borderRadius: '8px', marginBottom: '1rem' }}>✅ {cuSuccess}</div>}
+
+            <form onSubmit={handleCUSubmit} style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', marginBottom: '2rem' }}>
+              <h3 style={{ marginTop: 0, color: '#1e1b4b' }}>{cuEditId ? 'Edit Course Unit' : 'Add New Course Unit'}</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Programme *</label>
+                  <select
+                    value={cuForm.programme_id}
+                    onChange={e => setCuForm({ ...cuForm, programme_id: e.target.value })}
+                    required
+                    style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                  >
+                    <option value="">-- Select Programme --</option>
+                    {programmes.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Course Code *</label>
+                  <input
+                    type="text"
+                    value={cuForm.course_code}
+                    onChange={e => setCuForm({ ...cuForm, course_code: e.target.value.toUpperCase() })}
+                    placeholder="e.g. CS101"
+                    required
+                    style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Credits</label>
+                  <input type="number" min="1" max="10" value={cuForm.credits} onChange={e => setCuForm({ ...cuForm, credits: +e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Course Name *</label>
+                  <input
+                    type="text"
+                    value={cuForm.name}
+                    onChange={e => setCuForm({ ...cuForm, name: e.target.value })}
+                    placeholder="e.g. Introduction to Computer Science"
+                    required
+                    style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Year of Study</label>
+                  <select value={cuForm.target_year} onChange={e => setCuForm({ ...cuForm, target_year: +e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}>
+                    {[1,2,3,4].map(y => <option key={y} value={y}>Year {y}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Semester</label>
+                  <select value={cuForm.target_semester} onChange={e => setCuForm({ ...cuForm, target_semester: +e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}>
+                    <option value={1}>Semester 1</option>
+                    <option value={2}>Semester 2</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                <button type="submit" className="btn-primary">{cuEditId ? 'Update Unit' : 'Create Unit'}</button>
+                {cuEditId && <button type="button" className="btn-secondary" onClick={() => { setCuEditId(null); setCuForm({ programme_id: '', course_code: '', name: '', credits: 3, target_year: 1, target_semester: 1 }) }}>Cancel Edit</button>}
+              </div>
+            </form>
+
+            {cuLoading ? (
+              <p>Loading course units...</p>
+            ) : courseUnits.length > 0 ? (
+              <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
+                <thead style={{ background: '#f8fafc' }}>
+                  <tr>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.8rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Code</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.8rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.8rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Programme</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Yr/Sem</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Credits</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.8rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {courseUnits.map((unit, i) => (
+                    <tr key={unit.id} style={{ borderTop: '1px solid #f1f5f9', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
+                      <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontWeight: 700, color: '#6366f1', fontSize: '0.95rem' }}>{unit.course_code}</td>
+                      <td style={{ padding: '12px 16px', color: '#1e293b' }}>{unit.name}</td>
+                      <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '0.875rem' }}>{unit.programme_name}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>Y{unit.target_year} S{unit.target_semester}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{unit.credits}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                        <button onClick={() => handleCUEdit(unit)} style={{ background: '#e0e7ff', color: '#4338ca', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, marginRight: '8px', fontSize: '0.8rem' }}>Edit</button>
+                        <button onClick={() => handleCUDelete(unit.id)} style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}>Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '12px', color: '#9ca3af' }}>
+                <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📋</p>
+                <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>No course units yet</p>
+                <p style={{ fontSize: '0.875rem' }}>Use the form above to add course units to your programmes.</p>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="categories-ui">
             <h2>Homepage Cards Configuration</h2>

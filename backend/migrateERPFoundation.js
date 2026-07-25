@@ -153,6 +153,39 @@ async function migrate() {
     `)
     console.log('Created invoice_payments table.')
 
+    // 11. ERP Exams (Synced from Exam Portal)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS erp_exams (
+        id SERIAL PRIMARY KEY,
+        exam_portal_id VARCHAR(100) UNIQUE NOT NULL,
+        erp_course_code VARCHAR(50) NOT NULL,
+        exam_title VARCHAR(200) NOT NULL,
+        start_time TIMESTAMP,
+        end_time TIMESTAMP,
+        duration_minutes INTEGER,
+        seb_file_base64 TEXT,
+        seb_config_key TEXT,
+        gate_url TEXT,
+        status VARCHAR(20) DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+    console.log('Created erp_exams table.')
+
+    // 12. Student Exam PINs (One-Time Authentication)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS student_exam_pins (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+        pin VARCHAR(10) UNIQUE NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        used BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+    console.log('Created student_exam_pins table.')
+
     await client.query('COMMIT')
     console.log('Migration successful!')
 

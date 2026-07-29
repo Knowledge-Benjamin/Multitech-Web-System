@@ -11,17 +11,37 @@ const getOauth2Client = () => {
 }
 
 export const getAuthUrl = asyncHandler(async (req, res) => {
-  const oauth2Client = getOauth2Client()
-  const url = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    prompt: 'consent', // Ensures we always get a refresh token
-    scope: ['https://www.googleapis.com/auth/drive']
-  })
-  // Prevent caching to ensure fresh auth URL on each request
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate')
-  res.set('Pragma', 'no-cache')
-  res.set('Expires', '0')
-  res.json({ success: true, url })
+  try {
+    // Validate that OAuth credentials are configured
+    if (!process.env.GDRIVE_CLIENT_ID || !process.env.GDRIVE_CLIENT_SECRET || !process.env.GDRIVE_REDIRECT_URI) {
+      console.error('Google Drive OAuth credentials not configured')
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Google Drive is not configured on this server' 
+      })
+    }
+
+    const oauth2Client = getOauth2Client()
+    const url = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      prompt: 'consent', // Ensures we always get a refresh token
+      scope: ['https://www.googleapis.com/auth/drive']
+    })
+    
+    console.log('Generated auth URL:', url)
+    
+    // Prevent caching to ensure fresh auth URL on each request
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.set('Pragma', 'no-cache')
+    res.set('Expires', '0')
+    res.json({ success: true, url })
+  } catch (error) {
+    console.error('Error generating auth URL:', error)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to generate authentication URL' 
+    })
+  }
 })
 
 export const handleCallback = asyncHandler(async (req, res) => {

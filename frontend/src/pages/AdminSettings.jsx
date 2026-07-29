@@ -99,6 +99,7 @@ export default function AdminSettings() {
     try {
       // Add cache-busting parameter to force fresh request
       const timestamp = Date.now()
+      console.log('Requesting auth URL from backend...')
       const response = await axios.get(`/api/admin/gdrive/auth-url?t=${timestamp}`, {
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -106,11 +107,20 @@ export default function AdminSettings() {
           'Pragma': 'no-cache'
         }
       })
-      if (response.data.url) {
+      console.log('Auth URL response:', response)
+      console.log('Response data:', response.data)
+      console.log('Auth URL:', response.data.url)
+      
+      if (response.data && response.data.url) {
+        console.log('Redirecting to:', response.data.url)
         window.location.href = response.data.url
+      } else {
+        console.error('No URL in response:', response.data)
+        alert('Server did not return a valid authentication URL. Please try again.')
       }
     } catch (error) {
       console.error('Error getting auth URL:', error)
+      console.error('Error response:', error.response)
       alert('Could not initiate Google Drive connection.')
     }
   }

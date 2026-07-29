@@ -78,8 +78,14 @@ export default function AdminSettings() {
   const fetchDriveStatus = async () => {
     setLoading(true)
     try {
+      // Add cache-busting parameter to force fresh status check
       const response = await axios.get('/api/admin/gdrive/status', {
-        headers: { Authorization: `Bearer ${token}` }
+        params: { t: Date.now() },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
       })
       setDriveStatus(response.data.connected)
     } catch (error) {
@@ -91,8 +97,14 @@ export default function AdminSettings() {
 
   const handleConnectDrive = async () => {
     try {
-      const response = await axios.get('/api/admin/gdrive/auth-url', {
-        headers: { Authorization: `Bearer ${token}` }
+      // Add cache-busting parameter to force fresh request
+      const timestamp = Date.now()
+      const response = await axios.get(`/api/admin/gdrive/auth-url?t=${timestamp}`, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
       })
       if (response.data.url) {
         window.location.href = response.data.url
@@ -111,6 +123,8 @@ export default function AdminSettings() {
       })
       setDriveStatus(false)
       alert('Google Drive disconnected.')
+      // Refresh status to confirm disconnection
+      setTimeout(() => fetchDriveStatus(), 500)
     } catch (error) {
       console.error('Error disconnecting drive:', error)
       alert('Could not disconnect Google Drive.')

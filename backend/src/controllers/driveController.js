@@ -43,9 +43,16 @@ export const handleCallback = asyncHandler(async (req, res) => {
       )
     }
     
+    // Add no-cache headers to ensure this response is never cached
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.set('Pragma', 'no-cache')
+    res.set('Expires', '0')
     res.redirect(`${process.env.CORS_ORIGIN}/admin/settings?gdrive=connected`)
   } catch (error) {
     console.error('Error exchanging code for token:', error)
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.set('Pragma', 'no-cache')
+    res.set('Expires', '0')
     res.redirect(`${process.env.CORS_ORIGIN}/admin/settings?gdrive=error`)
   }
 })
@@ -62,5 +69,9 @@ export const getStatus = asyncHandler(async (req, res) => {
 
 export const disconnectDrive = asyncHandler(async (req, res) => {
   await pool.query("DELETE FROM settings WHERE setting_key = 'gdrive_refresh_token'")
+  // Prevent caching on disconnect response
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+  res.set('Pragma', 'no-cache')
+  res.set('Expires', '0')
   res.json({ success: true, message: 'Google Drive disconnected' })
 })

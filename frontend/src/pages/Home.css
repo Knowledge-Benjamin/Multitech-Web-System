@@ -496,6 +496,23 @@
   transform: none;
 }
 
+@media (max-width: 480px) {
+  .carousel-dots {
+    gap: 6px;
+  }
+
+  .carousel-dot {
+    width: 5px;
+    height: 5px;
+  }
+
+  .carousel-dot.is-selected {
+    width: 11px;
+    height: 5px;
+    border-radius: 999px;
+  }
+}
+
 @media (max-width: 1024px) {
   .hero-carousel-container {
     height: auto;

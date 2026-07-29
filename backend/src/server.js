@@ -81,6 +81,31 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }))
 // Request logging
 app.use(requestLogger)
 
+app.use((req, res, next) => {
+  if (req.method === 'GET' && req.path.startsWith('/api/')) {
+    const publicApiPrefixes = [
+      '/api/programmes',
+      '/api/programme-categories',
+      '/api/announcements',
+      '/api/articles',
+      '/api/about',
+      '/api/home/reasons',
+      '/api/calendar',
+      '/api/functional-fees',
+      '/api/programme-fees',
+      '/api/images'
+    ]
+
+    if (publicApiPrefixes.some((prefix) => req.path.startsWith(prefix))) {
+      res.set('Cache-Control', 'public, max-age=0, must-revalidate, stale-while-revalidate=60')
+    } else {
+      res.set('Cache-Control', 'no-store, max-age=0')
+    }
+  }
+
+  next()
+})
+
 const initializeApp = async () => {
   await initializeDatabase()
   await initAdmin()

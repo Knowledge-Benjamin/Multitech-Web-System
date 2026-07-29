@@ -1,55 +1,58 @@
+import { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import ProtectedRoute from './components/ProtectedRoute'
-import Home from './pages/Home'
-import Programmes from './pages/Programmes'
-import ProgrammeDetails from './pages/ProgrammeDetails'
-import Apply from './pages/Apply'
-import NotFound from './pages/NotFound'
-import AdminLogin from './pages/AdminLogin'
-import AdminDashboard from './pages/AdminDashboard'
-import AdminProgrammes from './pages/AdminProgrammes'
-import AdminFees from './pages/AdminFees'
-import AdminApplications from './pages/AdminApplications'
-import AdminCalendar from './pages/AdminCalendar'
-import AdminStudents from './pages/AdminStudents'
-import AdminAnnouncements from './pages/AdminAnnouncements'
-import AdminArticles from './pages/AdminArticles'
-import AdminAbout from './pages/AdminAbout'
-import AdminAboutSections from './pages/AdminAboutSections'
-import AdminHomeReasons from './pages/AdminHomeReasons'
-import AdminMessages from './pages/AdminMessages'
-import AdminCommunications from './pages/AdminCommunications'
-import AdminSettings from './pages/AdminSettings'
-import Articles from './pages/Articles'
-import ArticleView from './pages/ArticleView'
-import About from './pages/About'
-import ContactUs from './pages/ContactUs'
-import StudentLogin from './pages/StudentLogin'
-import StudentDashboard from './pages/StudentDashboard'
-import StudentFinances from './pages/StudentFinances'
-import StudentCourses from './pages/StudentCourses'
-import StudentProfile from './pages/StudentProfile'
-import StudentExams from './pages/StudentExams'
-import StudentResults from './pages/StudentResults'
-import StudentAttendance from './pages/StudentAttendance'
-import StudentTimetable from './pages/StudentTimetable'
-import StudentAnnouncements from './pages/StudentAnnouncements'
-import LecturerAttendance from './pages/LecturerAttendance'
-import LecturerLogin from './pages/LecturerLogin'
-import LecturerDashboard from './pages/LecturerDashboard'
-import LecturerCourseDetails from './pages/LecturerCourseDetails'
-import LecturerTimetable from './pages/LecturerTimetable'
-import AdminAttendanceReports from './pages/AdminAttendanceReports'
-import AdminTimetable from './pages/AdminTimetable'
-import AdminLecturers from './pages/AdminLecturers'
 import './App.css'
+
+const Home = lazy(() => import('./pages/Home'))
+const Programmes = lazy(() => import('./pages/Programmes'))
+const ProgrammeDetails = lazy(() => import('./pages/ProgrammeDetails'))
+const Apply = lazy(() => import('./pages/Apply'))
+const NotFound = lazy(() => import('./pages/NotFound'))
+const AdminLogin = lazy(() => import('./pages/AdminLogin'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const AdminProgrammes = lazy(() => import('./pages/AdminProgrammes'))
+const AdminFees = lazy(() => import('./pages/AdminFees'))
+const AdminApplications = lazy(() => import('./pages/AdminApplications'))
+const AdminCalendar = lazy(() => import('./pages/AdminCalendar'))
+const AdminStudents = lazy(() => import('./pages/AdminStudents'))
+const AdminAnnouncements = lazy(() => import('./pages/AdminAnnouncements'))
+const AdminArticles = lazy(() => import('./pages/AdminArticles'))
+const AdminAbout = lazy(() => import('./pages/AdminAbout'))
+const AdminAboutSections = lazy(() => import('./pages/AdminAboutSections'))
+const AdminHomeReasons = lazy(() => import('./pages/AdminHomeReasons'))
+const AdminMessages = lazy(() => import('./pages/AdminMessages'))
+const AdminCommunications = lazy(() => import('./pages/AdminCommunications'))
+const AdminSettings = lazy(() => import('./pages/AdminSettings'))
+const Articles = lazy(() => import('./pages/Articles'))
+const ArticleView = lazy(() => import('./pages/ArticleView'))
+const About = lazy(() => import('./pages/About'))
+const ContactUs = lazy(() => import('./pages/ContactUs'))
+const StudentLogin = lazy(() => import('./pages/StudentLogin'))
+const StudentDashboard = lazy(() => import('./pages/StudentDashboard'))
+const StudentFinances = lazy(() => import('./pages/StudentFinances'))
+const StudentCourses = lazy(() => import('./pages/StudentCourses'))
+const StudentProfile = lazy(() => import('./pages/StudentProfile'))
+const StudentExams = lazy(() => import('./pages/StudentExams'))
+const StudentResults = lazy(() => import('./pages/StudentResults'))
+const StudentAttendance = lazy(() => import('./pages/StudentAttendance'))
+const StudentTimetable = lazy(() => import('./pages/StudentTimetable'))
+const StudentAnnouncements = lazy(() => import('./pages/StudentAnnouncements'))
+const LecturerAttendance = lazy(() => import('./pages/LecturerAttendance'))
+const LecturerLogin = lazy(() => import('./pages/LecturerLogin'))
+const LecturerDashboard = lazy(() => import('./pages/LecturerDashboard'))
+const LecturerCourseDetails = lazy(() => import('./pages/LecturerCourseDetails'))
+const LecturerTimetable = lazy(() => import('./pages/LecturerTimetable'))
+const AdminAttendanceReports = lazy(() => import('./pages/AdminAttendanceReports'))
+const AdminTimetable = lazy(() => import('./pages/AdminTimetable'))
+const AdminLecturers = lazy(() => import('./pages/AdminLecturers'))
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading…</div>}>
+        <Routes>
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route
@@ -240,7 +243,8 @@ function App() {
             </div>
           }
         />
-      </Routes>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

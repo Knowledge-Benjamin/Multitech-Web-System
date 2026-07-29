@@ -165,4 +165,40 @@
   .programmes-list {
     grid-template-columns: 1fr;
   }
+
+  .programmes-mobile-deck {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0 0 1rem;
+  }
+
+  .programmes-mobile-hint,
+  .programmes-mobile-counter {
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+  }
+
+  .programmes-mobile-card {
+    display: flex;
+    justify-content: center;
+  }
+
+  .programmes-mobile-card .programme-card {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .programmes-mobile-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .programmes-mobile-actions .filter-btn {
+    flex: 1 1 120px;
+    max-width: 140px;
+  }
 }

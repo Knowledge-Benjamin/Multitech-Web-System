@@ -7,6 +7,9 @@ import './Programmes.css'
 export default function Programmes() {
   const [programmes, setProgrammes] = useState([])
   const [loading, setLoading] = useState(true)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [touchStartX, setTouchStartX] = useState(null)
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false)
   
   const [searchParams, setSearchParams] = useSearchParams()
   const initialFilter = searchParams.get('filter') || 'all'
@@ -22,6 +25,17 @@ export default function Programmes() {
       setFilter(queryFilter)
     }
   }, [searchParams])
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    setActiveIndex(0)
+  }, [filter, programmes.length])
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter)
@@ -77,6 +91,54 @@ export default function Programmes() {
 
   const filteredProgrammes = filter === 'all' ? programmes : programmes.filter(p => p.type === filter)
 
+  const showPreviousCard = () => {
+    if (filteredProgrammes.length <= 1) return
+    setActiveIndex((prev) => (prev === 0 ? filteredProgrammes.length - 1 : prev - 1))
+  }
+
+  const showNextCard = () => {
+    if (filteredProgrammes.length <= 1) return
+    setActiveIndex((prev) => (prev === filteredProgrammes.length - 1 ? 0 : prev + 1))
+  }
+
+  const shuffleCard = () => {
+    if (filteredProgrammes.length <= 1) return
+    let nextIndex = Math.floor(Math.random() * filteredProgrammes.length)
+    while (nextIndex === activeIndex) {
+      nextIndex = Math.floor(Math.random() * filteredProgrammes.length)
+    }
+    setActiveIndex(nextIndex)
+  }
+
+  const handleTouchStart = (event) => {
+    setTouchStartX(event.touches[0].clientX)
+  }
+
+  const handleTouchEnd = (event) => {
+    if (touchStartX === null) return
+    const touchEndX = event.changedTouches[0].clientX
+    const delta = touchEndX - touchStartX
+
+    if (delta > 50) {
+      showPreviousCard()
+    } else if (delta < -50) {
+      showNextCard()
+    }
+
+    setTouchStartX(null)
+  }
+
+  const renderProgrammeCard = (programme, index) => (
+    <ProgrammeCard 
+      key={programme.id || index} 
+      title={programme.name} 
+      description={programme.description}
+      imageUrl={programme.image_url} 
+      actionText="View Details"
+      linkTo={`/programmes/${programme.id}`}
+    />
+  )
+
   return (
     <div className="programmes-page">
       <div className="page-header">
@@ -126,23 +188,27 @@ export default function Programmes() {
 
         {loading ? (
           <div className="loading">Loading programmes...</div>
+        ) : filteredProgrammes.length > 0 ? (
+          isMobile && filteredProgrammes.length > 1 ? (
+            <div className="programmes-mobile-deck" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+              <div className="programmes-mobile-hint">Swipe or tap to shuffle through programmes</div>
+              <div className="programmes-mobile-counter">{activeIndex + 1} / {filteredProgrammes.length}</div>
+              <div className="programmes-mobile-card">
+                {renderProgrammeCard(filteredProgrammes[activeIndex], activeIndex)}
+              </div>
+              <div className="programmes-mobile-actions">
+                <button className="filter-btn" onClick={showPreviousCard}>Previous</button>
+                <button className="filter-btn active" onClick={shuffleCard}>Shuffle</button>
+                <button className="filter-btn" onClick={showNextCard}>Next</button>
+              </div>
+            </div>
+          ) : (
+            <div className="programmes-list">
+              {filteredProgrammes.map((programme, index) => renderProgrammeCard(programme, index))}
+            </div>
+          )
         ) : (
-          <div className="programmes-list">
-            {filteredProgrammes.length > 0 ? (
-              filteredProgrammes.map(programme => (
-                <ProgrammeCard 
-                  key={programme.id} 
-                  title={programme.name} 
-                  description={programme.description}
-                  imageUrl={programme.image_url} 
-                  actionText="View Details"
-                  linkTo={`/programmes/${programme.id}`}
-                />
-              ))
-            ) : (
-              <div className="no-results">No programmes found for the selected filter.</div>
-            )}
-          </div>
+          <div className="no-results">No programmes found for the selected filter.</div>
         )}
       </div>
     </div>

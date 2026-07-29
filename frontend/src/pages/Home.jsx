@@ -8,6 +8,7 @@ import ArticleCard from '../components/ArticleCard'
 import SkeletonCard from '../components/SkeletonCard'
 import ReasonsCarousel from '../components/ReasonsCarousel'
 import ContactForm from '../components/ContactForm'
+import LatestArticlesCarousel from '../components/LatestArticlesCarousel'
 import './Home.css'
 
 export default function Home() {
@@ -235,15 +236,20 @@ export default function Home() {
             <h2>Stay up to date</h2>
           </div>
 
-          <div className="latest-articles-grid">
-            {latestLoading ? (
-              Array.from({ length: 4 }).map((_, idx) => <SkeletonCard key={`latest-skeleton-${idx}`} />)
-            ) : latestArticles.length > 0 ? (
-              latestArticles.map(article => <ArticleCard key={article.id} article={article} />)
-            ) : (
-              <p className="latest-empty">No recent articles available yet.</p>
-            )}
-          </div>
+          {latestLoading ? (
+            <div className="latest-articles-grid">
+              {Array.from({ length: 4 }).map((_, idx) => <SkeletonCard key={`latest-skeleton-${idx}`} />)}
+            </div>
+          ) : latestArticles.length > 0 ? (
+            <>
+              <div className="latest-articles-grid latest-articles-grid--desktop">
+                {latestArticles.map(article => <ArticleCard key={article.id} article={article} />)}
+              </div>
+              <LatestArticlesCarousel articles={latestArticles} />
+            </>
+          ) : (
+            <p className="latest-empty">No recent articles available yet.</p>
+          )}
 
           <div className="latest-articles-action">
             <Link to="/articles" className="button button-secondary">Explore more articles</Link>

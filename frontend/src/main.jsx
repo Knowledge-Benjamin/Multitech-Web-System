@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import axios from 'axios'
 import './styles/global.css'
+import './styles/mobile.css'
 
 axios.interceptors.response.use(
   (response) => response,

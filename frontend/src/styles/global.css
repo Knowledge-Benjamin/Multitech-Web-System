@@ -300,19 +300,136 @@ li {
   display: block !important;
 }
 
-/* Responsive */
+/* ===== RESPONSIVE MEDIA QUERIES ===== */
+
+/* Tablets & Landscape (max-width: 1024px) */
+@media (max-width: 1024px) {
+  :root {
+    --spacing-3xl: 2.5rem;
+    --font-size-4xl: 2rem;
+  }
+
+  .container {
+    max-width: 960px;
+  }
+
+  section {
+    padding: var(--spacing-2xl) var(--spacing-lg);
+  }
+}
+
+/* Mobile & Small Tablets (max-width: 768px) */
 @media (max-width: 768px) {
   :root {
     --font-size-4xl: 1.875rem;
     --font-size-3xl: 1.5rem;
     --font-size-2xl: 1.25rem;
+    --spacing-3xl: 2rem;
+    --spacing-2xl: 1.5rem;
   }
   
+  body {
+    padding-top: var(--header-height, 70px);
+  }
+
   h1 {
     font-size: var(--font-size-3xl);
+  }
+
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  h3 {
+    font-size: var(--font-size-lg);
   }
   
   .container {
     padding: 0 var(--spacing-md);
+    max-width: 100%;
+  }
+
+  main {
+    padding: 0;
+  }
+
+  section {
+    padding: var(--spacing-2xl) var(--spacing-md);
+  }
+
+  /* Touch-friendly UI */
+  button,
+  .button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px 16px;
+  }
+
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+
+  /* Remove animations on reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Small Phones (max-width: 480px) */
+@media (max-width: 480px) {
+  :root {
+    --font-size-4xl: 1.5rem;
+    --font-size-3xl: 1.25rem;
+    --font-size-2xl: 1.125rem;
+    --spacing-xl: 1rem;
+    --spacing-2xl: 1.25rem;
+  }
+
+  body {
+    font-size: var(--font-size-sm);
+    padding-top: var(--header-height, 60px);
+  }
+
+  h1 {
+    font-size: var(--font-size-2xl);
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: var(--font-size-lg);
+  }
+
+  h3 {
+    font-size: var(--font-size-base);
+  }
+
+  .container {
+    padding: 0 var(--spacing-sm);
+  }
+
+  section {
+    padding: var(--spacing-lg) var(--spacing-sm);
+  }
+
+  button,
+  .button {
+    padding: 10px 12px;
+    font-size: var(--font-size-sm);
+    width: 100%;
+  }
+
+  button.secondary {
+    width: auto;
   }
 }

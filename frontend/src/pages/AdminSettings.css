@@ -214,3 +214,239 @@
   .log-time {
     min-width: auto;
   }
+
+/* ===== MOBILE RESPONSIVE (max-width: 640px) ===== */
+@media (max-width: 640px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+
+  .admin-content {
+    margin-bottom: 80px;
+    padding: var(--spacing-md);
+  }
+
+  .content-header {
+    padding: var(--spacing-lg) var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .content-header h1 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .settings-tabs {
+    gap: 0;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .tab-btn {
+    padding: var(--spacing-md) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+    flex: 0 0 auto;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+  }
+
+  .tab-btn.active {
+    border-bottom-color: var(--color-primary);
+    border-left: none;
+  }
+
+  .tab-content {
+    padding: var(--spacing-lg);
+    border-radius: 0;
+  }
+
+  /* Forms */
+  .form-container {
+    padding: var(--spacing-lg) 0;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: var(--spacing-lg);
+  }
+
+  .form-group {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  label {
+    font-size: var(--font-size-sm);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* Tables */
+  .admins-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admins-table table {
+    min-width: 600px;
+  }
+
+  .admins-table th,
+  .admins-table td {
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+  }
+
+  .admins-table tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    background: white;
+  }
+
+  .admins-table tbody tr::before {
+    content: attr(data-label);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+  }
+
+  .admins-table tbody th {
+    display: none;
+  }
+
+  /* Buttons */
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    width: 100%;
+    padding: 12px var(--spacing-md);
+    font-size: var(--font-size-base);
+    min-height: 44px;
+  }
+
+  .button-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .button-group .button {
+    width: 100%;
+  }
+
+  /* Integration Section */
+  .integrations-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  .integration-card {
+    padding: var(--spacing-lg);
+  }
+
+  .integration-status {
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    background: var(--color-bg-secondary);
+    border-radius: var(--border-radius-md);
+  }
+
+  .integration-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .integration-actions .button {
+    width: 100%;
+  }
+
+  /* Email Settings */
+  .email-settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+  }
+
+  .form-section {
+    padding: var(--spacing-lg);
+    background: var(--color-bg-secondary);
+    border-radius: var(--border-radius-md);
+  }
+
+  .form-section h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-md);
+  }
+
+  /* Logs */
+  .logs-list {
+    gap: var(--spacing-md);
+  }
+
+  .log-entry {
+    padding: var(--spacing-md);
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .log-time {
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .log-details {
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+  }
+
+  /* Template Preview */
+  .template-preview-card {
+    padding: var(--spacing-md);
+  }
+
+  .template-preview-body {
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-md);
+    max-height: 300px;
+    overflow-y: auto;
+  }
+}
+
+/* ===== TABLET (641px - 1024px) ===== */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .admin-content {
+    margin-bottom: 0;
+  }
+
+  .settings-tabs {
+    flex-wrap: wrap;
+  }
+
+  .admins-table table {
+    font-size: var(--font-size-sm);
+  }
+
+  .integrations-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+  }
+}

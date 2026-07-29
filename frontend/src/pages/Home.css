@@ -366,9 +366,17 @@
   transform: translateY(0);
 }
 
+.home .embla {
+  height: 100%;
+}
+
+.home .embla__container {
+  height: 100%;
+}
+
 .home .embla__slide {
   position: relative;
-  height: 100vh;
+  height: 100%;
   min-height: 520px;
 }
 
@@ -535,7 +543,7 @@
   .home .carousel-excerpt { font-size: 0.95rem; }
   .home .carousel-image-wrap,
   .home .carousel-img {
-    height: auto;
+    height: 100%;
     min-height: 54vh;
   }
   .home .carousel-img {
@@ -560,6 +568,13 @@
   .home .hero-carousel-container {
     min-height: 54vh;
     max-height: 70vh;
+    height: 54vh;
+  }
+
+  .home .embla,
+  .home .embla__container,
+  .home .embla__slide {
+    height: 100%;
   }
 
   .home .embla__slide {

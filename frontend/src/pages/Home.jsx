@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import useEmblaCarousel from 'embla-carousel-react'
@@ -13,7 +13,8 @@ import Seo from '../components/Seo'
 import './Home.css'
 
 export default function Home() {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true })])
+  const autoplayRef = useRef(null)
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 5000, stopOnInteraction: true })])
   const [heroArticles, setHeroArticles] = useState([])
   const [categories, setCategories] = useState([])
   const [heroLoading, setHeroLoading] = useState(true)
@@ -56,6 +57,33 @@ export default function Home() {
     emblaApi.on('select', onSelect)
     emblaApi.on('reInit', onSelect)
   }, [emblaApi, setScrollSnaps, onSelect])
+
+  useEffect(() => {
+    if (!emblaApi) return
+    const autoplay = emblaApi.plugins()?.autoplay
+    if (!autoplay) return
+    autoplayRef.current = autoplay
+  }, [emblaApi])
+
+  useEffect(() => {
+    if (!emblaApi || !autoplayRef.current) return
+
+    const handleMouseEnter = () => autoplayRef.current.stop()
+    const handleMouseLeave = () => autoplayRef.current.play()
+
+    const carousel = emblaApi.container()
+    if (carousel) {
+      carousel.addEventListener('mouseenter', handleMouseEnter)
+      carousel.addEventListener('mouseleave', handleMouseLeave)
+    }
+
+    return () => {
+      if (carousel) {
+        carousel.removeEventListener('mouseenter', handleMouseEnter)
+        carousel.removeEventListener('mouseleave', handleMouseLeave)
+      }
+    }
+  }, [emblaApi])
 
   useEffect(() => {
     const fetchHeroArticles = async () => {

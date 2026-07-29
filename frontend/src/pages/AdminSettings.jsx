@@ -3,6 +3,15 @@ import axios from 'axios'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminSettings.css'
 
+// Get API base URL from environment or fallback to relative /api
+const API_BASE_URL = import.meta.env.VITE_API_URL || (() => {
+  // If VITE_API_URL is not set, use current domain's /api
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}/api`
+  }
+  return '/api'
+})()
+
 export default function AdminSettings() {
   const [admins, setAdmins] = useState([])
   const [logs, setLogs] = useState([])
@@ -50,7 +59,7 @@ export default function AdminSettings() {
   const fetchAdmins = async () => {
     setLoading(true)
     try {
-      const response = await axios.get('/api/admin/users', {
+      const response = await axios.get(`${API_BASE_URL}/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setAdmins(response.data.admins || [])
@@ -64,7 +73,7 @@ export default function AdminSettings() {
   const fetchLogs = async () => {
     setLoading(true)
     try {
-      const response = await axios.get('/api/admin/logs', {
+      const response = await axios.get(`${API_BASE_URL}/admin/logs`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setLogs(response.data.logs || [])
@@ -79,7 +88,7 @@ export default function AdminSettings() {
     setLoading(true)
     try {
       // Add cache-busting parameter to force fresh status check
-      const response = await axios.get('/api/admin/gdrive/status', {
+      const response = await axios.get(`${API_BASE_URL}/admin/gdrive/status`, {
         params: { t: Date.now() },
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -100,7 +109,7 @@ export default function AdminSettings() {
       // Add cache-busting parameter to force fresh request
       const timestamp = Date.now()
       console.log('Requesting auth URL from backend...')
-      const response = await axios.get(`/api/admin/gdrive/auth-url?t=${timestamp}`, {
+      const response = await axios.get(`${API_BASE_URL}/admin/gdrive/auth-url?t=${timestamp}`, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -128,7 +137,7 @@ export default function AdminSettings() {
   const handleDisconnectDrive = async () => {
     if (!confirm('Are you sure you want to disconnect Google Drive? Image uploads will fail until reconnected.')) return
     try {
-      await axios.delete('/api/admin/gdrive/disconnect', {
+      await axios.delete(`${API_BASE_URL}/admin/gdrive/disconnect`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setDriveStatus(false)
@@ -144,7 +153,7 @@ export default function AdminSettings() {
   const fetchEmailSettings = async () => {
     setEmailLoading(true)
     try {
-      const response = await axios.get('/api/emails/settings', {
+      const response = await axios.get(`${API_BASE_URL}/emails/settings`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setEmailDestination(response.data.data.contact_destination_email || '')
@@ -161,7 +170,7 @@ export default function AdminSettings() {
     setEmailSaving(true)
     try {
       await axios.put(
-        '/api/emails/settings',
+        `${API_BASE_URL}/emails/settings`,
         {
           contact_destination_email: emailDestination,
           application_acknowledgement_template: acknowledgementTemplate
@@ -196,7 +205,7 @@ export default function AdminSettings() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      await axios.post('/api/admin/users', formData, {
+      await axios.post(`${API_BASE_URL}/admin/users`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       })
       
@@ -219,7 +228,7 @@ export default function AdminSettings() {
     if (!confirm('Are you sure you want to delete this admin?')) return
 
     try {
-      await axios.delete(`/api/admin/users/${id}`, {
+      await axios.delete(`${API_BASE_URL}/admin/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       fetchAdmins()

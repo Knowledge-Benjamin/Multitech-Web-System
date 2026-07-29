@@ -266,7 +266,6 @@ export default function Programmes() {
                       key={`${programme.id || programme.name}-${stackIndex}`}
                       className={`programmes-mobile-stack-card${isTopCard ? ' active' : ''}${isDragging && isTopCard ? ' is-dragging' : ''}`}
                       style={{ transform: stackTransform, zIndex: 3 - stackIndex }}
-                      onClick={isTopCard ? handleTopCardTap : undefined}
                       onPointerDown={isTopCard ? handleCardPointerDown : undefined}
                       onPointerMove={isTopCard ? handleCardPointerMove : undefined}
                       onPointerUp={isTopCard ? handleCardPointerEnd : undefined}

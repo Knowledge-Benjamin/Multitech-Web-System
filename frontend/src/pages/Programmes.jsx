@@ -251,13 +251,15 @@ export default function Programmes() {
               <div className="programmes-mobile-stack" role="presentation">
                 {deckCards.map((programme, stackIndex) => {
                   const isTopCard = stackIndex === 0
+                  const depthScale = stackIndex === 0 ? 1 : stackIndex === 1 ? 0.94 : 0.88
+                  const depthOffsetX = stackIndex === 1 ? 14 : stackIndex === 2 ? -14 : 0
+                  const depthOffsetY = stackIndex === 1 ? 18 : stackIndex === 2 ? 26 : 0
+                  const depthRotation = stackIndex === 1 ? 4 : stackIndex === 2 ? -4 : 0
                   const stackTransform = stackIndex === 0
                     ? isAnimatingOut
-                      ? `translate3d(${dragOffset}px, 0, 0) rotate(${dragOffset / 22}deg) scale(1)`
-                      : `translate3d(${dragOffset}px, 0, 0) rotate(${dragOffset / 28}deg) scale(1)`
-                    : stackIndex === 1
-                      ? 'translate3d(12px, 18px, 0) rotate(4deg) scale(0.96)'
-                      : 'translate3d(-10px, 24px, 0) rotate(-4deg) scale(0.92)'
+                      ? `translate3d(${dragOffset}px, 0, 0) rotate(${dragOffset / 22}deg) scale(${depthScale})`
+                      : `translate3d(${dragOffset}px, 0, 0) rotate(${dragOffset / 28}deg) scale(${depthScale})`
+                    : `translate3d(${depthOffsetX}px, ${depthOffsetY}px, 0) rotate(${depthRotation}deg) scale(${depthScale})`
 
                   return (
                     <div

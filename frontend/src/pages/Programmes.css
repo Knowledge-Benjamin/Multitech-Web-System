@@ -206,6 +206,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    perspective: 1400px;
   }
 
   .programmes-mobile-stack-card {
@@ -216,11 +217,14 @@
     pointer-events: none;
     transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 280ms ease;
     touch-action: none;
+    transform-style: preserve-3d;
+    transform-origin: center center;
   }
 
   .programmes-mobile-stack-card.active {
     pointer-events: auto;
     cursor: grab;
+    z-index: 4;
   }
 
   .programmes-mobile-stack-card.is-dragging {
@@ -236,6 +240,11 @@
 
   .programmes-mobile-stack-card.active .programme-card {
     box-shadow: 0 22px 48px rgba(0, 0, 0, 0.22);
+    transform: translateZ(12px);
+  }
+
+  .programmes-mobile-stack-card.active.is-dragging .programme-card {
+    box-shadow: 0 30px 56px rgba(0, 0, 0, 0.24);
   }
 
   .programmes-mobile-stack-card.active.is-dragging .programme-card {

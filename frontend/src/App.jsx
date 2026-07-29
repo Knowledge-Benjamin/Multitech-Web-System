@@ -235,7 +235,7 @@ function App() {
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<ContactUs />} />
                   <Route path="/articles" element={<Articles />} />
-                  <Route path="/articles/:id" element={<ArticleView />} />
+                  <Route path="/articles/:slug" element={<ArticleView />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

@@ -5,7 +5,7 @@ import './ArticleCard.css'
 export default function ArticleCard({ article }) {
 
   return (
-    <Link to={`/articles/${article.id}`} className="programme-card article-card">
+    <Link to={`/articles/${article.slug || article.id}`} className="programme-card article-card">
       {article.featured_image_url ? (
         <img
           src={article.featured_image_url}

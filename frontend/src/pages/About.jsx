@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import axios from 'axios'
 import './Home.css'
 import './About.css'
+import Seo from '../components/Seo'
 
 export default function About() {
   const [hero, setHero] = useState(null)
@@ -37,6 +38,12 @@ export default function About() {
 
   return (
     <div className="about-page">
+      <Seo
+        title="About Multitech Business School"
+        description="Learn about Multitech Business School's mission, programmes, and commitment to practical business education."
+        path="/about"
+        keywords={['about multitech', 'multitech business school', 'education in Uganda']}
+      />
       {loading ? (
         <section className="hero-skeleton">
           <div className="hero-skeleton-shimmer" />

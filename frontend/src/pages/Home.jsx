@@ -9,6 +9,7 @@ import SkeletonCard from '../components/SkeletonCard'
 import ReasonsCarousel from '../components/ReasonsCarousel'
 import ContactForm from '../components/ContactForm'
 import LatestArticlesCarousel from '../components/LatestArticlesCarousel'
+import Seo from '../components/Seo'
 import './Home.css'
 
 export default function Home() {
@@ -107,6 +108,12 @@ export default function Home() {
 
   return (
     <div className="home">
+      <Seo
+        title="Multitech Business School"
+        description="Discover academic programmes, admissions, and student opportunities at Multitech Business School in Uganda."
+        path="/"
+        keywords={['higher education', 'business school', 'Uganda', 'admissions']}
+      />
       {lcpHeroImage?.featured_image_url && (
         <link rel="preload" as="image" href={lcpHeroImage.featured_image_url} fetchPriority="high" />
       )}
@@ -150,7 +157,7 @@ export default function Home() {
                     <h1 className="carousel-title">{article.title}</h1>
                     <p className="carousel-excerpt">{article.excerpt}</p>
                     <div className="carousel-actions">
-                      <Link to={`/articles/${article.id}`} className="button button-accent">Read Article</Link>
+                      <Link to={`/articles/${article.slug || article.id}`} className="button button-accent">Read Article</Link>
                     </div>
                   </div>
                 </div>

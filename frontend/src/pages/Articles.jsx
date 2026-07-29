@@ -3,6 +3,7 @@ import axios from 'axios'
 import './Articles.css'
 import ArticleCard from '../components/ArticleCard'
 import SkeletonCard from '../components/SkeletonCard'
+import Seo from '../components/Seo'
 
 export default function Articles() {
   const [articles, setArticles] = useState([])
@@ -36,6 +37,12 @@ export default function Articles() {
 
   return (
     <div className="articles-page container">
+      <Seo
+        title="Articles and News"
+        description="Read the latest articles, campus news, and insights from Multitech Business School."
+        path="/articles"
+        keywords={['multitech articles', 'multitech news', 'business school updates']}
+      />
       <h1>Latest News & Articles</h1>
       <p className="article-intro">Stay updated with the latest from Multitech Business School.</p>
 

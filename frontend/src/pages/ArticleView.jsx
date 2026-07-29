@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import axios from 'axios'
+import Seo from '../components/Seo'
 
 export default function ArticleView() {
-  const { id } = useParams()
+  const { slug } = useParams()
   const [article, setArticle] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -11,7 +12,7 @@ export default function ArticleView() {
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/articles/${id}`)
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/articles/${slug}`)
         setArticle(res.data.data)
       } catch (err) {
         setError('Failed to load article.')
@@ -20,7 +21,7 @@ export default function ArticleView() {
       }
     }
     fetchArticle()
-  }, [id])
+  }, [slug])
 
   if (loading) return <div className="container" style={{ padding: '4rem 2rem' }}><h2>Loading...</h2></div>
   if (error) return <div className="container" style={{ padding: '4rem 2rem' }}><h2>{error}</h2><Link to="/articles">Back to Articles</Link></div>
@@ -28,6 +29,13 @@ export default function ArticleView() {
 
   return (
     <div className="container" style={{ padding: '4rem 2rem', maxWidth: '800px', margin: '0 auto' }}>
+      <Seo
+        title={article.title}
+        description={article.excerpt || article.title}
+        path={`/articles/${article.slug || article.id}`}
+        image={article.featured_image_url || undefined}
+        keywords={['multitech article', 'multitech business school']}
+      />
       <Link to="/articles" style={{ color: '#003366', textDecoration: 'none', marginBottom: '1rem', display: 'inline-block' }}>
         &larr; Back to Articles
       </Link>

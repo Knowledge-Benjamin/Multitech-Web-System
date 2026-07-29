@@ -50,6 +50,11 @@
   border-color: var(--color-primary);
 }
 
+.filter-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .loading, .no-results {
   text-align: center;
   padding: var(--spacing-2xl);
@@ -62,6 +67,18 @@
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--spacing-2xl);
   padding: var(--spacing-2xl) 0;
+}
+
+.programmes-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-bottom: var(--spacing-2xl);
+}
+
+.programmes-pagination .filter-btn {
+  min-width: 44px;
 }
 
 .programme-item {
@@ -180,14 +197,39 @@
     font-size: 0.95rem;
   }
 
-  .programmes-mobile-card {
+  .programmes-mobile-stack {
+    position: relative;
+    min-height: 28rem;
+    width: 100%;
+    max-width: 420px;
+    margin: 0.25rem auto 0;
     display: flex;
+    align-items: center;
     justify-content: center;
   }
 
-  .programmes-mobile-card .programme-card {
+  .programmes-mobile-stack-card {
+    position: absolute;
+    inset: 0;
     width: 100%;
-    max-width: 420px;
+    height: 100%;
+    pointer-events: none;
+    transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 280ms ease;
+  }
+
+  .programmes-mobile-stack-card.active {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  .programmes-mobile-stack-card .programme-card {
+    width: 100%;
+    height: 100%;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
+  }
+
+  .programmes-mobile-stack-card.active .programme-card {
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.22);
   }
 
   .programmes-mobile-actions {

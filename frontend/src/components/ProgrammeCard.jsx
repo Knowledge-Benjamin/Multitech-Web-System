@@ -19,9 +19,16 @@ export default function ProgrammeCard({ title, description, imageUrl, linkTo, on
     </>
   )
 
+  const handleClick = (event) => {
+    if (!onClick) return
+    event.preventDefault()
+    event.stopPropagation()
+    onClick(event)
+  }
+
   if (linkTo) {
     return (
-      <Link to={linkTo} className="programme-card">
+      <Link to={linkTo} className="programme-card" onClick={handleClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
         {cardContent}
       </Link>
     )

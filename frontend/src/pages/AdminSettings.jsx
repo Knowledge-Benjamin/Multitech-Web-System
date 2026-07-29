@@ -91,9 +91,7 @@ export default function AdminSettings() {
       const response = await axios.get(`${API_BASE_URL}/admin/gdrive/status`, {
         params: { t: Date.now() },
         headers: { 
-          Authorization: `Bearer ${token}`,
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
+          Authorization: `Bearer ${token}`
         }
       })
       setDriveStatus(response.data.connected)
@@ -111,9 +109,7 @@ export default function AdminSettings() {
       console.log('Requesting auth URL from backend...')
       const response = await axios.get(`${API_BASE_URL}/admin/gdrive/auth-url?t=${timestamp}`, {
         headers: { 
-          Authorization: `Bearer ${token}`,
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
+          Authorization: `Bearer ${token}`
         }
       })
       console.log('Auth URL response:', response)

@@ -201,7 +201,7 @@ export default function Programmes() {
             Professional
           </button>
           <button
-            className={`filter-btn ${filter === 'shortcourses' ? 'active' ? '' : ''}`}
+            className={`filter-btn ${filter === 'shortcourses' ? 'active' : ''}`}
             onClick={() => handleFilterChange('shortcourses')}
           >
             Short Courses

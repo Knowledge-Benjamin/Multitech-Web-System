@@ -320,7 +320,7 @@
     height: 6px;
     min-width: 0 !important;
     min-height: 0 !important;
-    padding: 0;
+    padding: 0 !important;
   }
 
   .home .carousel-dot.is-selected {

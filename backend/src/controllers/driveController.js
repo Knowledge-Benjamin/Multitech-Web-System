@@ -25,7 +25,10 @@ export const getAuthUrl = asyncHandler(async (req, res) => {
     const url = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent', // Ensures we always get a refresh token
-      scope: ['https://www.googleapis.com/auth/drive']
+      scope: [
+        'https://www.googleapis.com/auth/drive.file', // Allow file operations (upload, delete, etc)
+        'https://www.googleapis.com/auth/userinfo.email' // Get user email
+      ]
     })
     
     console.log('Generated auth URL:', url)

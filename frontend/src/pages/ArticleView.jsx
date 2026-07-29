@@ -48,7 +48,7 @@ export default function ArticleView() {
         />
       )}
 
-      <div style={{ lineHeight: '1.8', fontSize: '1.1rem', whiteSpace: 'pre-wrap' }}>
+      <div style={{ lineHeight: '1.8', fontSize: '1.1rem', whiteSpace: 'pre-wrap', textAlign: 'justify' }}>
         {article.content}
       </div>
     </div>

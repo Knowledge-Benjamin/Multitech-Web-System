@@ -71,7 +71,7 @@ export default function Home() {
     const handleMouseEnter = () => autoplayRef.current.stop()
     const handleMouseLeave = () => autoplayRef.current.play()
 
-    const carousel = emblaApi.container()
+    const carousel = emblaRef?.current
     if (carousel) {
       carousel.addEventListener('mouseenter', handleMouseEnter)
       carousel.addEventListener('mouseleave', handleMouseLeave)

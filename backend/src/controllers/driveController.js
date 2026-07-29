@@ -17,6 +17,10 @@ export const getAuthUrl = asyncHandler(async (req, res) => {
     prompt: 'consent', // Ensures we always get a refresh token
     scope: ['https://www.googleapis.com/auth/drive']
   })
+  // Prevent caching to ensure fresh auth URL on each request
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+  res.set('Pragma', 'no-cache')
+  res.set('Expires', '0')
   res.json({ success: true, url })
 })
 
@@ -49,6 +53,10 @@ export const handleCallback = asyncHandler(async (req, res) => {
 export const getStatus = asyncHandler(async (req, res) => {
   const result = await pool.query("SELECT setting_value FROM settings WHERE setting_key = 'gdrive_refresh_token'")
   const isConnected = result.rows.length > 0 && !!result.rows[0].setting_value
+  // Prevent caching to ensure fresh status on each request
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+  res.set('Pragma', 'no-cache')
+  res.set('Expires', '0')
   res.json({ success: true, connected: isConnected })
 })
 

@@ -51,7 +51,14 @@ export default function About() {
         <section className={`hero-carousel-container ${visible ? 'hero-carousel-visible' : ''}`} style={{ position: 'relative' }}>
           <div className="carousel-image-wrap">
             {hero.featured_image_url ? (
-              <img className="carousel-img" src={hero.featured_image_url} alt={hero.title} />
+              <img
+                className="carousel-img"
+                src={hero.featured_image_url}
+                alt={hero.title}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+              />
             ) : (
               <div className="carousel-img" style={{ backgroundColor: '#003366' }} />
             )}

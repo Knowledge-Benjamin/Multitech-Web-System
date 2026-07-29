@@ -38,9 +38,12 @@ export default function ArticleView() {
       </p>
 
       {article.featured_image_url && (
-        <img 
-          src={article.featured_image_url} 
-          alt={article.title} 
+        <img
+          src={article.featured_image_url}
+          alt={article.title}
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
           style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', borderRadius: '8px', marginBottom: '2rem' }}
         />
       )}

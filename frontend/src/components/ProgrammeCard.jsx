@@ -5,7 +5,14 @@ export default function ProgrammeCard({ title, description, imageUrl, linkTo, on
   const cardContent = (
     <>
       {imageUrl ? (
-        <img src={imageUrl} alt={title} className="programme-card-image" />
+        <img
+          src={imageUrl}
+          alt={title}
+          className="programme-card-image"
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
+        />
       ) : (
         <div className="programme-card-placeholder">No Image Available</div>
       )}

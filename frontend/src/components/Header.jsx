@@ -33,7 +33,14 @@ export default function Header() {
       <div className="header-container container">
         <div className="header-logo">
           <Link to="/" className="logo-link">
-            <img src="/logo_asset.png" alt="Multitech Business School" className="logo-image" />
+            <img
+              src="/logo_asset.png"
+              alt="Multitech Business School"
+              className="logo-image"
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+            />
           </Link>
         </div>
 

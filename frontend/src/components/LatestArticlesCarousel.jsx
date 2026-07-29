@@ -35,7 +35,14 @@ export default function LatestArticlesCarousel({ articles = [] }) {
             <div className="latest-articles-carousel__card">
               <article className="programme-card article-card">
                 {article.featured_image_url ? (
-                  <img src={article.featured_image_url} alt={article.title} className="programme-card-image" />
+                  <img
+                    src={article.featured_image_url}
+                    alt={article.title}
+                    className="programme-card-image"
+                    loading="lazy"
+                    decoding="async"
+                    fetchPriority="low"
+                  />
                 ) : (
                   <div className="programme-card-placeholder">No Image Available</div>
                 )}

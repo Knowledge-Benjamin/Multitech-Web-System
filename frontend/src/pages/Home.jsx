@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import useEmblaCarousel from 'embla-carousel-react'
@@ -24,6 +24,10 @@ export default function Home() {
   const [reasonsLoading, setReasonsLoading] = useState(true)
   const [latestArticles, setLatestArticles] = useState([])
   const [latestLoading, setLatestLoading] = useState(true)
+
+  const lcpHeroImage = useMemo(() => {
+    return heroArticles.find((article) => article?.featured_image_url) || null
+  }, [heroArticles])
 
   const getCategoryLink = (title) => {
     const lowerTitle = title.toLowerCase();
@@ -103,6 +107,9 @@ export default function Home() {
 
   return (
     <div className="home">
+      {lcpHeroImage?.featured_image_url && (
+        <link rel="preload" as="image" href={lcpHeroImage.featured_image_url} fetchPriority="high" />
+      )}
       {/* Hero Banner — wait for data before rendering */}
       {heroLoading ? (
         <section className="hero-skeleton">
@@ -123,7 +130,14 @@ export default function Home() {
                   {/* Full-bleed image */}
                   <div className="carousel-image-wrap">
                     {article.featured_image_url ? (
-                      <img className="carousel-img" src={article.featured_image_url} alt={article.title} />
+                      <img
+                        className="carousel-img"
+                        src={article.featured_image_url}
+                        alt={article.title}
+                        loading={index === 0 ? 'eager' : 'lazy'}
+                        decoding="async"
+                        fetchPriority={index === 0 ? 'high' : 'low'}
+                      />
                     ) : (
                       <div className="carousel-img" style={{ backgroundColor: '#003366' }} />
                     )}
@@ -171,7 +185,7 @@ export default function Home() {
             </div>
           </div>
           <div className="hero-image">
-            <img src="/hero-campus.jpg" alt="Multitech Business School Campus" />
+            <img src="/hero-campus.jpg" alt="Multitech Business School Campus" loading="eager" decoding="async" fetchPriority="high" />
           </div>
         </section>
       )}

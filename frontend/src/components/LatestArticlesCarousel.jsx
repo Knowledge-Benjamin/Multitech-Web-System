@@ -16,7 +16,16 @@ export default function LatestArticlesCarousel({ articles = [] }) {
     onSelect()
     emblaApi.on('select', onSelect)
     emblaApi.on('reInit', onSelect)
+    return () => {
+      emblaApi.off('select', onSelect)
+      emblaApi.off('reInit', onSelect)
+    }
   }, [emblaApi, onSelect])
+
+  const scrollTo = useCallback((index) => {
+    if (!emblaApi) return
+    emblaApi.scrollTo(index)
+  }, [emblaApi])
 
   return (
     <div className="latest-articles-carousel" ref={emblaRef}>
@@ -50,6 +59,7 @@ export default function LatestArticlesCarousel({ articles = [] }) {
               key={index}
               className={`latest-articles-carousel__dot ${index === selected ? 'is-selected' : ''}`}
               aria-label={`Go to slide ${index + 1}`}
+              onClick={() => scrollTo(index)}
             />
           ))}
         </div>

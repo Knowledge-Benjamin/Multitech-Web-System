@@ -23,7 +23,7 @@ export default function ReasonsCarousel({ reasons = [] }) {
   const scrollNext = () => emblaApi && emblaApi.scrollNext()
 
   return (
-    <section className="reasons-carousel" style={{ height: '100vh' }}>
+    <section className="reasons-carousel">
       <div className="reasons-embla" ref={emblaRef}>
         <div className="reasons-container">
           {reasons.map((r) => (

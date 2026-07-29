@@ -1,6 +1,7 @@
 .reasons-section {
   position: relative;
-  height: 100vh;
+  height: auto;
+  min-height: 520px;
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #f7f9fc 0%, #ffffff 100%);
@@ -114,6 +115,10 @@
   .reasons-header { padding-top: 1.5rem; }
   .reasons-header .container { padding: 0 1rem; }
   .reasons-carousel { padding-bottom: 1.5rem; }
-  .reason-slide { flex: 0 0 90%; }
+  .reason-slide { flex: 0 0 90%; min-width: 220px; }
+  .reason-card { padding: 1.25rem; }
+  .reason-icon { width: 44px; height: 44px; font-size: 22px; }
+  .reason-title { font-size: 1.05rem; }
+  .reason-points { padding-left: 0.95rem; }
   .reasons-arrow { display: none; }
 }

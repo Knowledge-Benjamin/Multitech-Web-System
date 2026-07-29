@@ -312,11 +312,18 @@
     left: 50%;
     right: auto;
     transform: translateX(-50%);
+    gap: 8px;
   }
 
   .carousel-dot {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
+  }
+
+  .carousel-dot.is-selected {
+    width: 12px;
+    height: 6px;
+    border-radius: 3px;
   }
 
   .hero-skeleton-content {

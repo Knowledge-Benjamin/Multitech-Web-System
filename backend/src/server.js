@@ -55,6 +55,9 @@ const __dirname = dirname(__filename)
 const app = express()
 const PORT = process.env.PORT || 3000
 
+// Disable ETag to prevent 304 Not Modified responses
+app.disable('etag')
+
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }

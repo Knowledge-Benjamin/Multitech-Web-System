@@ -541,6 +541,33 @@
   .carousel-img {
     object-position: center top;
   }
+  .hero-carousel-container,
+  .hero-carousel-container.hero-carousel-visible {
+    min-height: 52vh;
+    max-height: 62vh;
+  }
+  .embla__slide {
+    min-height: 52vh;
+    max-height: 62vh;
+  }
+  .carousel-image-wrap,
+  .carousel-img {
+    min-height: 52vh;
+  }
+  .home .carousel-dots {
+    gap: 6px !important;
+  }
+  .home .carousel-dot {
+    width: 5px !important;
+    height: 5px !important;
+  }
+  .home .carousel-dot.is-selected {
+    width: 11px !important;
+    height: 5px !important;
+    border-radius: 999px !important;
+    background: rgba(240, 192, 64, 0.65) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3) !important;
+  }
 }
 
 @media (max-width: 640px) {

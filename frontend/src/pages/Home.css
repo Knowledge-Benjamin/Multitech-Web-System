@@ -214,21 +214,21 @@
   }
 
   /* Carousel */
-  .hero-carousel-container {
-    min-height: 52vh;
-    max-height: 62vh;
+  .home .hero-carousel-container {
+    min-height: 54vh;
+    max-height: 70vh;
     height: auto;
   }
 
-  .embla__slide {
-    min-height: 52vh;
-    max-height: 62vh;
+  .home .embla__slide {
+    min-height: 54vh;
+    max-height: 70vh;
     height: auto;
   }
 
-  .carousel-image-wrap,
-  .carousel-img {
-    min-height: 52vh;
+  .home .carousel-image-wrap,
+  .home .carousel-img {
+    min-height: 54vh;
   }
 
   .carousel-content {
@@ -252,7 +252,7 @@
     flex-wrap: wrap;
   }
 
-  .carousel-dots {
+  .home .carousel-dots {
     left: 50%;
     right: auto;
     transform: translateX(-50%);
@@ -315,15 +315,20 @@
     gap: 8px;
   }
 
-  .carousel-dot {
+  .home .carousel-dot {
     width: 6px;
     height: 6px;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0;
   }
 
-  .carousel-dot.is-selected {
+  .home .carousel-dot.is-selected {
     width: 12px;
     height: 6px;
-    border-radius: 3px;
+    border-radius: 999px;
+    min-width: 0 !important;
+    min-height: 0 !important;
   }
 
   .hero-skeleton-content {
@@ -531,35 +536,35 @@
   .home .carousel-image-wrap,
   .home .carousel-img {
     height: auto;
-    min-height: 280px;
+    min-height: 54vh;
   }
   .home .carousel-img {
     object-position: center top;
   }
   .home .hero-carousel-container,
   .home .hero-carousel-container.hero-carousel-visible {
-    min-height: 52vh;
-    max-height: 62vh;
+    min-height: 54vh;
+    max-height: 70vh;
   }
   .home .embla__slide {
-    min-height: 52vh;
-    max-height: 62vh;
+    min-height: 54vh;
+    max-height: 70vh;
   }
   .home .carousel-image-wrap,
   .home .carousel-img {
-    min-height: 52vh;
+    min-height: 54vh;
   }
 }
 
 @media (max-width: 640px) {
   .home .hero-carousel-container {
-    min-height: 280px;
-    max-height: 52vh;
+    min-height: 54vh;
+    max-height: 70vh;
   }
 
   .home .embla__slide {
-    min-height: 280px;
-    max-height: 52vh;
+    min-height: 54vh;
+    max-height: 70vh;
   }
 
   .home .carousel-content {

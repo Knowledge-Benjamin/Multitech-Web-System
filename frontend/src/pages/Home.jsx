@@ -125,7 +125,7 @@ export default function Home() {
         <section className={`hero-carousel-container ${heroVisible ? 'hero-carousel-visible' : ''}`} style={{ position: 'relative' }}>
           <div className="embla" ref={emblaRef} style={{ overflow: 'hidden', position: 'relative', height: '100%' }}>
             <div className="embla__container" style={{ display: 'flex', height: '100%' }}>
-              {heroArticles.map(article => (
+              {heroArticles.map((article, index) => (
                 <div className="embla__slide" key={article.id} style={{ flex: '0 0 100%', minWidth: 0, position: 'relative', height: '100%' }}>
                   {/* Full-bleed image */}
                   <div className="carousel-image-wrap">

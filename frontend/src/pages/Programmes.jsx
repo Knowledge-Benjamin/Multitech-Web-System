@@ -9,9 +9,12 @@ export default function Programmes() {
   const [programmes, setProgrammes] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeIndex, setActiveIndex] = useState(0)
-  const [touchStartX, setTouchStartX] = useState(null)
   const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false))
   const [page, setPage] = useState(1)
+  const [dragOffset, setDragOffset] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false)
+  const [dragStartX, setDragStartX] = useState(null)
 
   const [searchParams, setSearchParams] = useSearchParams()
   const initialFilter = searchParams.get('filter') || 'all'
@@ -111,31 +114,61 @@ export default function Programmes() {
     setActiveIndex((prev) => (prev === filteredProgrammes.length - 1 ? 0 : prev + 1))
   }
 
-  const shuffleCard = () => {
-    if (filteredProgrammes.length <= 1) return
-    let nextIndex = Math.floor(Math.random() * filteredProgrammes.length)
-    while (nextIndex === activeIndex) {
-      nextIndex = Math.floor(Math.random() * filteredProgrammes.length)
+  const handleCardPointerDown = (event) => {
+    if (!isMobile || filteredProgrammes.length <= 1) return
+    setDragStartX(event.clientX)
+    setIsDragging(true)
+    setIsAnimatingOut(false)
+  }
+
+  const handleCardPointerMove = (event) => {
+    if (!isDragging || dragStartX === null) return
+    setDragOffset(event.clientX - dragStartX)
+  }
+
+  const handleCardPointerEnd = () => {
+    if (!isDragging) return
+
+    if (dragOffset < -90) {
+      setIsAnimatingOut(true)
+      setDragOffset(-140)
+      window.setTimeout(() => {
+        showNextCard()
+        setDragOffset(0)
+        setIsAnimatingOut(false)
+        setIsDragging(false)
+      }, 220)
+      return
     }
-    setActiveIndex(nextIndex)
+
+    if (dragOffset > 90) {
+      setIsAnimatingOut(true)
+      setDragOffset(140)
+      window.setTimeout(() => {
+        showPreviousCard()
+        setDragOffset(0)
+        setIsAnimatingOut(false)
+        setIsDragging(false)
+      }, 220)
+      return
+    }
+
+    setDragOffset(0)
+    setIsDragging(false)
+    setDragStartX(null)
   }
 
-  const handleTouchStart = (event) => {
-    setTouchStartX(event.touches[0].clientX)
-  }
-
-  const handleTouchEnd = (event) => {
-    if (touchStartX === null) return
-    const touchEndX = event.changedTouches[0].clientX
-    const delta = touchEndX - touchStartX
-
-    if (delta > 50) {
-      showPreviousCard()
-    } else if (delta < -50) {
+  const handleTopCardTap = (event) => {
+    if (!isMobile || filteredProgrammes.length <= 1 || isDragging) return
+    event.preventDefault()
+    event.stopPropagation()
+    setIsAnimatingOut(true)
+    setDragOffset(-120)
+    window.setTimeout(() => {
       showNextCard()
-    }
-
-    setTouchStartX(null)
+      setDragOffset(0)
+      setIsAnimatingOut(false)
+    }, 220)
   }
 
   const renderProgrammeCard = (programme, index, onClick) => (
@@ -212,34 +245,35 @@ export default function Programmes() {
           <div className="loading">Loading programmes...</div>
         ) : filteredProgrammes.length > 0 ? (
           isMobile && filteredProgrammes.length > 1 ? (
-            <div className="programmes-mobile-deck" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+            <div className="programmes-mobile-deck">
               <div className="programmes-mobile-hint">Swipe or tap the top card to shuffle through programmes</div>
               <div className="programmes-mobile-counter">{activeIndex + 1} / {filteredProgrammes.length}</div>
               <div className="programmes-mobile-stack" role="presentation">
                 {deckCards.map((programme, stackIndex) => {
                   const isTopCard = stackIndex === 0
                   const stackTransform = stackIndex === 0
-                    ? 'translate3d(0, 0, 0) rotate(0deg) scale(1)'
+                    ? isAnimatingOut
+                      ? `translate3d(${dragOffset}px, 0, 0) rotate(${dragOffset / 22}deg) scale(1)`
+                      : `translate3d(${dragOffset}px, 0, 0) rotate(${dragOffset / 28}deg) scale(1)`
                     : stackIndex === 1
-                      ? 'translate3d(10px, 16px, 0) rotate(4deg) scale(0.96)'
-                      : 'translate3d(-8px, 24px, 0) rotate(-4deg) scale(0.92)'
+                      ? 'translate3d(12px, 18px, 0) rotate(4deg) scale(0.96)'
+                      : 'translate3d(-10px, 24px, 0) rotate(-4deg) scale(0.92)'
 
                   return (
                     <div
                       key={`${programme.id || programme.name}-${stackIndex}`}
-                      className={`programmes-mobile-stack-card${isTopCard ? ' active' : ''}`}
+                      className={`programmes-mobile-stack-card${isTopCard ? ' active' : ''}${isDragging && isTopCard ? ' is-dragging' : ''}`}
                       style={{ transform: stackTransform, zIndex: 3 - stackIndex }}
-                      onClick={isTopCard ? showNextCard : undefined}
+                      onClick={isTopCard ? handleTopCardTap : undefined}
+                      onPointerDown={isTopCard ? handleCardPointerDown : undefined}
+                      onPointerMove={isTopCard ? handleCardPointerMove : undefined}
+                      onPointerUp={isTopCard ? handleCardPointerEnd : undefined}
+                      onPointerCancel={isTopCard ? handleCardPointerEnd : undefined}
                     >
-                      {renderProgrammeCard(programme, (activeIndex + stackIndex) % filteredProgrammes.length, isTopCard ? showNextCard : undefined)}
+                      {renderProgrammeCard(programme, (activeIndex + stackIndex) % filteredProgrammes.length, isTopCard ? handleTopCardTap : undefined)}
                     </div>
                   )
                 })}
-              </div>
-              <div className="programmes-mobile-actions">
-                <button className="filter-btn" onClick={showPreviousCard}>Previous</button>
-                <button className="filter-btn active" onClick={shuffleCard}>Shuffle</button>
-                <button className="filter-btn" onClick={showNextCard}>Next</button>
               </div>
             </div>
           ) : (

@@ -19,6 +19,7 @@ export default function AdminSettings() {
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(true)
   const [driveStatus, setDriveStatus] = useState(false)
+  const [driveAccountEmail, setDriveAccountEmail] = useState(null)
   const [emailDestination, setEmailDestination] = useState('')
   const [acknowledgementTemplate, setAcknowledgementTemplate] = useState('')
   const [emailLoading, setEmailLoading] = useState(true)
@@ -95,6 +96,7 @@ export default function AdminSettings() {
         }
       })
       setDriveStatus(response.data.connected)
+      setDriveAccountEmail(response.data.accountEmail || null)
     } catch (error) {
       console.error('Error fetching drive status:', error)
     } finally {
@@ -137,6 +139,7 @@ export default function AdminSettings() {
         headers: { Authorization: `Bearer ${token}` }
       })
       setDriveStatus(false)
+      setDriveAccountEmail(null)
       alert('Google Drive disconnected.')
       // Refresh status to confirm disconnection
       setTimeout(() => fetchDriveStatus(), 500)
@@ -506,6 +509,11 @@ export default function AdminSettings() {
                   <span className="status-badge active">Connected</span>
                 ) : (
                   <span className="status-badge inactive">Not Connected</span>
+                )}
+                {driveStatus && driveAccountEmail && (
+                  <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#666' }}>
+                    Account: <strong>{driveAccountEmail}</strong>
+                  </p>
                 )}
               </div>
               <div className="integration-actions">

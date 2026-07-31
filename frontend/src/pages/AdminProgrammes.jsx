@@ -74,7 +74,11 @@ export default function AdminProgrammes() {
 
   const fetchProgrammes = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/programmes`)
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/programmes`, {
+        params: { _: Date.now() },
+        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+        __skipCache: true
+      })
       setProgrammes(response.data.data || [])
     } catch (error) {
       console.error('Error fetching programmes:', error)
@@ -143,7 +147,8 @@ export default function AdminProgrammes() {
           }
         })
       }
-      
+
+      window.__multitechInvalidateCaches?.(['programmes'])
       resetForm()
       fetchProgrammes()
     } catch (error) {
@@ -205,6 +210,7 @@ export default function AdminProgrammes() {
       await axios.delete(`${import.meta.env.VITE_API_URL}/programmes/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
+      window.__multitechInvalidateCaches?.(['programmes'])
       fetchProgrammes()
     } catch (error) {
       console.error('Error deleting programme:', error)
@@ -217,7 +223,9 @@ export default function AdminProgrammes() {
     const token = localStorage.getItem('adminToken')
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/course-units`, {
-        headers: { Authorization: `Bearer ${token}` }
+        params: { _: Date.now() },
+        headers: { Authorization: `Bearer ${token}`, 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+        __skipCache: true
       })
       setCourseUnits(res.data.data || [])
     } catch (err) {
@@ -239,6 +247,7 @@ export default function AdminProgrammes() {
         await axios.post(`${import.meta.env.VITE_API_URL}/course-units`, cuForm, { headers: { Authorization: `Bearer ${token}` } })
         setCuSuccess('Course unit created.')
       }
+      window.__multitechInvalidateCaches?.(['course-units'])
       setCuForm({ programme_id: cuForm.programme_id, course_code: '', name: '', credits: 3, target_year: 1, target_semester: 1 })
       setCuEditId(null)
       fetchCourseUnits()

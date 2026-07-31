@@ -54,7 +54,13 @@ export default function Programmes() {
 
   const fetchProgrammes = async () => {
     try {
-      const response = await fetch('/api/programmes')
+      const response = await fetch(`/api/programmes?ts=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache'
+        }
+      })
       const result = await response.json()
       setProgrammes(result.data || [])
     } catch (error) {

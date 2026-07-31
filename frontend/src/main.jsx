@@ -23,12 +23,26 @@ const cacheablePrefixes = [
 ]
 
 const isCacheableGet = (config) => {
-  if (!config?.url) return false
+  if (!config?.url || config.__skipCache) return false
   const method = config.method?.toLowerCase() || 'get'
   if (method !== 'get') return false
 
   const url = new URL(config.url, window.location.origin)
   return cacheablePrefixes.some((prefix) => url.pathname.startsWith(prefix))
+}
+
+const invalidateCachedResponses = (prefixes = []) => {
+  const normalizedPrefixes = prefixes.map((prefix) => prefix.toLowerCase())
+  Array.from(responseCache.keys()).forEach((key) => {
+    const lowerKey = key.toLowerCase()
+    if (normalizedPrefixes.length === 0 || normalizedPrefixes.some((prefix) => lowerKey.includes(prefix))) {
+      responseCache.delete(key)
+    }
+  })
+}
+
+if (typeof window !== 'undefined') {
+  window.__multitechInvalidateCaches = invalidateCachedResponses
 }
 
 axios.interceptors.response.use(
@@ -104,6 +118,10 @@ if (typeof MutationObserver !== 'undefined') {
 applyLazyLoading()
 
 axios.interceptors.request.use((config) => {
+  if (config.__skipCache) {
+    return config
+  }
+
   if (isCacheableGet(config)) {
     const cacheKey = getCacheKey(config)
     const cachedEntry = responseCache.get(cacheKey)

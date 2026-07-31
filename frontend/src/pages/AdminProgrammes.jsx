@@ -149,6 +149,8 @@ export default function AdminProgrammes() {
       }
 
       window.__multitechInvalidateCaches?.(['programmes'])
+      window.localStorage.setItem('multitech:programmes-updated', String(Date.now()))
+      window.dispatchEvent(new CustomEvent('multitech:programmes-updated'))
       resetForm()
       fetchProgrammes()
     } catch (error) {
@@ -211,6 +213,8 @@ export default function AdminProgrammes() {
         headers: { Authorization: `Bearer ${token}` }
       })
       window.__multitechInvalidateCaches?.(['programmes'])
+      window.localStorage.setItem('multitech:programmes-updated', String(Date.now()))
+      window.dispatchEvent(new CustomEvent('multitech:programmes-updated'))
       fetchProgrammes()
     } catch (error) {
       console.error('Error deleting programme:', error)

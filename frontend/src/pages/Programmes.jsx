@@ -22,6 +22,21 @@ export default function Programmes() {
 
   useEffect(() => {
     fetchProgrammes()
+
+    const handleProgrammeChanged = () => {
+      fetchProgrammes()
+    }
+
+    window.addEventListener('multitech:programmes-updated', handleProgrammeChanged)
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'multitech:programmes-updated') {
+        handleProgrammeChanged()
+      }
+    })
+
+    return () => {
+      window.removeEventListener('multitech:programmes-updated', handleProgrammeChanged)
+    }
   }, [])
 
   useEffect(() => {

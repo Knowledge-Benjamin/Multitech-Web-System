@@ -27,6 +27,12 @@ const ensureProgrammeColumns = async () => {
   `)
 }
 
+const ensureTableColumns = async (tableName, columnDefinitions) => {
+  for (const [columnName, definition] of columnDefinitions) {
+    await pool.query(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS ${columnName} ${definition}`)
+  }
+}
+
 const initializeDatabase = async () => {
   try {
     console.log('Initializing database schema...')
@@ -62,18 +68,128 @@ const initializeDatabase = async () => {
 
     await ensureProgrammeColumns()
 
+    // Intakes and application workflow tables
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS intakes (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        academic_year VARCHAR(50),
+        application_fee NUMERIC(10, 2) DEFAULT 0.00,
+        status VARCHAR(20) DEFAULT 'upcoming',
+        application_start_date DATE,
+        application_end_date DATE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+    await ensureTableColumns('intakes', [
+      ['application_fee', 'NUMERIC(10, 2) DEFAULT 0.00'],
+      ['status', "VARCHAR(20) DEFAULT 'upcoming'"],
+      ['application_start_date', 'DATE'],
+      ['application_end_date', 'DATE']
+    ])
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS programme_intakes (
+        id SERIAL PRIMARY KEY,
+        intake_id INTEGER REFERENCES intakes(id) ON DELETE CASCADE,
+        programme_id INTEGER REFERENCES programmes(id) ON DELETE CASCADE,
+        application_start_date DATE,
+        application_end_date DATE,
+        intake_status VARCHAR(20) DEFAULT 'closed',
+        quota INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
     // Applications table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS applications (
         id SERIAL PRIMARY KEY,
+        reference_number VARCHAR(30),
+        intake_id INTEGER REFERENCES intakes(id) ON DELETE SET NULL,
         first_name VARCHAR(100) NOT NULL,
+        middle_name VARCHAR(100),
         last_name VARCHAR(100) NOT NULL,
+        gender VARCHAR(20),
+        date_of_birth DATE,
+        marital_status VARCHAR(30),
+        nationality VARCHAR(100),
+        country_of_residence VARCHAR(100),
+        id_number VARCHAR(100),
+        religion VARCHAR(100),
+        disability_disclosed BOOLEAN DEFAULT false,
+        disability_details TEXT,
+        funding_source VARCHAR(100),
+        phone VARCHAR(30) NOT NULL,
         email VARCHAR(255) NOT NULL,
-        phone VARCHAR(20) NOT NULL,
-        programme_id INTEGER NOT NULL REFERENCES programmes(id) ON DELETE CASCADE,
-        qualifications TEXT NOT NULL,
-        additional_info TEXT,
-        status VARCHAR(50) DEFAULT 'submitted' CHECK(status IN ('submitted', 'under_review', 'accepted', 'rejected')),
+        address TEXT,
+        town VARCHAR(100),
+        county VARCHAR(100),
+        kin_name VARCHAR(200),
+        kin_relationship VARCHAR(100),
+        kin_phone VARCHAR(30),
+        kin_email VARCHAR(255),
+        kin_address TEXT,
+        academic_history JSONB DEFAULT '[]',
+        drive_folder_id VARCHAR(255),
+        passport_photo_folder_id VARCHAR(255),
+        identity_docs_folder_id VARCHAR(255),
+        academic_docs_folder_id VARCHAR(255),
+        passport_photo_url VARCHAR(500),
+        passport_photo_drive_id VARCHAR(255),
+        documents JSONB DEFAULT '[]',
+        status VARCHAR(50) DEFAULT 'pending' CHECK(status IN ('pending', 'submitted', 'under_review', 'accepted', 'rejected', 'offered', 'reviewing', 'admitted')),
+        payment_status VARCHAR(20) DEFAULT 'pending',
+        admin_notes TEXT,
+        applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+    await ensureTableColumns('applications', [
+      ['reference_number', 'VARCHAR(30)'],
+      ['intake_id', 'INTEGER REFERENCES intakes(id) ON DELETE SET NULL'],
+      ['middle_name', 'VARCHAR(100)'],
+      ['gender', 'VARCHAR(20)'],
+      ['date_of_birth', 'DATE'],
+      ['marital_status', 'VARCHAR(30)'],
+      ['nationality', 'VARCHAR(100)'],
+      ['country_of_residence', 'VARCHAR(100)'],
+      ['id_number', 'VARCHAR(100)'],
+      ['religion', 'VARCHAR(100)'],
+      ['disability_disclosed', 'BOOLEAN DEFAULT false'],
+      ['disability_details', 'TEXT'],
+      ['funding_source', 'VARCHAR(100)'],
+      ['address', 'TEXT'],
+      ['town', 'VARCHAR(100)'],
+      ['county', 'VARCHAR(100)'],
+      ['kin_name', 'VARCHAR(200)'],
+      ['kin_relationship', 'VARCHAR(100)'],
+      ['kin_phone', 'VARCHAR(30)'],
+      ['kin_email', 'VARCHAR(255)'],
+      ['kin_address', 'TEXT'],
+      ['academic_history', "JSONB DEFAULT '[]'"],
+      ['drive_folder_id', 'VARCHAR(255)'],
+      ['passport_photo_folder_id', 'VARCHAR(255)'],
+      ['identity_docs_folder_id', 'VARCHAR(255)'],
+      ['academic_docs_folder_id', 'VARCHAR(255)'],
+      ['passport_photo_url', 'VARCHAR(500)'],
+      ['passport_photo_drive_id', 'VARCHAR(255)'],
+      ['documents', "JSONB DEFAULT '[]'"],
+      ['payment_status', "VARCHAR(20) DEFAULT 'pending'"],
+      ['admin_notes', 'TEXT'],
+      ['applied_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'],
+      ['updated_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP']
+    ])
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS application_choices (
+        id SERIAL PRIMARY KEY,
+        application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,
+        programme_intake_id INTEGER REFERENCES programme_intakes(id) ON DELETE CASCADE,
+        preference_order INTEGER NOT NULL,
+        status VARCHAR(30) DEFAULT 'pending',
+        reviewer_notes TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -98,7 +214,9 @@ const initializeDatabase = async () => {
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_programmes_slug ON programmes(slug)`)
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status)`)
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_applications_email ON applications(email)`)
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_applications_programme_id ON applications(programme_id)`)
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_applications_intake_id ON applications(intake_id)`)
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_application_choices_application_id ON application_choices(application_id)`)
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_application_choices_programme_intake_id ON application_choices(programme_intake_id)`)
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_announcements_published ON announcements(published)`)
 
     // About hero table (single record managed by admin)

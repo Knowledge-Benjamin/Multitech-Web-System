@@ -115,7 +115,7 @@ export const createProgramme = asyncHandler(async (req, res) => {
 export const updateProgramme = asyncHandler(async (req, res) => {
   const { id } = req.params
   const { 
-    name, description, duration, capacity, tuition_fee, active,
+    name, level, description, duration, capacity, tuition_fee, active,
     requirements, curriculum, career_prospects, intake_status, 
     application_start_date, application_end_date, is_supplementary,
     national_tuition_fee, international_tuition_fee
@@ -157,28 +157,30 @@ export const updateProgramme = asyncHandler(async (req, res) => {
   const result = await pool.query(
     `UPDATE programmes
      SET name = COALESCE($1, name),
-         description = $2,
-         duration = $3,
-         capacity = $4,
-         tuition_fee = $5,
-         active = COALESCE($6, active, true),
-         image_url = $7,
-         gdrive_file_id = $8,
-         requirements = $9,
-         curriculum = $10,
-         career_prospects = $11,
-         intake_status = $12,
-         application_start_date = $13,
-         application_end_date = $14,
-         is_supplementary = $15,
-         national_tuition_fee = $16,
-         international_tuition_fee = $17,
-         slug = $18,
+         level = COALESCE($2, level),
+         description = $3,
+         duration = $4,
+         capacity = $5,
+         tuition_fee = $6,
+         active = COALESCE($7, active, true),
+         image_url = $8,
+         gdrive_file_id = $9,
+         requirements = $10,
+         curriculum = $11,
+         career_prospects = $12,
+         intake_status = $13,
+         application_start_date = $14,
+         application_end_date = $15,
+         is_supplementary = $16,
+         national_tuition_fee = $17,
+         international_tuition_fee = $18,
+         slug = $19,
          updated_at = NOW()
-     WHERE id = $19
+     WHERE id = $20
      RETURNING *`,
     [
       name || existing_row.name,
+      level ?? existing_row.level,
       description,
       duration,
       normalizedCapacity,

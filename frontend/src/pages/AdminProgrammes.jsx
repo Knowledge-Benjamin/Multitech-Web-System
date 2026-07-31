@@ -4,6 +4,22 @@ import axios from 'axios'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminProgrammes.css'
 
+const getSuggestedLevel = (type) => {
+  switch (type) {
+    case 'undergraduate':
+      return 'degree'
+    case 'postgraduate':
+      return 'masters'
+    case 'diploma':
+      return 'diploma'
+    case 'professional':
+    case 'shortcourses':
+      return 'certificate'
+    default:
+      return ''
+  }
+}
+
 export default function AdminProgrammes() {
   const [activeMainTab, setActiveMainTab] = useState('programmes')
   const [programmes, setProgrammes] = useState([])
@@ -20,7 +36,7 @@ export default function AdminProgrammes() {
   const [formData, setFormData] = useState({
     name: '',
     type: 'undergraduate',
-    level: 'bachelor',
+    level: '',
     description: '',
     duration: '',
     capacity: '',
@@ -89,6 +105,16 @@ export default function AdminProgrammes() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
+
+    if (name === 'type') {
+      setFormData(prev => ({
+        ...prev,
+        type: value,
+        level: getSuggestedLevel(value)
+      }))
+      return
+    }
+
     setFormData(prev => ({ 
       ...prev, 
       [name]: type === 'checkbox' ? checked : value 
@@ -163,7 +189,7 @@ export default function AdminProgrammes() {
     setFormData({
       name: programme.name || '',
       type: programme.type || 'undergraduate',
-      level: programme.level || 'bachelor',
+      level: programme.level || '',
       description: programme.description || '',
       duration: programme.duration || '',
       capacity: programme.capacity || '',
@@ -194,7 +220,7 @@ export default function AdminProgrammes() {
     setShowForm(false)
     setEditingId(null)
     setFormData({
-      name: '', type: 'undergraduate', level: 'bachelor', description: '', duration: '', capacity: '',
+      name: '', type: 'undergraduate', level: '', description: '', duration: '', capacity: '',
       requirements: '', curriculum: '[]', career_prospects: '',
       intake_status: 'closed', application_start_date: '', application_end_date: '', is_supplementary: false,
       national_tuition_fee: '', international_tuition_fee: ''
@@ -411,7 +437,8 @@ export default function AdminProgrammes() {
                       <div className="form-row">
                         <div className="form-group">
                           <label>Level *</label>
-                          <input type="text" name="level" value={formData.level} onChange={handleChange} placeholder="e.g., Bachelor, Master" required />
+                          <input type="text" name="level" value={formData.level} onChange={handleChange} placeholder="e.g., degree, masters" required />
+                          <div style={{ color: '#6b7280', fontSize: '0.85rem', marginTop: '0.35rem' }}>Suggested automatically from the selected type.</div>
                         </div>
                         <div className="form-group">
                           <label>Duration</label>

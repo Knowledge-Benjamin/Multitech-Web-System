@@ -110,10 +110,17 @@ export default function AdminProgrammes() {
     
     const submitData = {
       ...formData,
-      curriculum: JSON.stringify(curriculumItems)
+      curriculum: JSON.stringify(curriculumItems),
+      capacity: formData.capacity === '' ? 50 : Number(formData.capacity) || 50,
+      tuition_fee: formData.tuition_fee === '' ? '' : Number(formData.tuition_fee),
+      national_tuition_fee: formData.national_tuition_fee === '' ? '' : Number(formData.national_tuition_fee),
+      international_tuition_fee: formData.international_tuition_fee === '' ? '' : Number(formData.international_tuition_fee)
     }
 
     for (const key in submitData) {
+      if (submitData[key] === '' || submitData[key] === null || submitData[key] === undefined) {
+        continue
+      }
       data.append(key, submitData[key])
     }
     if (file) {
@@ -396,6 +403,17 @@ export default function AdminProgrammes() {
                         <div className="form-group">
                           <label>Duration</label>
                           <input type="text" name="duration" value={formData.duration} onChange={handleChange} placeholder="e.g., 3 years" />
+                        </div>
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Capacity</label>
+                          <input type="number" name="capacity" value={formData.capacity} onChange={handleChange} placeholder="e.g. 50" min="1" />
+                        </div>
+                        <div className="form-group">
+                          <label>&nbsp;</label>
+                          <div style={{ color: '#6b7280', fontSize: '0.9rem', paddingTop: '0.45rem' }}>Leave blank to use a default value.</div>
                         </div>
                       </div>
 

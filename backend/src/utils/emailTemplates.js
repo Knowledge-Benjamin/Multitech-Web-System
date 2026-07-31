@@ -1,8 +1,18 @@
 export const DEFAULT_APPLICATION_ACK_TEMPLATE = `Dear {{name}},
 
-Thank you for submitting your application to Multitech Business School for the {{programmeName}} programme.
+Thank you for submitting your application to Multitech Business School for the {{intakeName}} intake.
 
 Your application reference is {{applicationReference}}.
+
+**Important: Application Fee Payment**
+Please pay the application fee of {{applicationFee}} to proceed with your application review.
+Payment instructions: 
+1. Airtel Money: Dial *185# -> Pay Bill -> URA -> ... (Use reference {{applicationReference}})
+2. MTN Mobile Money: Dial *165# -> ...
+(Please refer to the website for full payment details).
+
+Once paid, the admissions team will review your choices:
+{{choicesList}}
 
 Application status: {{status}}
 
@@ -49,11 +59,13 @@ export const renderContactEmail = ({ name, email, subject, message, pageUrl }) =
   return { subject: renderedSubject, text: plainText, html }
 }
 
-export const renderApplicationAcknowledgementEmail = ({ template, name, applicationReference, programmeName, status, loginEmail, loginPassword, applicationDate, email, phone }) => {
+export const renderApplicationAcknowledgementEmail = ({ template, name, applicationReference, intakeName, applicationFee, choicesList, status, loginEmail, loginPassword, applicationDate, email, phone }) => {
   const rendered = renderTemplate(template, {
     name,
     applicationReference,
-    programmeName,
+    intakeName,
+    applicationFee,
+    choicesList,
     status,
     loginEmail,
     loginPassword,

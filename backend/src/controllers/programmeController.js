@@ -23,22 +23,34 @@ const slugify = (value) => String(value || '')
 
 // Get all programmes with optional filtering
 export const getProgrammes = asyncHandler(async (req, res) => {
-  const { type, level } = req.query
+  const { type, level, intake_id } = req.query
 
-  let query = 'SELECT * FROM programmes WHERE active = true'
+  let query = 'SELECT p.* FROM programmes p'
   const params = []
+  
+  if (intake_id) {
+    query += " JOIN programme_intakes pi ON pi.programme_id = p.id WHERE p.active = true AND pi.intake_id = $1 AND pi.intake_status = 'open'"
+    params.push(intake_id)
+  } else {
+    query += ' WHERE p.active = true'
+  }
 
   if (type) {
-    query += ' AND type = $1'
     params.push(type)
+    query += ` AND p.type = $${params.length}`
   }
 
   if (level) {
-    query += ` AND level = ${type ? '$2' : '$1'}`
     params.push(level)
+    query += ` AND p.level = $${params.length}`
   }
 
-  query += ' ORDER BY name ASC'
+  if (intake_id) {
+    // Add pi.id as programme_intake_id to help the frontend submit the application
+    query = query.replace('SELECT p.*', 'SELECT p.*, pi.id as programme_intake_id')
+  }
+
+  query += ' ORDER BY p.name ASC'
 
   const result = await pool.query(query, params)
   res.json({ success: true, data: result.rows })

@@ -39,21 +39,55 @@ export default function AdminApplications() {
     fetchApplications()
   }
 
-  const handleStatusUpdate = async (appId, newStatus) => {
+  const handlePaymentStatusUpdate = async (appId, newStatus) => {
     const token = localStorage.getItem('adminToken')
-    
     try {
       await axios.put(
-        `${import.meta.env.VITE_API_URL}/applications/${appId}/status`,
-        { status: newStatus, admin_notes: adminNotes },
+        `${import.meta.env.VITE_API_URL}/applications/${appId}/payment`,
+        { payment_status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       )
+      setSelectedApp(prev => ({ ...prev, payment_status: newStatus }))
       fetchApplications()
-      setSelectedApp(null)
-      alert('Application status updated')
+      alert('Payment status updated')
     } catch (error) {
-      console.error('Error updating status:', error)
-      alert('Error updating status')
+      console.error('Error updating payment status:', error)
+      alert('Error updating payment status')
+    }
+  }
+
+  const sendPaymentReminder = async (appId) => {
+    const token = localStorage.getItem('adminToken')
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/applications/${appId}/remind-payment`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      alert('Payment reminder sent successfully')
+    } catch (error) {
+      alert(error.response?.data?.message || 'Error sending payment reminder')
+    }
+  }
+
+  const handleChoiceEvaluation = async (choiceId, newStatus) => {
+    const token = localStorage.getItem('adminToken')
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/applications/${selectedApp.id}/choices/${choiceId}`,
+        { status: newStatus, reviewer_notes: adminNotes },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      // Re-fetch the individual application to get updated choices
+      const refreshed = await axios.get(
+        `${import.meta.env.VITE_API_URL}/applications/${selectedApp.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setSelectedApp(refreshed.data.data)
+      fetchApplications()
+      alert(`Choice ${newStatus === 'offered' ? 'offered' : 'rejected'} successfully`)
+    } catch (error) {
+      alert(error.response?.data?.message || 'Error evaluating choice')
     }
   }
 
@@ -93,7 +127,7 @@ export default function AdminApplications() {
           <div className="applications-container">
             <div className="inbox-controls">
               <div className="filter-buttons">
-                {['all', 'pending', 'reviewing', 'admitted', 'rejected'].map(status => (
+                {['all', 'pending', 'offered', 'enrolled', 'rejected'].map(status => (
                   <button
                     key={status}
                     onClick={() => setStatusFilter(status)}
@@ -124,8 +158,8 @@ export default function AdminApplications() {
                     <tr>
                       <th>Reference No.</th>
                       <th>Applicant Name</th>
-                      <th>Programme</th>
-                      <th>Date Applied</th>
+                      <th>Intake</th>
+                      <th>Payment</th>
                       <th>Status</th>
                       <th>Action</th>
                     </tr>
@@ -138,8 +172,12 @@ export default function AdminApplications() {
                           <strong>{app.first_name} {app.last_name}</strong>
                           <div className="text-muted">{app.email}</div>
                         </td>
-                        <td>{app.programme_name}</td>
-                        <td>{new Date(app.applied_at).toLocaleDateString()}</td>
+                        <td>{app.intake_name || '—'}</td>
+                        <td>
+                          <span className={`status-badge status-${app.payment_status || 'pending'}`}>
+                            {(app.payment_status || 'pending').toUpperCase()}
+                          </span>
+                        </td>
                         <td>
                           <span className={`status-badge status-${app.status}`}>
                             {app.status.toUpperCase()}
@@ -198,7 +236,7 @@ export default function AdminApplications() {
                     <div className="profile-info">
                       <h3>{selectedApp.first_name} {selectedApp.middle_name} {selectedApp.last_name}</h3>
                       <p><strong>Ref Number:</strong> {selectedApp.reference_number}</p>
-                      <p><strong>Programme:</strong> {selectedApp.programme_name}</p>
+                      <p><strong>Intake:</strong> {selectedApp.intake_name || '—'}</p>
                       <p><strong>Date of Birth:</strong> {new Date(selectedApp.date_of_birth).toLocaleDateString()}</p>
                       <p><strong>Gender:</strong> {selectedApp.gender}</p>
                       <p><strong>Nationality:</strong> {selectedApp.nationality}</p>
@@ -322,44 +360,87 @@ export default function AdminApplications() {
                 </div>
 
                 <div className="detail-card status-card">
-                  <h3>Admission Decision</h3>
-                  <div className="form-group">
-                    <label>Admin Notes (Internal)</label>
-                    <textarea 
-                      rows="4" 
-                      className="form-control" 
-                      value={adminNotes} 
-                      onChange={(e) => setAdminNotes(e.target.value)}
-                      placeholder="Add private notes about this application..."
-                    />
-                  </div>
-                  
-                  <div className="decision-actions">
-                    <button 
-                      onClick={() => handleStatusUpdate(selectedApp.id, 'reviewing')} 
-                      className={`button ${selectedApp.status === 'reviewing' ? 'button-primary' : 'button-outline'}`}
-                      style={{width: '100%', marginBottom: '0.5rem'}}
-                    >
-                      Mark as Under Review
-                    </button>
-                    
-                    <div style={{display: 'flex', gap: '0.5rem', marginTop: '1rem'}}>
-                      <button 
-                        onClick={() => handleStatusUpdate(selectedApp.id, 'admitted')} 
-                        className="button button-accent"
-                        style={{flex: 1, backgroundColor: '#2ecc71', borderColor: '#2ecc71'}}
+                  <h3>Payment Status</h3>
+                  <p>
+                    Current:{' '}
+                    <span className={`status-badge status-${selectedApp.payment_status || 'pending'}`}>
+                      {(selectedApp.payment_status || 'pending').toUpperCase()}
+                    </span>
+                  </p>
+                  {selectedApp.payment_status !== 'paid' ? (
+                    <div className="decision-actions">
+                      <button
+                        onClick={() => sendPaymentReminder(selectedApp.id)}
+                        className="button button-outline"
+                        style={{width: '100%', marginBottom: '0.5rem'}}
                       >
-                        Admit Student
+                        Send Payment Reminder
                       </button>
-                      <button 
-                        onClick={() => handleStatusUpdate(selectedApp.id, 'rejected')} 
-                        className="button button-accent"
-                        style={{flex: 1, backgroundColor: '#e74c3c', borderColor: '#e74c3c'}}
+                      <button
+                        onClick={() => handlePaymentStatusUpdate(selectedApp.id, 'paid')}
+                        className="button button-primary"
+                        style={{width: '100%'}}
                       >
-                        Reject
+                        ✓ Mark as Paid
                       </button>
                     </div>
-                  </div>
+                  ) : (
+                    <p style={{color: '#2e7d32', fontWeight: 600, marginTop: '0.5rem'}}>✓ Payment verified</p>
+                  )}
+                </div>
+
+                <div className="detail-card status-card">
+                  <h3>Programme Choices</h3>
+
+                  {selectedApp.payment_status !== 'paid' ? (
+                    <div style={{padding: '10px', background: '#fff3e0', borderRadius: '6px', color: '#e65100'}}>
+                      ⚠ Application fee must be paid before you can evaluate choices.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="form-group" style={{marginBottom: '1rem'}}>
+                        <label>Reviewer Notes (Optional)</label>
+                        <textarea
+                          rows="3"
+                          className="form-control"
+                          value={adminNotes}
+                          onChange={(e) => setAdminNotes(e.target.value)}
+                          placeholder="Notes applied to the evaluated choice..."
+                        />
+                      </div>
+                      {(selectedApp.choices || []).map(choice => (
+                        <div key={choice.id} style={{border: '1px solid #e0e0e0', borderRadius: '8px', padding: '12px', marginBottom: '10px'}}>
+                          <p style={{fontWeight: 600, marginBottom: '4px'}}>
+                            Choice {choice.preference_order}: {choice.programme_name}
+                          </p>
+                          <p style={{marginBottom: '8px'}}>
+                            <span className={`status-badge status-${choice.status}`}>{choice.status.toUpperCase()}</span>
+                          </p>
+                          {choice.status === 'pending' && (
+                            <div style={{display: 'flex', gap: '8px'}}>
+                              <button
+                                onClick={() => handleChoiceEvaluation(choice.id, 'offered')}
+                                className="button button-primary"
+                                style={{flex: 1, fontSize: '0.8rem', padding: '6px'}}
+                              >
+                                Offer
+                              </button>
+                              <button
+                                onClick={() => handleChoiceEvaluation(choice.id, 'rejected')}
+                                className="button"
+                                style={{flex: 1, fontSize: '0.8rem', padding: '6px', background: '#e74c3c', color: '#fff', border: 'none'}}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                          {choice.status === 'bypassed' && (
+                            <p style={{fontSize: '0.8rem', color: '#888'}}>Bypassed — offer made on higher preference.</p>
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
               </div>
             </div>

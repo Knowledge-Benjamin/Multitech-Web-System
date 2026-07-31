@@ -24,7 +24,9 @@ router.post('/', applicationUpload, applicationController.createApplication)
 // Admin routes (protected)
 router.get('/', authMiddleware, adminOnly, applicationController.getApplications)
 router.get('/:id', authMiddleware, adminOnly, applicationController.getApplicationById)
-router.put('/:id/status', authMiddleware, adminOnly, applicationController.updateApplicationStatus)
+router.put('/:id/payment', authMiddleware, adminOnly, applicationController.updatePaymentStatus)
+router.post('/:id/remind-payment', authMiddleware, adminOnly, applicationController.sendPaymentReminder)
+router.put('/:id/choices/:choice_id', authMiddleware, adminOnly, applicationController.evaluateApplicationChoice)
 router.delete('/:id', authMiddleware, adminOnly, applicationController.deleteApplication)
 
 export default router

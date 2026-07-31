@@ -12,6 +12,7 @@ const Apply = lazy(() => import('./pages/Apply'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 const AdminLogin = lazy(() => import('./pages/AdminLogin'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const AdminIntakes = lazy(() => import('./pages/AdminIntakes'))
 const AdminProgrammes = lazy(() => import('./pages/AdminProgrammes'))
 const AdminFees = lazy(() => import('./pages/AdminFees'))
 const AdminApplications = lazy(() => import('./pages/AdminApplications'))
@@ -60,6 +61,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/intakes"
+          element={
+            <ProtectedRoute>
+              <AdminIntakes />
             </ProtectedRoute>
           }
         />

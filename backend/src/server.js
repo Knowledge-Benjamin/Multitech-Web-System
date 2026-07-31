@@ -37,7 +37,7 @@ import timetableRoutes from './routes/timetable.js'
 import lecturerRoutes from './routes/lecturer.js'
 import adminLecturersRoutes from './routes/adminLecturers.js'
 import courseUnitsRoutes from './routes/courseUnits.js'
-
+import intakesRoutes from './routes/intakes.js'
 dotenv.config()
 
 if (!process.env.JWT_SECRET) {
@@ -140,6 +140,7 @@ const initializeApp = async () => {
   app.use('/api/lecturer', lecturerRoutes)
   app.use('/api/admin/lecturers', adminLecturersRoutes)
   app.use('/api/course-units', courseUnitsRoutes)
+  app.use('/api/intakes', intakesRoutes)
 
   // 404 handler
   app.use('*', (req, res) => {

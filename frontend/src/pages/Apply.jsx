@@ -4,7 +4,7 @@ import axios from 'axios'
 import './Apply.css'
 
 const STEPS = [
-  'Programme Selection',
+  'Intake & Choices',
   'Personal Information',
   'Contact Details',
   'Next of Kin',
@@ -18,12 +18,15 @@ export default function Apply() {
   const initialProgrammeId = searchParams.get('programme') || ''
 
   const [currentStep, setCurrentStep] = useState(0)
+  const [intakes, setIntakes] = useState([])
   const [programmes, setProgrammes] = useState([])
-  const [loadingProgrammes, setLoadingProgrammes] = useState(true)
+  const [loading, setLoading] = useState(true)
 
   // Form State
   const [formData, setFormData] = useState({
-    programme_id: initialProgrammeId,
+    intake_id: '',
+    choices: [],
+
     first_name: '',
     middle_name: '',
     last_name: '',
@@ -62,20 +65,52 @@ export default function Apply() {
   const [successData, setSuccessData] = useState(null)
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const intakeRes = await axios.get(`${import.meta.env.VITE_API_URL}/intakes/active`)
+        setIntakes(intakeRes.data.data)
+      } catch (err) {
+        console.error('Failed to load intakes', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    if (!formData.intake_id) {
+      setProgrammes([])
+      return
+    }
     const fetchProgrammes = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/programmes`)
-        // Only show active and open/scheduled programmes
-        const available = res.data.data.filter(p => p.active && p.intake_status !== 'closed')
-        setProgrammes(available)
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/programmes?intake_id=${formData.intake_id}`)
+        setProgrammes(res.data.data)
       } catch (err) {
         console.error('Failed to load programmes', err)
-      } finally {
-        setLoadingProgrammes(false)
       }
     }
     fetchProgrammes()
-  }, [])
+  }, [formData.intake_id])
+
+  const handleChoiceChange = (index, value) => {
+    const newChoices = [...formData.choices]
+    newChoices[index] = value
+    setFormData(prev => ({ ...prev, choices: newChoices }))
+  }
+
+  const addChoice = () => {
+    if (formData.choices.length < 3) {
+      setFormData(prev => ({ ...prev, choices: [...prev.choices, ''] }))
+    }
+  }
+
+  const removeChoice = (index) => {
+    const newChoices = [...formData.choices]
+    newChoices.splice(index, 1)
+    setFormData(prev => ({ ...prev, choices: newChoices }))
+  }
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -130,6 +165,9 @@ export default function Apply() {
     Object.keys(formData).forEach(key => {
       if (key === 'academic_history') {
         form.append(key, JSON.stringify(formData[key]))
+      } else if (key === 'choices') {
+        const formattedChoices = formData.choices.filter(c => c).map((c, i) => ({ programme_intake_id: parseInt(c), preference_order: i + 1 }))
+        form.append(key, JSON.stringify(formattedChoices))
       } else {
         form.append(key, formData[key])
       }
@@ -171,6 +209,11 @@ export default function Apply() {
             <div className="ref-number">{successData.reference_number}</div>
             
             <div className="creds">
+              <h4>Action Required: Application Fee</h4>
+              <p style={{color: '#d32f2f', fontWeight: 'bold'}}>Your application is pending payment. Please check your email for payment instructions.</p>
+            </div>
+
+            <div className="creds" style={{marginTop: '1rem'}}>
               <p>An account has been automatically created for you to track your application status.</p>
               <p><strong>Email:</strong> {successData.credentials.email}</p>
               <p><strong>Password:</strong> {successData.credentials.password}</p>
@@ -187,39 +230,60 @@ export default function Apply() {
   const renderStep = () => {
     switch (currentStep) {
       case 0:
+        const selectedIntake = intakes.find(i => i.id.toString() === formData.intake_id)
         return (
           <div className="step-content">
-            <h2>Select Programme</h2>
+            <h2>Select Intake & Choices</h2>
+            
             <div className="form-group">
-              <label>Which programme are you applying for? *</label>
-              {loadingProgrammes ? (
-                <p>Loading programmes...</p>
+              <label>Which intake are you applying for? *</label>
+              {loading ? (
+                <p>Loading intakes...</p>
               ) : (
-                <select name="programme_id" value={formData.programme_id} onChange={handleInputChange} required className="form-control">
-                  <option value="">-- Select a Programme --</option>
-                  {programmes.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} ({p.level})</option>
+                <select name="intake_id" value={formData.intake_id} onChange={(e) => { handleInputChange(e); setFormData(p => ({...p, choices: ['']})) }} required className="form-control">
+                  <option value="">-- Select an Intake --</option>
+                  {intakes.map(i => (
+                    <option key={i.id} value={i.id}>{i.name} (Fee: {i.application_fee})</option>
                   ))}
                 </select>
               )}
             </div>
-            {formData.programme_id && (
-              <div className="selected-programme-info">
-                {(() => {
-                  const p = programmes.find(x => x.id.toString() === formData.programme_id)
-                  if (!p) return null
-                  return (
-                    <>
-                      <p><strong>Duration:</strong> {p.duration}</p>
-                      <p><strong>Intake Status:</strong> {p.intake_status === 'scheduled' ? `Scheduled (Opens ${new Date(p.application_start_date).toLocaleDateString()})` : 'Open'}</p>
-                      {p.is_supplementary && <p className="badge-supp">Supplementary / Short Course</p>}
-                    </>
-                  )
-                })()}
+
+            {formData.intake_id && (
+              <div className="choices-section">
+                <h3>Your Programme Choices (Ranked in Order of Preference)</h3>
+                <p className="text-sm text-gray-500 mb-4">You can select up to 3 choices for this intake.</p>
+                
+                {formData.choices.map((choiceId, index) => (
+                  <div key={index} className="form-group choice-group">
+                    <label>Choice {index + 1} {index === 0 && '*'}</label>
+                    <div className="choice-input-wrapper" style={{display: 'flex', gap: '10px'}}>
+                      <select 
+                        value={choiceId} 
+                        onChange={(e) => handleChoiceChange(index, e.target.value)} 
+                        required={index === 0}
+                        className="form-control"
+                      >
+                        <option value="">-- Select Programme --</option>
+                        {programmes.map(p => (
+                          <option key={p.id} value={p.programme_intake_id}>{p.name} ({p.level})</option>
+                        ))}
+                      </select>
+                      {index > 0 && (
+                        <button type="button" onClick={() => removeChoice(index)} className="button button-danger">Remove</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {formData.choices.length < 3 && (
+                  <button type="button" onClick={addChoice} className="button button-secondary mt-2">+ Add Another Choice</button>
+                )}
               </div>
             )}
+
             <div className="step-actions">
-              <button type="button" className="button button-primary" onClick={nextStep} disabled={!formData.programme_id}>Next Step</button>
+              <button type="button" className="button button-primary" onClick={nextStep} disabled={!formData.intake_id || !formData.choices[0]}>Next Step</button>
             </div>
           </div>
         )

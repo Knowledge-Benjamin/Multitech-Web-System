@@ -57,6 +57,10 @@ export default function AdminSidebar() {
           <span className="nav-icon">📋</span>
           <span className="sidebar-text">Applications</span>
         </Link>
+        <Link to="/admin/intakes" className={`nav-item ${isActive('/admin/intakes') ? 'active' : ''}`}>
+          <span className="nav-icon">📥</span>
+          <span className="sidebar-text">Intakes</span>
+        </Link>
         <Link to="/admin/students" className={`nav-item ${isActive('/admin/students') ? 'active' : ''}`}>
           <span className="nav-icon">🎓</span>
           <span className="sidebar-text">Students</span>

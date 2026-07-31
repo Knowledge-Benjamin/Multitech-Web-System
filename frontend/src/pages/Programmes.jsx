@@ -4,6 +4,7 @@ import ProgrammeCard from '../components/ProgrammeCard'
 import './Programmes.css'
 
 const DESKTOP_PAGE_SIZE = 6
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 export default function Programmes() {
   const [programmes, setProgrammes] = useState([])
@@ -70,7 +71,8 @@ export default function Programmes() {
   const fetchProgrammes = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/programmes?ts=${Date.now()}`, {
+      const url = `${API_BASE_URL}/programmes?ts=${Date.now()}`
+      const response = await fetch(url, {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache',
@@ -78,11 +80,15 @@ export default function Programmes() {
         }
       })
 
+      const text = await response.text()
+      console.log('[programmes] response status', response.status, 'url', url)
+      console.log('[programmes] raw response', text.slice(0, 500))
+
       if (!response.ok) {
         throw new Error(`Programme request failed with status ${response.status}`)
       }
 
-      const result = await response.json()
+      const result = text ? JSON.parse(text) : {}
       const nextProgrammes = Array.isArray(result?.data) ? result.data : []
       setProgrammes(nextProgrammes)
     } catch (error) {

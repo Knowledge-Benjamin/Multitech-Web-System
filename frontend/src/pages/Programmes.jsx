@@ -68,6 +68,7 @@ export default function Programmes() {
   }
 
   const fetchProgrammes = async () => {
+    setLoading(true)
     try {
       const response = await fetch(`/api/programmes?ts=${Date.now()}`, {
         cache: 'no-store',
@@ -76,40 +77,17 @@ export default function Programmes() {
           Pragma: 'no-cache'
         }
       })
+
+      if (!response.ok) {
+        throw new Error(`Programme request failed with status ${response.status}`)
+      }
+
       const result = await response.json()
-      setProgrammes(result.data || [])
+      const nextProgrammes = Array.isArray(result?.data) ? result.data : []
+      setProgrammes(nextProgrammes)
     } catch (error) {
       console.error('Failed to fetch programmes:', error)
-      setProgrammes([
-        {
-          id: 1,
-          name: 'Bachelor of Business Administration',
-          type: 'undergraduate',
-          description: 'Comprehensive business education with focus on management and entrepreneurship',
-          duration: '3 years'
-        },
-        {
-          id: 2,
-          name: 'Master of Business Administration',
-          type: 'postgraduate',
-          description: 'Advanced business studies for professionals seeking career advancement',
-          duration: '2 years'
-        },
-        {
-          id: 3,
-          name: 'Diploma in Information Technology',
-          type: 'diploma',
-          description: 'Practical IT skills and systems development',
-          duration: '2 years'
-        },
-        {
-          id: 4,
-          name: 'Professional Accounting Certification',
-          type: 'professional',
-          description: 'Industry-recognized accounting and finance certification',
-          duration: '1 year'
-        }
-      ])
+      setProgrammes([])
     } finally {
       setLoading(false)
     }

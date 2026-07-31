@@ -1,5 +1,32 @@
 import pool from '../config/database.js'
 
+const ensureProgrammeColumns = async () => {
+  const columnDefinitions = [
+    ['slug', "VARCHAR(255)"],
+    ['requirements', 'TEXT'],
+    ['curriculum', 'TEXT'],
+    ['career_prospects', 'TEXT'],
+    ['intake_status', "VARCHAR(50) DEFAULT 'closed'"],
+    ['application_start_date', 'DATE'],
+    ['application_end_date', 'DATE'],
+    ['is_supplementary', 'BOOLEAN DEFAULT false'],
+    ['national_tuition_fee', 'DECIMAL(10, 2)'],
+    ['international_tuition_fee', 'DECIMAL(10, 2)'],
+    ['image_url', 'TEXT'],
+    ['gdrive_file_id', 'TEXT']
+  ]
+
+  for (const [columnName, definition] of columnDefinitions) {
+    await pool.query(`ALTER TABLE programmes ADD COLUMN IF NOT EXISTS ${columnName} ${definition}`)
+  }
+
+  await pool.query(`
+    UPDATE programmes
+    SET slug = COALESCE(NULLIF(trim(slug), ''), lower(regexp_replace(name, '[^a-zA-Z0-9]+', '-', 'g')))
+    WHERE slug IS NULL OR trim(slug) = ''
+  `)
+}
+
 const initializeDatabase = async () => {
   try {
     console.log('Initializing database schema...')
@@ -16,10 +43,24 @@ const initializeDatabase = async () => {
         capacity INTEGER NOT NULL DEFAULT 50,
         tuition_fee DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
         active BOOLEAN DEFAULT true,
+        image_url TEXT,
+        gdrive_file_id TEXT,
+        requirements TEXT,
+        curriculum TEXT,
+        career_prospects TEXT,
+        intake_status VARCHAR(50) DEFAULT 'closed',
+        application_start_date DATE,
+        application_end_date DATE,
+        is_supplementary BOOLEAN DEFAULT false,
+        national_tuition_fee DECIMAL(10, 2),
+        international_tuition_fee DECIMAL(10, 2),
+        slug VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `)
+
+    await ensureProgrammeColumns()
 
     // Applications table
     await pool.query(`
@@ -54,6 +95,7 @@ const initializeDatabase = async () => {
     // Create indexes for better performance
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_programmes_type ON programmes(type)`)
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_programmes_active ON programmes(active)`)
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_programmes_slug ON programmes(slug)`)
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status)`)
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_applications_email ON applications(email)`)
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_applications_programme_id ON applications(programme_id)`)

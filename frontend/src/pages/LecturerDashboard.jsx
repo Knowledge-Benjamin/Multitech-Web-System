@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import api from '../services/api'
 import LecturerSidebar from '../components/LecturerSidebar'
 import './LecturerDashboard.css'
-
-const API = import.meta.env.VITE_API_URL
 
 export default function LecturerDashboard() {
   const [courses, setCourses] = useState([])
@@ -17,11 +15,8 @@ export default function LecturerDashboard() {
   }, [])
 
   const fetchCourses = async () => {
-    const token = localStorage.getItem('lecturerToken')
     try {
-      const res = await axios.get(`${API}/lecturer/courses`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const res = await api.get('/lecturer/courses')
       setCourses(res.data.data || [])
       setTerm(res.data.term)
     } catch (err) {

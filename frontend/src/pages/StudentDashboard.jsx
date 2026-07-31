@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../services/api'
 import StudentSidebar from '../components/StudentSidebar'
 import './StudentDashboard.css'
 
@@ -21,12 +21,8 @@ export default function StudentDashboard() {
   }, [])
 
   const fetchDashboard = async () => {
-    const token = localStorage.getItem('studentToken')
-    
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/student-profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const res = await api.get('/student-profile')
       setData(res.data.data)
     } catch (error) {
       console.error('Error fetching dashboard', error)
@@ -48,12 +44,9 @@ export default function StudentDashboard() {
     }
 
     try {
-      const token = localStorage.getItem('studentToken')
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/student-auth/change-password`, {
+      const res = await api.post('/student-auth/change-password', {
         oldPassword: passwordForm.oldPassword,
         newPassword: passwordForm.newPassword
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       if (res.data.success) {

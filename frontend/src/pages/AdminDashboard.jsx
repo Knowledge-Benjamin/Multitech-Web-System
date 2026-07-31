@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import api from '../services/api'
 import './AdminDashboard.css'
 
 export default function AdminDashboard() {
@@ -16,10 +16,7 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('adminToken')
-      const response = await axios.get('/api/auth/dashboard/stats', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await api.get('/auth/dashboard/stats')
 
       if (response.data.success) {
         setStats(response.data.stats)

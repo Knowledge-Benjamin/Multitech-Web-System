@@ -29,7 +29,7 @@ const applyNoCacheHeaders = (config) => {
 // Add token to requests if available
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('adminToken') || localStorage.getItem('studentToken')
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('studentToken') || localStorage.getItem('lecturerToken')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }

@@ -2,6 +2,18 @@ import pool from '../config/database.js'
 import { asyncHandler } from '../utils/helpers.js'
 import { uploadToDrive, deleteFromDrive } from '../utils/googleDriveService.js'
 
+const normalizeOptionalInteger = (value, fallback = null) => {
+  if (value === null || value === undefined || value === '') return fallback
+  const parsed = Number.parseInt(value, 10)
+  return Number.isNaN(parsed) ? fallback : parsed
+}
+
+const normalizeOptionalNumeric = (value, fallback = null) => {
+  if (value === null || value === undefined || value === '') return fallback
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
 // Get all programmes with optional filtering
 export const getProgrammes = asyncHandler(async (req, res) => {
   const { type, level } = req.query
@@ -55,6 +67,11 @@ export const createProgramme = asyncHandler(async (req, res) => {
     gdrive_file_id = uploadResult.fileId
   }
 
+  const normalizedCapacity = normalizeOptionalInteger(capacity, 50)
+  const normalizedTuitionFee = normalizeOptionalNumeric(tuition_fee, null)
+  const normalizedNationalTuitionFee = normalizeOptionalNumeric(national_tuition_fee, null)
+  const normalizedInternationalTuitionFee = normalizeOptionalNumeric(international_tuition_fee, null)
+
   const result = await pool.query(
     `INSERT INTO programmes (
        name, type, level, description, duration, capacity, tuition_fee, active, image_url, gdrive_file_id, 
@@ -64,13 +81,13 @@ export const createProgramme = asyncHandler(async (req, res) => {
      VALUES ($1, $2, $3, $4, $5, $6, $7, true, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
      RETURNING *`,
     [
-      name, type, level, description, duration, capacity, tuition_fee || national_tuition_fee || 0, image_url, gdrive_file_id,
+      name, type, level, description, duration, normalizedCapacity, normalizedTuitionFee ?? normalizedNationalTuitionFee ?? 0, image_url, gdrive_file_id,
       requirements, 
       typeof curriculum === 'string' ? curriculum : JSON.stringify(curriculum || []), 
       career_prospects, intake_status || 'closed', 
       application_start_date || null, application_end_date || null, 
       is_supplementary === 'true' || is_supplementary === true,
-      national_tuition_fee || null, international_tuition_fee || null
+      normalizedNationalTuitionFee, normalizedInternationalTuitionFee
     ]
   )
 
@@ -109,6 +126,10 @@ export const updateProgramme = asyncHandler(async (req, res) => {
   }
 
   const existing_row = existing.rows[0]
+  const normalizedCapacity = normalizeOptionalInteger(capacity, existing_row.capacity ?? 50)
+  const normalizedTuitionFee = normalizeOptionalNumeric(tuition_fee, null)
+  const normalizedNationalTuitionFee = normalizeOptionalNumeric(national_tuition_fee, null)
+  const normalizedInternationalTuitionFee = normalizeOptionalNumeric(international_tuition_fee, null)
 
   // Resolve active: JS-level fallback ensures it is never undefined/null/string "undefined"
   const resolvedActive = (active !== undefined && active !== null && active !== 'undefined')
@@ -141,8 +162,8 @@ export const updateProgramme = asyncHandler(async (req, res) => {
       name || existing_row.name,
       description,
       duration,
-      capacity,
-      tuition_fee || national_tuition_fee || existing_row.tuition_fee || 0,
+      normalizedCapacity,
+      normalizedTuitionFee ?? normalizedNationalTuitionFee ?? existing_row.tuition_fee ?? 0,
       resolvedActive,
       image_url, gdrive_file_id,
       requirements,
@@ -152,8 +173,8 @@ export const updateProgramme = asyncHandler(async (req, res) => {
       application_start_date || null,
       application_end_date || null,
       is_supplementary === 'true' || is_supplementary === true,
-      national_tuition_fee || existing_row.national_tuition_fee || null,
-      international_tuition_fee || existing_row.international_tuition_fee || null,
+      normalizedNationalTuitionFee ?? existing_row.national_tuition_fee ?? null,
+      normalizedInternationalTuitionFee ?? existing_row.international_tuition_fee ?? null,
       id
     ]
   )

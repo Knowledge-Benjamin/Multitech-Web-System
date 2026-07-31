@@ -183,7 +183,7 @@ export default function Programmes() {
       description={programme.description}
       imageUrl={programme.image_url}
       actionText="View Details"
-      linkTo={`/programmes/${programme.id}`}
+      linkTo={`/programmes/${programme.slug || programme.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || programme.id}`}
       onClick={onClick}
     />
   )

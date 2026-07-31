@@ -1,6 +1,12 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const normalizeApiBaseUrl = () => {
+  const configured = import.meta.env.VITE_API_URL || '/api'
+  if (!configured) return '/api'
+  return configured.replace(/\/$/, '')
+}
+
+const API_BASE_URL = normalizeApiBaseUrl()
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -9,6 +15,17 @@ const api = axios.create({
   }
 })
 
+const applyNoCacheHeaders = (config) => {
+  if (config?.method?.toLowerCase() === 'get') {
+    config.headers = {
+      ...(config.headers || {}),
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache'
+    }
+  }
+  return config
+}
+
 // Add token to requests if available
 api.interceptors.request.use(
   (config) => {
@@ -16,7 +33,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    return config
+    return applyNoCacheHeaders(config)
   },
   (error) => Promise.reject(error)
 )

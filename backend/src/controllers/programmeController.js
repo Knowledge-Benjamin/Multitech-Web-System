@@ -14,6 +14,13 @@ const normalizeOptionalNumeric = (value, fallback = null) => {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+const slugify = (value) => String(value || '')
+  .toLowerCase()
+  .trim()
+  .normalize('NFKD')
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/(^-|-$)/g, '')
+
 // Get all programmes with optional filtering
 export const getProgrammes = asyncHandler(async (req, res) => {
   const { type, level } = req.query
@@ -40,7 +47,14 @@ export const getProgrammes = asyncHandler(async (req, res) => {
 // Get single programme
 export const getProgrammeById = asyncHandler(async (req, res) => {
   const { id } = req.params
-  const result = await pool.query('SELECT * FROM programmes WHERE id = $1', [id])
+  const isNumericId = /^\d+$/.test(id)
+
+  const result = await pool.query(
+    isNumericId
+      ? 'SELECT * FROM programmes WHERE id = $1'
+      : 'SELECT * FROM programmes WHERE active = true AND slug = $1',
+    [id]
+  )
 
   if (result.rows.length === 0) {
     return res.status(404).json({ success: false, message: 'Programme not found' })
@@ -72,13 +86,15 @@ export const createProgramme = asyncHandler(async (req, res) => {
   const normalizedNationalTuitionFee = normalizeOptionalNumeric(national_tuition_fee, null)
   const normalizedInternationalTuitionFee = normalizeOptionalNumeric(international_tuition_fee, null)
 
+  const slug = slugify(name)
+
   const result = await pool.query(
     `INSERT INTO programmes (
        name, type, level, description, duration, capacity, tuition_fee, active, image_url, gdrive_file_id, 
        requirements, curriculum, career_prospects, intake_status, application_start_date, application_end_date,
-       is_supplementary, national_tuition_fee, international_tuition_fee, created_at
+       is_supplementary, national_tuition_fee, international_tuition_fee, slug, created_at
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, true, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
+     VALUES ($1, $2, $3, $4, $5, $6, $7, true, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW())
      RETURNING *`,
     [
       name, type, level, description, duration, normalizedCapacity, normalizedTuitionFee ?? normalizedNationalTuitionFee ?? 0, image_url, gdrive_file_id,
@@ -87,7 +103,8 @@ export const createProgramme = asyncHandler(async (req, res) => {
       career_prospects, intake_status || 'closed', 
       application_start_date || null, application_end_date || null, 
       is_supplementary === 'true' || is_supplementary === true,
-      normalizedNationalTuitionFee, normalizedInternationalTuitionFee
+      normalizedNationalTuitionFee, normalizedInternationalTuitionFee,
+      slug
     ]
   )
 
@@ -127,6 +144,7 @@ export const updateProgramme = asyncHandler(async (req, res) => {
 
   const existing_row = existing.rows[0]
   const normalizedCapacity = normalizeOptionalInteger(capacity, existing_row.capacity ?? 50)
+  const slug = slugify(name || existing_row.name)
   const normalizedTuitionFee = normalizeOptionalNumeric(tuition_fee, null)
   const normalizedNationalTuitionFee = normalizeOptionalNumeric(national_tuition_fee, null)
   const normalizedInternationalTuitionFee = normalizeOptionalNumeric(international_tuition_fee, null)
@@ -155,8 +173,9 @@ export const updateProgramme = asyncHandler(async (req, res) => {
          is_supplementary = $15,
          national_tuition_fee = $16,
          international_tuition_fee = $17,
+         slug = $18,
          updated_at = NOW()
-     WHERE id = $18
+     WHERE id = $19
      RETURNING *`,
     [
       name || existing_row.name,
@@ -175,6 +194,7 @@ export const updateProgramme = asyncHandler(async (req, res) => {
       is_supplementary === 'true' || is_supplementary === true,
       normalizedNationalTuitionFee ?? existing_row.national_tuition_fee ?? null,
       normalizedInternationalTuitionFee ?? existing_row.international_tuition_fee ?? null,
+      slug,
       id
     ]
   )

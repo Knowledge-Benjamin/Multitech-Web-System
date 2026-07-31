@@ -230,7 +230,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/programmes" element={<Programmes />} />
-                  <Route path="/programmes/:id" element={<ProgrammeDetails />} />
+                  <Route path="/programmes/:slug" element={<ProgrammeDetails />} />
                   <Route path="/apply" element={<Apply />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<ContactUs />} />

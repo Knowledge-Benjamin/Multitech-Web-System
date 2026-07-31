@@ -3,8 +3,15 @@ import { useParams, Link } from 'react-router-dom'
 import axios from 'axios'
 import './ProgrammeDetails.css'
 
+const slugify = (value) => String(value || '')
+  .toLowerCase()
+  .trim()
+  .normalize('NFKD')
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/(^-|-$)/g, '')
+
 export default function ProgrammeDetails() {
-  const { id } = useParams()
+  const { slug } = useParams()
   const [programme, setProgramme] = useState(null)
   const [programmeFees, setProgrammeFees] = useState([])
   const [functionalFees, setFunctionalFees] = useState([])
@@ -13,10 +20,10 @@ export default function ProgrammeDetails() {
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const progRes = await axios.get(`${import.meta.env.VITE_API_URL}/programmes/${id}`)
+        const progRes = await axios.get(`${import.meta.env.VITE_API_URL}/programmes/${slug}`)
         setProgramme(progRes.data.data)
 
-        const customFeesRes = await axios.get(`${import.meta.env.VITE_API_URL}/programme-fees/programme/${id}`)
+        const customFeesRes = await axios.get(`${import.meta.env.VITE_API_URL}/programme-fees/programme/${progRes.data.data?.id}`)
         setProgrammeFees(customFeesRes.data.data || [])
 
         const funcFeesRes = await axios.get(`${import.meta.env.VITE_API_URL}/functional-fees`)
@@ -29,7 +36,7 @@ export default function ProgrammeDetails() {
     }
 
     fetchDetails()
-  }, [id])
+  }, [slug])
 
   if (loading) {
     return <div className="programme-details-page"><div className="container"><p>Loading programme details...</p></div></div>

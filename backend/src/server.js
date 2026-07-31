@@ -60,15 +60,31 @@ app.disable('etag')
 
 // Security middleware
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false
 }))
 
 // CORS configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://multitech-web-system.onrender.com',
+  'https://www.multitech-web-system.onrender.com'
+]
+
+const corsOrigin = process.env.CORS_ORIGIN || ''
+if (corsOrigin) allowedOrigins.push(corsOrigin)
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+      return
+    }
+    callback(null, false)
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma']
 }))
 
 // Body parsing middleware — capture rawBody for HMAC signature verification
@@ -83,24 +99,9 @@ app.use(requestLogger)
 
 app.use((req, res, next) => {
   if (req.method === 'GET' && req.path.startsWith('/api/')) {
-    const publicApiPrefixes = [
-      '/api/programmes',
-      '/api/programme-categories',
-      '/api/announcements',
-      '/api/articles',
-      '/api/about',
-      '/api/home/reasons',
-      '/api/calendar',
-      '/api/functional-fees',
-      '/api/programme-fees',
-      '/api/images'
-    ]
-
-    if (publicApiPrefixes.some((prefix) => req.path.startsWith(prefix))) {
-      res.set('Cache-Control', 'public, max-age=0, must-revalidate, stale-while-revalidate=60')
-    } else {
-      res.set('Cache-Control', 'no-store, max-age=0')
-    }
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    res.set('Pragma', 'no-cache')
+    res.set('Expires', '0')
   }
 
   next()

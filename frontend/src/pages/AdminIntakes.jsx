@@ -12,7 +12,7 @@ export default function AdminIntakes() {
   const [editMode, setEditMode] = useState(false)
   const [formData, setFormData] = useState({
     id: '', name: '', application_start_date: '', application_end_date: '',
-    application_fee: '', status: 'active', linkedProgrammes: []
+    application_fee: '', status: 'open', linkedProgrammes: []
   })
   
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function AdminIntakes() {
   const openAddModal = () => {
     setFormData({
       id: '', name: '', application_start_date: '', application_end_date: '',
-      application_fee: '', status: 'active', linkedProgrammes: []
+      application_fee: '', status: 'open', linkedProgrammes: []
     })
     setEditMode(false)
     setShowModal(true)

@@ -20,14 +20,16 @@ export const getIntakes = asyncHandler(async (req, res) => {
 })
 
 export const getActiveIntakes = asyncHandler(async (req, res) => {
-  // 'active' is the admin-facing status; original migration used 'open' and 'upcoming'
-  // We return all intakes that are open OR active and still within the application window
   const now = new Date().toISOString().split('T')[0]
   const result = await pool.query(`
     SELECT * FROM intakes 
-    WHERE status IN ('open', 'active')
-      AND (application_start_date IS NULL OR application_start_date <= $1)
-      AND (application_end_date IS NULL OR application_end_date >= $1)
+    WHERE (
+      -- 'open' means admin has explicitly opened it; show if not yet past end date
+      (status = 'open' AND (application_end_date IS NULL OR application_end_date >= $1))
+      OR
+      -- 'upcoming' means it will open; show once the start date has arrived
+      (status = 'upcoming' AND application_start_date <= $1 AND (application_end_date IS NULL OR application_end_date >= $1))
+    )
     ORDER BY created_at DESC
   `, [now])
   res.json({ success: true, data: result.rows })

@@ -10,8 +10,8 @@ import {
 
 const router = express.Router()
 
-router.get('/', authMiddleware, getCourseUnits)
-router.get('/:id', authMiddleware, getCourseUnit)
+router.get('/', getCourseUnits)
+router.get('/:id', getCourseUnit)
 router.post('/', authMiddleware, adminOnly, createCourseUnit)
 router.put('/:id', authMiddleware, adminOnly, updateCourseUnit)
 router.delete('/:id', authMiddleware, adminOnly, deleteCourseUnit)

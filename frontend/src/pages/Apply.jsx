@@ -67,8 +67,8 @@ export default function Apply() {
 
   const { data: progRes } = useApiQuery(
     formData.intake_id ? `/programmes?intake_id=${formData.intake_id}` : null,
-    ['programmes', formData.intake_id],
-    { enabled: !!formData.intake_id }
+    ['intakeProgrammes', formData.intake_id],
+    { queryOptions: { enabled: !!formData.intake_id } }
   )
   const programmes = progRes?.data || []
 

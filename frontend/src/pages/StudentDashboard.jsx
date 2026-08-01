@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import api from '../services/api'
 import StudentSidebar from '../components/StudentSidebar'
+import { useApiQuery } from '../hooks/useApiQuery'
 import './StudentDashboard.css'
 
+const API = import.meta.env.VITE_API_URL
+
 export default function StudentDashboard() {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [passwordForm, setPasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' })
   const [passwordMessage, setPasswordMessage] = useState('')
@@ -13,23 +14,17 @@ export default function StudentDashboard() {
   const [changingPassword, setChangingPassword] = useState(false)
   const studentUser = JSON.parse(localStorage.getItem('studentUser') || '{}')
 
+  const token = localStorage.getItem('studentToken')
+  const { data: resData, isLoading } = useApiQuery(`${API}/student-profile`, {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
+  const data = resData?.data
+
   useEffect(() => {
-    fetchDashboard()
     if (studentUser.must_change_password) {
       setShowPasswordModal(true)
     }
   }, [])
-
-  const fetchDashboard = async () => {
-    try {
-      const res = await api.get('/student-profile')
-      setData(res.data.data)
-    } catch (error) {
-      console.error('Error fetching dashboard', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handlePasswordChange = async (e) => {
     e.preventDefault()
@@ -115,7 +110,7 @@ export default function StudentDashboard() {
           </div>
         )}
 
-        {loading ? (
+        {isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
             <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(0, 82, 204, 0.1)', borderLeftColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

@@ -1,38 +1,33 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import './Home.css'
 import './About.css'
 import Seo from '../components/Seo'
 
 export default function About() {
-  const [hero, setHero] = useState(null)
-  const [sections, setSections] = useState([])
-  const [loading, setLoading] = useState(true)
   const [visible, setVisible] = useState(false)
   const [activeSection, setActiveSection] = useState(null)
 
+  const { data: heroRes, isLoading: heroLoading } = useApiQuery('/about', 'aboutHero')
+  const hero = heroRes?.data || null
+
+  const { data: sectionsRes, isLoading: sectionsLoading } = useApiQuery('/about/sections', 'aboutSections')
+  const sections = sectionsRes?.data || []
+
+  const loading = heroLoading || sectionsLoading
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [heroRes, sectionsRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL}/about`),
-          axios.get(`${import.meta.env.VITE_API_URL}/about/sections`)
-        ])
-
-        setHero(heroRes.data.data)
-        setSections(sectionsRes.data.data || [])
-        setActiveSection(sectionsRes.data.data?.[0]?.id || null)
-      } catch (err) {
-        console.error('Failed to load About page data', err)
-      } finally {
-        setLoading(false)
-        setTimeout(() => setVisible(true), 30)
-      }
+    if (!loading) {
+      setTimeout(() => setVisible(true), 30)
     }
+  }, [loading])
 
-    fetchData()
-  }, [])
+  useEffect(() => {
+    if (sections.length > 0 && !activeSection) {
+      setActiveSection(sections[0].id)
+    }
+  }, [sections, activeSection])
 
   const currentSection = sections.find(section => section.id === activeSection) || sections[0] || null
 

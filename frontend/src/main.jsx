@@ -5,56 +5,21 @@ import axios from 'axios'
 import './styles/global.css'
 import './styles/mobile.css'
 
-const CACHE_TTL_MS = 15 * 1000
-const STALE_WHILE_REVALIDATE_MS = 60 * 1000
-const responseCache = new Map()
-const refreshAxios = axios.create()
-const cacheablePrefixes = [
-  '/api/programmes',
-  '/api/programme-categories',
-  '/api/announcements',
-  '/api/articles',
-  '/api/about',
-  '/api/home/reasons',
-  '/api/calendar',
-  '/api/functional-fees',
-  '/api/programme-fees',
-  '/api/images'
-]
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-const isCacheableGet = (config) => {
-  if (!config?.url || config.__skipCache) return false
-  const method = config.method?.toLowerCase() || 'get'
-  if (method !== 'get') return false
-
-  const url = new URL(config.url, window.location.origin)
-  return cacheablePrefixes.some((prefix) => url.pathname.startsWith(prefix))
-}
-
-const invalidateCachedResponses = (prefixes = []) => {
-  const normalizedPrefixes = prefixes.map((prefix) => prefix.toLowerCase())
-  Array.from(responseCache.keys()).forEach((key) => {
-    const lowerKey = key.toLowerCase()
-    if (normalizedPrefixes.length === 0 || normalizedPrefixes.some((prefix) => lowerKey.includes(prefix))) {
-      responseCache.delete(key)
-    }
-  })
-}
-
-if (typeof window !== 'undefined') {
-  window.__multitechInvalidateCaches = invalidateCachedResponses
-}
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+      cacheTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: true,
+      retry: 1,
+    },
+  },
+})
 
 axios.interceptors.response.use(
-  (response) => {
-    if (isCacheableGet(response.config)) {
-      responseCache.set(`${response.config.method?.toUpperCase() || 'GET'}:${response.config.url}`, {
-        timestamp: Date.now(),
-        response
-      })
-    }
-    return response
-  },
+  (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
       const path = window.location.pathname
@@ -73,24 +38,6 @@ axios.interceptors.response.use(
     return Promise.reject(error)
   }
 )
-
-const getCacheKey = (config) => `${config.method?.toUpperCase() || 'GET'}:${config.url}`
-
-const refreshCachedRequest = (config, cacheKey) => {
-  if (config.__backgroundRefresh) return
-
-  refreshAxios.request({
-    method: config.method || 'get',
-    url: config.url,
-    headers: config.headers,
-    params: config.params
-  }).then((response) => {
-    responseCache.set(cacheKey, {
-      timestamp: Date.now(),
-      response
-    })
-  }).catch(() => undefined)
-}
 
 const applyLazyLoading = () => {
   const images = document.querySelectorAll('img')
@@ -117,49 +64,6 @@ if (typeof MutationObserver !== 'undefined') {
 
 applyLazyLoading()
 
-axios.interceptors.request.use((config) => {
-  if (config.__skipCache) {
-    return config
-  }
-
-  if (isCacheableGet(config)) {
-    const cacheKey = getCacheKey(config)
-    const cachedEntry = responseCache.get(cacheKey)
-
-    if (cachedEntry) {
-      const age = Date.now() - cachedEntry.timestamp
-      if (age < CACHE_TTL_MS) {
-        return Promise.reject({
-          __cachedResponse: cachedEntry.response,
-          config,
-          cacheKey
-        })
-      }
-
-      if (age < STALE_WHILE_REVALIDATE_MS) {
-        refreshCachedRequest(config, cacheKey)
-        return Promise.reject({
-          __cachedResponse: cachedEntry.response,
-          config,
-          cacheKey,
-          stale: true
-        })
-      }
-    }
-  }
-  return config
-})
-
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error?.__cachedResponse) {
-      return Promise.resolve(error.__cachedResponse)
-    }
-    return Promise.reject(error)
-  }
-)
-
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
@@ -170,6 +74,8 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
   </React.StrictMode>,
 )

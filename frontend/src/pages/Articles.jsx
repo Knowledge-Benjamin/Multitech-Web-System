@@ -1,29 +1,16 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { useState } from 'react'
+import { useApiQuery } from '../hooks/useApiQuery'
 import './Articles.css'
 import ArticleCard from '../components/ArticleCard'
 import SkeletonCard from '../components/SkeletonCard'
 import Seo from '../components/Seo'
 
 export default function Articles() {
-  const [articles, setArticles] = useState([])
-  const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const perPage = 8
 
-  useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/articles`)
-        setArticles(res.data.data)
-      } catch (err) {
-        console.error('Failed to load articles', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchArticles()
-  }, [])
+  const { data: response, isLoading: loading } = useApiQuery('/articles', 'articles')
+  const articles = response?.data || []
 
   const totalPages = Math.max(1, Math.ceil(articles.length / perPage))
   const start = (currentPage - 1) * perPage

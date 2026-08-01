@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
 import ProgrammeCard from '../components/ProgrammeCard'
@@ -15,17 +15,27 @@ import './Home.css'
 export default function Home() {
   const autoplayRef = useRef(null)
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 5000, stopOnInteraction: true })])
-  const [heroArticles, setHeroArticles] = useState([])
-  const [categories, setCategories] = useState([])
-  const [heroLoading, setHeroLoading] = useState(true)
-  const [loadingCategories, setLoadingCategories] = useState(true)
   const [heroVisible, setHeroVisible] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [scrollSnaps, setScrollSnaps] = useState([])
-  const [reasons, setReasons] = useState([])
-  const [reasonsLoading, setReasonsLoading] = useState(true)
-  const [latestArticles, setLatestArticles] = useState([])
-  const [latestLoading, setLatestLoading] = useState(true)
+
+  const { data: heroRes, isLoading: heroLoading } = useApiQuery('/articles/carousel', 'heroArticles')
+  const heroArticles = heroRes?.data || []
+
+  const { data: catRes, isLoading: loadingCategories } = useApiQuery('/programme-categories', 'categories')
+  const categories = catRes?.data || []
+
+  const { data: reasonsRes, isLoading: reasonsLoading } = useApiQuery('/home/reasons', 'homeReasons')
+  const reasons = reasonsRes?.data || []
+
+  const { data: latestRes, isLoading: latestLoading } = useApiQuery('/articles', 'latestArticles')
+  const latestArticles = (latestRes?.data || []).slice(0, 4)
+
+  useEffect(() => {
+    if (!heroLoading) {
+      setTimeout(() => setHeroVisible(true), 30)
+    }
+  }, [heroLoading])
 
   const lcpHeroImage = useMemo(() => {
     return heroArticles.find((article) => article?.featured_image_url) || null
@@ -85,54 +95,7 @@ export default function Home() {
     }
   }, [emblaApi])
 
-  useEffect(() => {
-    const fetchHeroArticles = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/articles/carousel`)
-        setHeroArticles(res.data.data || [])
-      } catch (err) {
-        console.error('Failed to load hero articles', err)
-      } finally {
-        setHeroLoading(false)
-        // Tiny delay so the browser paints the new DOM before starting the transition
-        setTimeout(() => setHeroVisible(true), 30)
-      }
-    }
-    const fetchCategories = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/programme-categories`)
-        setCategories(res.data.data || [])
-      } catch (err) {
-        console.error('Failed to load categories', err)
-      } finally {
-        setLoadingCategories(false)
-      }
-    }
-    const fetchReasons = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/home/reasons`)
-        setReasons(res.data.data || [])
-      } catch (err) {
-        console.error('Failed to load home reasons', err)
-      } finally {
-        setReasonsLoading(false)
-      }
-    }
-    const fetchLatestArticles = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/articles`)
-        setLatestArticles((res.data.data || []).slice(0, 4))
-      } catch (err) {
-        console.error('Failed to load latest articles', err)
-      } finally {
-        setLatestLoading(false)
-      }
-    }
-    fetchHeroArticles()
-    fetchCategories()
-    fetchReasons()
-    fetchLatestArticles()
-  }, [])
+
 
   return (
     <div className="home">

@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import StudentSidebar from '../components/StudentSidebar'
 
 const API = import.meta.env.VITE_API_URL
@@ -16,26 +15,13 @@ function formatTime(timeStr) {
 }
 
 export default function StudentTimetable() {
-  const [schedules, setSchedules] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const token = localStorage.getItem('studentToken')
+  const { data: resData, isLoading, error: apiError } = useApiQuery(`${API}/student-profile/timetable`, {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
 
-  useEffect(() => {
-    const fetchTimetable = async () => {
-      const token = localStorage.getItem('studentToken')
-      try {
-        const res = await axios.get(`${API}/student-profile/timetable`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setSchedules(res.data.data || [])
-      } catch (err) {
-        setError('Failed to load your timetable.')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchTimetable()
-  }, [])
+  const schedules = resData?.data || []
+  const error = apiError ? 'Failed to load your timetable.' : ''
 
   // Group schedules by day of week
   const grouped = DAYS.reduce((acc, day) => {
@@ -55,7 +41,7 @@ export default function StudentTimetable() {
 
           {error && <div className="message-error">{error}</div>}
 
-          {loading ? (
+          {isLoading ? (
             <div className="loading-spinner"><div className="spinner"></div></div>
           ) : schedules.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px', border: '1px solid #e5e7eb' }}>

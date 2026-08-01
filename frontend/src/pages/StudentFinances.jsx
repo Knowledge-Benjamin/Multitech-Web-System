@@ -1,34 +1,18 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import StudentSidebar from '../components/StudentSidebar'
 
 export default function StudentFinances() {
-  const [invoices, setInvoices] = useState([])
-  const [summary, setSummary] = useState({
+  const token = localStorage.getItem('studentToken')
+  const { data, isLoading } = useApiQuery(`${import.meta.env.VITE_API_URL}/student-profile/invoices`, {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
+
+  const invoices = data?.data?.invoices || []
+  const summary = data?.data?.summary || {
     totalBilled: 0,
     totalPaid: 0,
     outstandingBalance: 0,
     isClearedForExams: false
-  })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchInvoices()
-  }, [])
-
-  const fetchInvoices = async () => {
-    const token = localStorage.getItem('studentToken')
-    try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/student-profile/invoices`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setInvoices(res.data.data.invoices)
-      setSummary(res.data.data.summary)
-    } catch (error) {
-      console.error('Error fetching invoices', error)
-    } finally {
-      setLoading(false)
-    }
   }
 
   const getStatusBadge = (status) => {
@@ -50,7 +34,7 @@ export default function StudentFinances() {
           <button className="button button-primary hide-on-print">Make a Payment</button>
         </header>
 
-        {loading ? <p>Loading financial records...</p> : (
+        {isLoading ? <p>Loading financial records...</p> : (
           <>
             {/* Financial Summary & Exam Pass */}
             <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap' }}>

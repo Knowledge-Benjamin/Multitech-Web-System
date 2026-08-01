@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 
 const API = import.meta.env.VITE_API_URL
 
 export default function AdminStudents() {
-  const [students, setStudents] = useState([])
-  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
 
@@ -27,19 +26,15 @@ export default function AdminStudents() {
   const token = localStorage.getItem('adminToken')
   const headers = { Authorization: `Bearer ${token}` }
 
-  useEffect(() => { fetchStudents() }, [search, statusFilter])
+  const queryParams = {}
+  if (statusFilter) queryParams.status = statusFilter
+  if (search) queryParams.search = search
 
-  const fetchStudents = async () => {
-    setLoading(true)
-    try {
-      const res = await axios.get(`${API}/students`, { headers, params: { search, status: statusFilter } })
-      setStudents(res.data.data)
-    } catch (error) {
-      console.error('Error fetching students:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data: studentsData, isLoading: loading, refetch: fetchStudents } = useApiQuery('/students', 'adminStudents', {
+    axiosOptions: { headers, params: queryParams }
+  })
+  
+  const students = studentsData?.data || []
 
   const fetchStudentDetails = async (id) => {
     try {

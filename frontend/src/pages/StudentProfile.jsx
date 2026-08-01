@@ -1,28 +1,13 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import StudentSidebar from '../components/StudentSidebar'
 
 export default function StudentProfile() {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const token = localStorage.getItem('studentToken')
+  const { data: resData, isLoading } = useApiQuery(`${import.meta.env.VITE_API_URL}/student-profile`, {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
 
-  useEffect(() => {
-    fetchProfile()
-  }, [])
-
-  const fetchProfile = async () => {
-    const token = localStorage.getItem('studentToken')
-    try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/student-profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setData(res.data.data)
-    } catch (error) {
-      console.error('Error fetching profile', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const data = resData?.data
 
   return (
     <div className="admin-layout">
@@ -32,7 +17,7 @@ export default function StudentProfile() {
           <h1>My Profile</h1>
         </header>
 
-        {loading ? <p>Loading profile...</p> : (
+        {isLoading ? <p>Loading profile...</p> : (
           <div className="profile-container" style={{ display: 'grid', gap: '2rem', gridTemplateColumns: '1fr 1fr' }}>
             <div className="dashboard-card" style={{ background: 'var(--color-surface)', padding: '2rem', borderRadius: '12px', border: '1px solid var(--color-border)' }}>
               <h3>Personal Details</h3>

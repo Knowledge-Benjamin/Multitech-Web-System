@@ -1,30 +1,14 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
 import StudentSidebar from '../components/StudentSidebar'
+import { useApiQuery } from '../hooks/useApiQuery'
 
 const API = import.meta.env.VITE_API_URL
 
 export default function StudentAnnouncements() {
-  const [announcements, setAnnouncements] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    const fetchAnnouncements = async () => {
-      const token = localStorage.getItem('studentToken')
-      try {
-        const res = await axios.get(`${API}/student-profile/announcements`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setAnnouncements(res.data.data || [])
-      } catch (err) {
-        setError('Failed to load announcements.')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchAnnouncements()
-  }, [])
+  const token = localStorage.getItem('studentToken')
+  const { data, isLoading, error } = useApiQuery(`${API}/student-profile/announcements`, {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
+  const announcements = data?.data || []
 
   return (
     <div className="admin-layout">
@@ -36,9 +20,9 @@ export default function StudentAnnouncements() {
             <p style={{ color: '#6b7280' }}>Important updates from your lecturers for enrolled courses.</p>
           </header>
 
-          {error && <div className="message-error">{error}</div>}
+          {error && <div className="message-error">Failed to load announcements.</div>}
 
-          {loading ? (
+          {isLoading ? (
             <div className="loading-spinner"><div className="spinner"></div></div>
           ) : (
             <div className="announcements-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

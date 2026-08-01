@@ -1,42 +1,33 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminApplications.css'
 
 export default function AdminApplications() {
-  const [applications, setApplications] = useState([])
   const [statusFilter, setStatusFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [appliedSearch, setAppliedSearch] = useState('')
   const [selectedApp, setSelectedApp] = useState(null)
   const [adminNotes, setAdminNotes] = useState('')
 
-  useEffect(() => {
-    fetchApplications()
-  }, [statusFilter])
+  const token = localStorage.getItem('adminToken')
+  const queryParams = {}
+  if (statusFilter !== 'all') queryParams.status = statusFilter
+  if (appliedSearch) queryParams.search = appliedSearch
 
-  const fetchApplications = async () => {
-    setLoading(true)
-    const token = localStorage.getItem('adminToken')
-    try {
-      let url = `${import.meta.env.VITE_API_URL}/applications?`
-      if (statusFilter !== 'all') url += `status=${statusFilter}&`
-      if (searchQuery) url += `search=${searchQuery}&`
-      
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setApplications(response.data.data || [])
-    } catch (error) {
-      console.error('Error fetching applications:', error)
-    } finally {
-      setLoading(false)
+  const { data: applicationsData, isLoading: loading, refetch: fetchApplications } = useApiQuery('/applications', 'adminApplications', {
+    axiosOptions: { 
+      headers: { Authorization: `Bearer ${token}` },
+      params: queryParams
     }
-  }
+  })
+
+  const applications = applicationsData?.data || []
 
   const handleSearchSubmit = (e) => {
     e.preventDefault()
-    fetchApplications()
+    setAppliedSearch(searchQuery)
   }
 
   const handlePaymentStatusUpdate = async (appId, newStatus) => {

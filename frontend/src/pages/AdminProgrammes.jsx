@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminProgrammes.css'
 
@@ -22,11 +23,8 @@ const getSuggestedLevel = (type) => {
 
 export default function AdminProgrammes() {
   const [activeMainTab, setActiveMainTab] = useState('programmes')
-  const [programmes, setProgrammes] = useState([])
-  const [categories, setCategories] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
-  const [loading, setLoading] = useState(true)
   const [file, setFile] = useState(null)
   const [uploadingCategory, setUploadingCategory] = useState(null)
   
@@ -48,8 +46,6 @@ export default function AdminProgrammes() {
   })
   
   // ── Course Units state ────────────────────────────────────────────────────
-  const [courseUnits, setCourseUnits] = useState([])
-  const [cuLoading, setCuLoading] = useState(false)
   const [cuError, setCuError] = useState('')
   const [cuSuccess, setCuSuccess] = useState('')
   const [cuForm, setCuForm] = useState({ programme_id: '', course_code: '', name: '', credits: 3, target_year: 1, target_semester: 1 })
@@ -59,43 +55,28 @@ export default function AdminProgrammes() {
 
   const navigate = useNavigate()
 
-  useEffect(() => {
-    if (activeMainTab === 'programmes') {
-      fetchProgrammes()
-    } else if (activeMainTab === 'course_units') {
-      fetchProgrammes()
-      fetchCourseUnits()
-    } else {
-      fetchCategories()
-    }
-  }, [activeMainTab])
+  const token = localStorage.getItem('adminToken')
+  
+  const { data: programmesData, isLoading: loadingProgrammes, refetch: fetchProgrammes } = useApiQuery('/programmes', 'adminProgrammes', {
+    queryOptions: { enabled: activeMainTab === 'programmes' || activeMainTab === 'course_units' },
+    axiosOptions: { headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' } }
+  })
+  
+  const { data: categoriesData, isLoading: loadingCategories, refetch: fetchCategories } = useApiQuery('/programme-categories', 'adminCategories', {
+    queryOptions: { enabled: activeMainTab === 'categories' }
+  })
+  
+  const { data: cuData, isLoading: cuLoading, refetch: fetchCourseUnits } = useApiQuery('/course-units', 'adminCourseUnits', {
+    queryOptions: { enabled: activeMainTab === 'course_units' },
+    axiosOptions: { headers: { Authorization: `Bearer ${token}`, 'Cache-Control': 'no-cache', Pragma: 'no-cache' } }
+  })
 
-  const fetchCategories = async () => {
-    setLoading(true)
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/programme-categories`)
-      setCategories(response.data.data || [])
-    } catch (error) {
-      console.error('Error fetching categories:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchProgrammes = async () => {
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/programmes`, {
-        params: { _: Date.now() },
-        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-        __skipCache: true
-      })
-      setProgrammes(response.data.data || [])
-    } catch (error) {
-      console.error('Error fetching programmes:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const programmes = programmesData?.data || []
+  const categories = categoriesData?.data || []
+  const courseUnits = cuData?.data || []
+  
+  const loading = (activeMainTab === 'programmes' && loadingProgrammes) || 
+                  (activeMainTab === 'categories' && loadingCategories)
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -128,8 +109,7 @@ export default function AdminProgrammes() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const token = localStorage.getItem('adminToken')
-
+    
     const data = new FormData()
     
     const submitData = {
@@ -229,28 +209,12 @@ export default function AdminProgrammes() {
     }
   }
 
-  const fetchCourseUnits = async () => {
-    setCuLoading(true)
-    const token = localStorage.getItem('adminToken')
-    try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/course-units`, {
-        params: { _: Date.now() },
-        headers: { Authorization: `Bearer ${token}`, 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-        __skipCache: true
-      })
-      setCourseUnits(res.data.data || [])
-    } catch (err) {
-      setCuError('Failed to load course units.')
-    } finally {
-      setCuLoading(false)
-    }
-  }
+  // course unit functions
 
   const handleCUSubmit = async (e) => {
     e.preventDefault()
     setCuError('')
     setCuSuccess('')
-    const token = localStorage.getItem('adminToken')
     
     const payload = { ...cuForm, modules: cuModules }
 
@@ -291,7 +255,6 @@ export default function AdminProgrammes() {
 
   const handleCUDelete = async (id) => {
     if (!window.confirm('Delete this course unit?')) return
-    const token = localStorage.getItem('adminToken')
     try {
       await axios.delete(`${import.meta.env.VITE_API_URL}/course-units/${id}`, { headers: { Authorization: `Bearer ${token}` } })
       fetchCourseUnits()
@@ -305,7 +268,6 @@ export default function AdminProgrammes() {
     if (!file) return
 
     setUploadingCategory(`prog_${programmeId}`)
-    const token = localStorage.getItem('adminToken')
     const formData = new FormData()
     formData.append('image', file)
 
@@ -332,7 +294,6 @@ export default function AdminProgrammes() {
     if (!file) return
 
     setUploadingCategory(categoryId)
-    const token = localStorage.getItem('adminToken')
     const formData = new FormData()
     formData.append('image', file)
 

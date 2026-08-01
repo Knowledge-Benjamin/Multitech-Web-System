@@ -1,19 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminProgrammes.css'
 
 const API = import.meta.env.VITE_API_URL
 
 export default function AdminLecturers() {
-  const [lecturers, setLecturers] = useState([])
-  const [loading, setLoading] = useState(true)
   const [view, setView] = useState('list') // 'list' | 'create' | 'assign'
   const [selectedLecturer, setSelectedLecturer] = useState(null)
   const [assignments, setAssignments] = useState([])
-
-  const [courses, setCourses] = useState([])
-  const [terms, setTerms] = useState([])
 
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '' })
   const [assignForm, setAssignForm] = useState({ course_id: '', academic_term_id: '' })
@@ -22,35 +18,23 @@ export default function AdminLecturers() {
 
   const token = localStorage.getItem('adminToken')
 
-  useEffect(() => {
-    fetchLecturers()
-    fetchCoursesAndTerms()
-  }, [])
-
-  const fetchLecturers = async () => {
-    setLoading(true)
-    try {
-      const res = await axios.get(`${API}/admin/lecturers`, { headers: { Authorization: `Bearer ${token}` } })
-      setLecturers(res.data.data)
-    } catch (err) {
-      setError('Failed to load lecturers.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchCoursesAndTerms = async () => {
-    try {
-      const termsRes = await axios.get(`${API}/calendar/terms`, { headers: { Authorization: `Bearer ${token}` } })
-      setTerms(termsRes.data.data || [])
-      
-      // Also fetch courses for the dropdown
-      const coursesRes = await axios.get(`${API}/course-units`, { headers: { Authorization: `Bearer ${token}` } })
-      setCourses(coursesRes.data.data || [])
-    } catch (err) {
-      console.error('Failed to load terms/courses:', err)
-    }
-  }
+  const { data: lecturersData, isLoading: loadingLecturers, refetch: fetchLecturers } = useApiQuery('/admin/lecturers', 'adminLecturers', {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
+  
+  const { data: termsData, isLoading: loadingTerms } = useApiQuery('/calendar/terms', 'adminTerms', {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
+  
+  const { data: coursesData, isLoading: loadingCourses } = useApiQuery('/course-units', 'adminCourseUnits', {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
+  
+  const lecturers = lecturersData?.data || []
+  const terms = termsData?.data || []
+  const courses = coursesData?.data || []
+  
+  const loading = loadingLecturers || loadingTerms || loadingCourses
 
   const fetchAssignments = async (lecturerId) => {
     try {

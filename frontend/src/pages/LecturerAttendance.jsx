@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts'
 import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import QRCode from 'qrcode'
 import './LecturerAttendance.css'
 
@@ -10,7 +11,6 @@ const API = import.meta.env.VITE_API_URL
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 export default function LecturerAttendance() {
-  const [schedules, setSchedules] = useState([])
   const [selectedScheduleId, setSelectedScheduleId] = useState('')
   const [selectedSchedule, setSelectedSchedule] = useState(null)
   const [session, setSession] = useState(null)
@@ -23,7 +23,6 @@ export default function LecturerAttendance() {
   const [meshDone, setMeshDone] = useState(false)
   const [verifiedCount, setVerifiedCount] = useState(0)
   const [mapData, setMapData] = useState([])
-  const [loadingSchedules, setLoadingSchedules] = useState(true)
   const [error, setError] = useState('')
   const [bleStatus, setBleStatus] = useState('idle') // idle | checking | granted | denied | unavailable
   const [gpsStatus, setGpsStatus] = useState('idle') // idle | checking | granted | denied
@@ -32,31 +31,22 @@ export default function LecturerAttendance() {
   const countdownRef = useRef(null)
   const token = localStorage.getItem('lecturerToken')
 
+  const info = JSON.parse(localStorage.getItem('lecturerInfo') || '{}')
+  const lecturerId = info.id || null
+  const { data: resData, isLoading: loadingSchedules, error: queryError } = useApiQuery(
+    lecturerId ? `/timetable/schedules?lecturerId=${lecturerId}` : null,
+    ['lecturerSchedules', lecturerId],
+    { axiosOptions: { headers: { Authorization: `Bearer ${token}` } } }
+  )
+  const schedules = resData?.schedules || []
+  const displayError = error || (queryError ? 'Could not load your class schedules. Please contact the administrator.' : '')
+
+  // Auto-select if only one schedule
   useEffect(() => {
-    fetchMySchedules()
-  }, [])
-
-  const fetchMySchedules = async () => {
-    setLoadingSchedules(true)
-    try {
-      const info = localStorage.getItem('lecturerInfo')
-      const lecturerId = info ? JSON.parse(info).id : null
-
-      const res = await axios.get(`${API}/timetable/schedules?lecturerId=${lecturerId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      const loaded = res.data.schedules || []
-      setSchedules(loaded)
-      // Auto-select if only one schedule
-      if (loaded.length === 1) {
-        setSelectedScheduleId(String(loaded[0].id))
-      }
-    } catch (err) {
-      setError('Could not load your class schedules. Please contact the administrator.')
-    } finally {
-      setLoadingSchedules(false)
+    if (schedules.length === 1 && !selectedScheduleId) {
+      setSelectedScheduleId(String(schedules[0].id))
     }
-  }
+  }, [schedules, selectedScheduleId])
 
   // Update selectedSchedule object whenever dropdown changes
   useEffect(() => {
@@ -238,7 +228,7 @@ export default function LecturerAttendance() {
             Select one of your scheduled classes to begin a live BLE + GPS + QR attendance session.
           </p>
 
-          {error && <div className="la-error">{error}</div>}
+          {displayError && <div className="la-error">{displayError}</div>}
 
           {/* Schedule Selector */}
           <label className="la-label">Your Scheduled Classes</label>

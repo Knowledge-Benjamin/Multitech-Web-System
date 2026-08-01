@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import StudentSidebar from '../components/StudentSidebar'
+import { useApiQuery } from '../hooks/useApiQuery'
 import './StudentExams.css'
 
 const API = import.meta.env.VITE_API_URL
@@ -25,10 +26,6 @@ function formatDate(dt) {
 }
 
 export default function StudentExams() {
-  const [exams, setExams] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
   // PIN state
   const [pin, setPin] = useState(null)
   const [pinExpiry, setPinExpiry] = useState(null)
@@ -41,22 +38,10 @@ export default function StudentExams() {
 
   const token = localStorage.getItem('studentToken')
 
-  const fetchExams = useCallback(async () => {
-    try {
-      const res = await axios.get(`${API}/student-profile/exams`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      setExams(res.data.data || [])
-    } catch (err) {
-      setError('Could not load your exams. Please try again later.')
-    } finally {
-      setLoading(false)
-    }
-  }, [token])
-
-  useEffect(() => {
-    fetchExams()
-  }, [fetchExams])
+  const { data, isLoading, error } = useApiQuery(`${API}/student-profile/exams`, {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
+  const exams = data?.data || []
 
   // Countdown timer for the PIN
   useEffect(() => {
@@ -191,12 +176,12 @@ export default function StudentExams() {
           </div>
 
           {/* Exams List */}
-          {loading ? (
+          {isLoading ? (
             <div className="loading-spinner">
               <div className="spinner"></div>
             </div>
           ) : error ? (
-            <div className="message-error">{error}</div>
+            <div className="message-error">Could not load your exams. Please try again later.</div>
           ) : exams.length === 0 ? (
             <div className="exams-empty">
               <span className="empty-icon">📋</span>

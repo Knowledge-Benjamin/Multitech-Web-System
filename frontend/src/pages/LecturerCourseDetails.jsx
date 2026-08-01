@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import LecturerSidebar from '../components/LecturerSidebar'
 import './LecturerCourseDetails.css'
 
@@ -28,13 +29,9 @@ function getFileIcon(mimeType) {
 export default function LecturerCourseDetails() {
   const { courseId } = useParams()
   const navigate = useNavigate()
-  const [data, setData] = useState(null)
-  const [materials, setMaterials] = useState([])
   const [students, setStudents] = useState([])
-  const [announcements, setAnnouncements] = useState([])
   const [activeTab, setActiveTab] = useState('materials') // 'materials', 'gradebook', 'announcements'
   const [ssoLoading, setSsoLoading] = useState(false)
-  const [loading, setLoading] = useState(true)
   const [savingGrades, setSavingGrades] = useState(false)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
@@ -51,34 +48,36 @@ export default function LecturerCourseDetails() {
 
   const token = localStorage.getItem('lecturerToken')
 
-  useEffect(() => {
-    fetchCourseData()
-  }, [courseId])
+  const { data: courseRes, isLoading, refetch: refetchCourse } = useApiQuery(
+    `/lecturer/courses/${courseId}`,
+    ['courseDetails', courseId],
+    { axiosOptions: { headers: { Authorization: `Bearer ${token}` } } }
+  )
+  const { data: studentsRes, refetch: refetchStudents } = useApiQuery(
+    `/lecturer/courses/${courseId}/students`,
+    ['courseStudents', courseId],
+    { axiosOptions: { headers: { Authorization: `Bearer ${token}` } } }
+  )
+  const { data: announcementsRes, refetch: refetchAnnouncements } = useApiQuery(
+    `/lecturer/courses/${courseId}/announcements`,
+    ['courseAnnouncements', courseId],
+    { axiosOptions: { headers: { Authorization: `Bearer ${token}` } } }
+  )
 
-  const fetchCourseData = async () => {
-    setLoading(true)
-    try {
-      const [courseRes, studentsRes, announcementsRes] = await Promise.all([
-        axios.get(`${API}/lecturer/courses/${courseId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/lecturer/courses/${courseId}/students`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/lecturer/courses/${courseId}/announcements`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      ])
-      
-      setData(courseRes.data.data)
-      setMaterials(courseRes.data.data.materials)
-      setStudents(studentsRes.data.data)
-      setAnnouncements(announcementsRes.data.data)
-    } catch (err) {
-      setError('Failed to load course details')
-    } finally {
-      setLoading(false)
+  const data = courseRes?.data || null
+  const materials = courseRes?.data?.materials || []
+  const announcements = announcementsRes?.data || []
+
+  useEffect(() => {
+    if (studentsRes?.data) {
+      setStudents(studentsRes.data)
     }
+  }, [studentsRes])
+
+  const fetchCourseData = () => {
+    refetchCourse()
+    refetchStudents()
+    refetchAnnouncements()
   }
 
   const handleUpload = async (e) => {
@@ -194,7 +193,7 @@ export default function LecturerCourseDetails() {
     }
   }
 
-  if (loading) return (
+  if (isLoading) return (
     <div className="lecturer-layout">
       <div className="lecturer-loading" style={{ margin: 'auto' }}>
         <div className="spinner-ring"></div>

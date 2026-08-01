@@ -1,14 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminFees.css'
 
 export default function AdminFees() {
   const [activeTab, setActiveTab] = useState('functional') // 'functional' or 'programme_specific'
-  const [functionalFees, setFunctionalFees] = useState([])
-  const [programmeFees, setProgrammeFees] = useState([])
-  const [programmes, setProgrammes] = useState([])
-  const [loading, setLoading] = useState(true)
 
   // Modals
   const [showFuncModal, setShowFuncModal] = useState(false)
@@ -18,28 +15,27 @@ export default function AdminFees() {
   const [funcFormData, setFuncFormData] = useState({ fee_name: '', national_amount: '', international_amount: '', description: '', is_mandatory: true })
   const [progFormData, setProgFormData] = useState({ programme_id: '', fee_name: '', national_amount: '', international_amount: '', description: '', is_mandatory: true })
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  const token = localStorage.getItem('adminToken')
+  
+  const { data: funcFeesData, isLoading: loadingFunc, refetch: fetchFuncFees } = useApiQuery('/functional-fees', 'adminFuncFees', {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
+  
+  const { data: progFeesData, isLoading: loadingProgFees, refetch: fetchProgFees } = useApiQuery('/programme-fees', 'adminProgFees', {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
+  
+  const { data: programmesData, isLoading: loadingProgrammes } = useApiQuery('/programmes', 'adminProgrammes')
 
-  const fetchData = async () => {
-    setLoading(true)
-    const token = localStorage.getItem('adminToken')
-    try {
-      const [funcRes, progRes, pgRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL}/functional-fees`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${import.meta.env.VITE_API_URL}/programme-fees`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${import.meta.env.VITE_API_URL}/programmes`)
-      ])
-      
-      setFunctionalFees(funcRes.data.data || [])
-      setProgrammeFees(progRes.data.data || [])
-      setProgrammes(pgRes.data.data || [])
-    } catch (error) {
-      console.error('Error fetching fees:', error)
-    } finally {
-      setLoading(false)
-    }
+  const functionalFees = funcFeesData?.data || []
+  const programmeFees = progFeesData?.data || []
+  const programmes = programmesData?.data || []
+  
+  const loading = loadingFunc || loadingProgFees || loadingProgrammes
+  
+  const fetchData = () => {
+    fetchFuncFees()
+    fetchProgFees()
   }
 
   // Functional Fees Handlers

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import axios from 'axios'
+
+import { useApiQuery } from '../hooks/useApiQuery'
 import './ProgrammeDetails.css'
 
 const slugify = (value) => String(value || '')
@@ -12,35 +12,30 @@ const slugify = (value) => String(value || '')
 
 export default function ProgrammeDetails() {
   const { slug } = useParams()
-  const [programme, setProgramme] = useState(null)
-  const [courseUnits, setCourseUnits] = useState([])
-  const [programmeFees, setProgrammeFees] = useState([])
-  const [functionalFees, setFunctionalFees] = useState([])
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchDetails = async () => {
-      try {
-        const progRes = await axios.get(`${import.meta.env.VITE_API_URL}/programmes/${slug}`)
-        setProgramme(progRes.data.data)
+  const { data: progData, isLoading: loadingProg } = useApiQuery(`/programmes/${slug}`, ['programme', slug])
+  const programme = progData?.data || null
+  const progId = programme?.id
 
-        const cuRes = await axios.get(`${import.meta.env.VITE_API_URL}/course-units?programme_id=${progRes.data.data?.id}`)
-        setCourseUnits(cuRes.data.data || [])
+  const { data: cuData, isLoading: loadingCu } = useApiQuery(
+    progId ? `/course-units?programme_id=${progId}` : null,
+    ['courseUnits', progId],
+    { queryOptions: { enabled: !!progId } }
+  )
 
-        const customFeesRes = await axios.get(`${import.meta.env.VITE_API_URL}/programme-fees/programme/${progRes.data.data?.id}`)
-        setProgrammeFees(customFeesRes.data.data || [])
+  const { data: pfData, isLoading: loadingPf } = useApiQuery(
+    progId ? `/programme-fees/programme/${progId}` : null,
+    ['programmeFees', progId],
+    { queryOptions: { enabled: !!progId } }
+  )
 
-        const funcFeesRes = await axios.get(`${import.meta.env.VITE_API_URL}/functional-fees`)
-        setFunctionalFees(funcFeesRes.data.data || [])
-      } catch (err) {
-        console.error('Failed to fetch programme details:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
+  const { data: ffData, isLoading: loadingFf } = useApiQuery('/functional-fees', 'functionalFees')
 
-    fetchDetails()
-  }, [slug])
+  const courseUnits = cuData?.data || []
+  const programmeFees = pfData?.data || []
+  const functionalFees = ffData?.data || []
+
+  const loading = loadingProg || (!!progId && (loadingCu || loadingPf || loadingFf))
 
   if (loading) {
     return <div className="programme-details-page"><div className="container"><p>Loading programme details...</p></div></div>

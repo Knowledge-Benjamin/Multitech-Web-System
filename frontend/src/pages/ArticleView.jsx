@@ -1,27 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import Seo from '../components/Seo'
 
 export default function ArticleView() {
   const { slug } = useParams()
-  const [article, setArticle] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    const fetchArticle = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/articles/${slug}`)
-        setArticle(res.data.data)
-      } catch (err) {
-        setError('Failed to load article.')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchArticle()
-  }, [slug])
+  const { data: response, isLoading: loading, isError } = useApiQuery(`/articles/${slug}`, `article-${slug}`)
+  const article = response?.data || null
+  const error = isError ? 'Failed to load article.' : ''
 
   if (loading) return <div className="container" style={{ padding: '4rem 2rem' }}><h2>Loading...</h2></div>
   if (error) return <div className="container" style={{ padding: '4rem 2rem' }}><h2>{error}</h2><Link to="/articles">Back to Articles</Link></div>

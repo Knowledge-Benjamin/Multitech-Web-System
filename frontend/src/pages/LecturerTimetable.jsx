@@ -1,39 +1,26 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import LecturerSidebar from '../components/LecturerSidebar'
 import './LecturerDashboard.css'
 
 const API = import.meta.env.VITE_API_URL
 
 export default function LecturerTimetable() {
-  const [schedules, setSchedules] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-  useEffect(() => {
-    fetchTimetable()
-  }, [])
+  const infoStr = localStorage.getItem('lecturerInfo')
+  const lecturer = infoStr ? JSON.parse(infoStr) : null
+  const token = localStorage.getItem('lecturerToken')
 
-  const fetchTimetable = async () => {
-    try {
-      const info = localStorage.getItem('lecturerInfo')
-      if (!info) throw new Error('Lecturer info not found')
-      const lecturer = JSON.parse(info)
-      
-      const token = localStorage.getItem('lecturerToken')
-      const res = await axios.get(`${API}/timetable/schedules?lecturerId=${lecturer.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setSchedules(res.data.schedules || [])
-    } catch (err) {
-      console.error(err)
-      setError('Failed to load timetable')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data, isLoading, error: queryError } = useApiQuery(
+    lecturer?.id ? `/timetable/schedules?lecturerId=${lecturer.id}` : null,
+    ['lecturerTimetable', lecturer?.id],
+    { axiosOptions: { headers: { Authorization: `Bearer ${token}` } } }
+  )
+
+  const schedules = data?.schedules || []
+  const error = queryError ? 'Failed to load timetable' : ''
 
   // Group schedules by day
   const groupedSchedules = daysOfWeek.reduce((acc, day) => {
@@ -59,7 +46,7 @@ export default function LecturerTimetable() {
           </div>
         </header>
 
-        {loading ? (
+        {isLoading ? (
           <div className="lecturer-loading">
             <div className="spinner-ring"></div>
             <p>Loading your timetable...</p>

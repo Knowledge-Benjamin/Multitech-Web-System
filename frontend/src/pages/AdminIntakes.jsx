@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminIntakes.css'
 
 export default function AdminIntakes() {
-  const [intakes, setIntakes] = useState([])
-  const [programmes, setProgrammes] = useState([])
-  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [formData, setFormData] = useState({
@@ -15,27 +13,17 @@ export default function AdminIntakes() {
     application_fee: '', international_fee: '', status: 'open', linkedProgrammes: []
   })
   
-  useEffect(() => {
-    fetchData()
-  }, [])
+  const token = localStorage.getItem('adminToken')
+  
+  const { data: intakesData, isLoading: loadingIntakes, refetch: fetchIntakes } = useApiQuery('/intakes', 'adminIntakes', {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
+  
+  const { data: programmesData, isLoading: loadingProgrammes } = useApiQuery('/programmes', 'adminProgrammes')
 
-  const fetchData = async () => {
-    const token = localStorage.getItem('adminToken')
-    try {
-      const [intakesRes, progsRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL}/intakes`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${import.meta.env.VITE_API_URL}/programmes`)
-      ])
-      setIntakes(intakesRes.data.data)
-      setProgrammes(progsRes.data.data)
-    } catch (err) {
-      console.error('Failed to load intakes data:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const intakes = intakesData?.data || []
+  const programmes = programmesData?.data || []
+  const loading = loadingIntakes || loadingProgrammes
 
   const openAddModal = () => {
     setFormData({
@@ -78,7 +66,7 @@ export default function AdminIntakes() {
         })
       }
       setShowModal(false)
-      fetchData()
+      fetchIntakes()
     } catch (err) {
       console.error(err)
       alert(err.response?.data?.message || 'Failed to save intake')

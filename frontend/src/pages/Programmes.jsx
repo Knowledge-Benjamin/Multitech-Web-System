@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import ProgrammeCard from '../components/ProgrammeCard'
+import { useApiQuery } from '../hooks/useApiQuery'
 import './Programmes.css'
 
 const DESKTOP_PAGE_SIZE = 6
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 export default function Programmes() {
-  const [programmes, setProgrammes] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { data: progRes, isLoading: loading, refetch } = useApiQuery('/programmes', 'programmes')
+  const programmes = progRes?.data || []
+  
   const [activeIndex, setActiveIndex] = useState(0)
   const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false))
   const [page, setPage] = useState(1)
@@ -22,10 +24,8 @@ export default function Programmes() {
   const [filter, setFilter] = useState(initialFilter)
 
   useEffect(() => {
-    fetchProgrammes()
-
     const handleProgrammeChanged = () => {
-      fetchProgrammes()
+      refetch?.()
     }
 
     window.addEventListener('multitech:programmes-updated', handleProgrammeChanged)
@@ -38,7 +38,7 @@ export default function Programmes() {
     return () => {
       window.removeEventListener('multitech:programmes-updated', handleProgrammeChanged)
     }
-  }, [])
+  }, [refetch])
 
   useEffect(() => {
     const queryFilter = searchParams.get('filter')
@@ -68,36 +68,7 @@ export default function Programmes() {
     }
   }
 
-  const fetchProgrammes = async () => {
-    setLoading(true)
-    try {
-      const url = `${API_BASE_URL}/programmes?ts=${Date.now()}`
-      const response = await fetch(url, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache'
-        }
-      })
 
-      const text = await response.text()
-      console.log('[programmes] response status', response.status, 'url', url)
-      console.log('[programmes] raw response', text.slice(0, 500))
-
-      if (!response.ok) {
-        throw new Error(`Programme request failed with status ${response.status}`)
-      }
-
-      const result = text ? JSON.parse(text) : {}
-      const nextProgrammes = Array.isArray(result?.data) ? result.data : []
-      setProgrammes(nextProgrammes)
-    } catch (error) {
-      console.error('Failed to fetch programmes:', error)
-      setProgrammes([])
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const filteredProgrammes = filter === 'all' ? programmes : programmes.filter((programme) => programme.type === filter)
   const totalPages = Math.max(1, Math.ceil(filteredProgrammes.length / DESKTOP_PAGE_SIZE))

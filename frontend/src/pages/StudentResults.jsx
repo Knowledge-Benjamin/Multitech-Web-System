@@ -1,31 +1,15 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import StudentSidebar from '../components/StudentSidebar'
 import './StudentResults.css'
 
 export default function StudentResults() {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const token = localStorage.getItem('studentToken')
+  const { data: resData, isLoading, error: apiError } = useApiQuery(`${import.meta.env.VITE_API_URL}/student-profile/results`, {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
 
-  useEffect(() => {
-    fetchResults()
-  }, [])
-
-  const fetchResults = async () => {
-    const token = localStorage.getItem('studentToken')
-    try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/student-profile/results`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setData(res.data.data)
-    } catch (err) {
-      console.error('Error fetching results', err)
-      setError('Could not load your academic results. Please try again later.')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const data = resData?.data
+  const error = apiError ? 'Could not load your academic results. Please try again later.' : ''
 
   const getGradeColor = (letter) => {
     switch(letter) {
@@ -53,7 +37,7 @@ export default function StudentResults() {
             </button>
           </header>
 
-          {loading ? (
+          {isLoading ? (
             <div className="loading-spinner">
               <div className="spinner"></div>
             </div>

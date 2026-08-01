@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
 import StudentSidebar from '../components/StudentSidebar'
+import { useApiQuery } from '../hooks/useApiQuery'
 
 const API = import.meta.env.VITE_API_URL
 
@@ -8,28 +9,15 @@ export default function StudentAttendance() {
   const token = localStorage.getItem('studentToken')
   const headers = { Authorization: `Bearer ${token}` }
 
-  const [stats, setStats] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const { data, isLoading, error } = useApiQuery(`${API}/student-profile/attendance`, {
+    axiosOptions: { headers }
+  })
+  const stats = data?.data?.stats || []
 
   // Drilldown state
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [drilldownData, setDrilldownData] = useState([])
   const [drilldownLoading, setDrilldownLoading] = useState(false)
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await axios.get(`${API}/student-profile/attendance`, { headers })
-        setStats(res.data.data.stats || [])
-      } catch (err) {
-        setError('Failed to load attendance statistics.')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchStats()
-  }, [])
 
   const handleDrilldown = async (courseCode) => {
     if (selectedCourse === courseCode) {
@@ -56,9 +44,9 @@ export default function StudentAttendance() {
         <h1 style={{ margin: '0 0 0.5rem 0' }}>📈 My Attendance</h1>
         <p style={{ color: '#94a3b8', margin: '0 0 2rem 0' }}>Track your presence across all registered courses. Click on a course to view session details.</p>
 
-        {error && <div className="alert alert-danger">{error}</div>}
+        {error && <div className="alert alert-danger">Failed to load attendance statistics.</div>}
 
-        {loading ? <p>Loading...</p> : (
+        {isLoading ? <p>Loading...</p> : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
             {stats.map((stat, i) => (
               <div key={i} style={{ 

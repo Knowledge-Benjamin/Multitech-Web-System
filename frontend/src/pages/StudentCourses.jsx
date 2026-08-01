@@ -1,35 +1,24 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { useState } from 'react'
 import StudentSidebar from '../components/StudentSidebar'
+import { useApiQuery } from '../hooks/useApiQuery'
 
 const API = import.meta.env.VITE_API_URL
 
 export default function StudentCourses() {
-  const [enrollments, setEnrollments] = useState([])
-  const [materials, setMaterials] = useState({})
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('enrolled')
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const token = localStorage.getItem('studentToken')
-      const headers = { Authorization: `Bearer ${token}` }
-      try {
-        const [enrollRes, materialsRes] = await Promise.all([
-          axios.get(`${API}/student-profile/enrollments`, { headers }),
-          axios.get(`${API}/student-profile/materials`, { headers })
-        ])
-        setEnrollments(enrollRes.data.data || [])
-        setMaterials(materialsRes.data.data || {})
-      } catch (err) {
-        setError('Failed to load your courses or materials.')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [])
+  const token = localStorage.getItem('studentToken')
+  const { data: enrollRes, isLoading: enrollLoading, error: enrollError } = useApiQuery(`${API}/student-profile/enrollments`, {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
+  const { data: materialsRes, isLoading: materialsLoading, error: materialsError } = useApiQuery(`${API}/student-profile/materials`, {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
+
+  const enrollments = enrollRes?.data || []
+  const materials = materialsRes?.data || {}
+  const isLoading = enrollLoading || materialsLoading
+  const error = enrollError || materialsError
 
   return (
     <div className="admin-layout">
@@ -58,9 +47,9 @@ export default function StudentCourses() {
             </button>
           </div>
 
-          {error && <div className="message-error">{error}</div>}
+          {error && <div className="message-error">Failed to load your courses or materials.</div>}
 
-          {loading ? (
+          {isLoading ? (
             <div className="loading-spinner"><div className="spinner"></div></div>
           ) : (
             <>

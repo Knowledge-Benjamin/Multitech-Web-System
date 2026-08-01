@@ -1,33 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useApiQuery } from '../hooks/useApiQuery'
 import api from '../services/api'
 import LecturerSidebar from '../components/LecturerSidebar'
 import './LecturerDashboard.css'
 
 export default function LecturerDashboard() {
-  const [courses, setCourses] = useState([])
-  const [term, setTerm] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const token = localStorage.getItem('lecturerToken')
+  const { data: resData, isLoading } = useApiQuery('/lecturer/courses', 'lecturerCourses', {
+    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  })
 
-  useEffect(() => {
-
-    fetchCourses()
-  }, [])
-
-  const fetchCourses = async () => {
-    try {
-      const res = await api.get('/lecturer/courses')
-      setCourses(res.data.data || [])
-      setTerm(res.data.term)
-    } catch (err) {
-      console.error('Failed to fetch courses:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-
-
+  const courses = resData?.data || []
+  const term = resData?.term || null
   const getFileIcon = (count) => count > 0 ? '📂' : '📁'
 
   return (
@@ -44,7 +29,7 @@ export default function LecturerDashboard() {
           </div>
         </header>
 
-        {loading ? (
+        {isLoading ? (
           <div className="lecturer-loading">
             <div className="spinner-ring"></div>
             <p>Loading your courses...</p>

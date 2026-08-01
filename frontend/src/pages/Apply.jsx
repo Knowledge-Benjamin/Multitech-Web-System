@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import './Apply.css'
 
 const STEPS = [
@@ -18,9 +19,9 @@ export default function Apply() {
   const initialProgrammeId = searchParams.get('programme') || ''
 
   const [currentStep, setCurrentStep] = useState(0)
-  const [intakes, setIntakes] = useState([])
-  const [programmes, setProgrammes] = useState([])
-  const [loading, setLoading] = useState(true)
+
+  const { data: intakeRes, isLoading: loading } = useApiQuery('/intakes/active', 'activeIntakes')
+  const intakes = intakeRes?.data || []
 
   // Form State
   const [formData, setFormData] = useState({
@@ -64,35 +65,12 @@ export default function Apply() {
   const [submitError, setSubmitError] = useState(null)
   const [successData, setSuccessData] = useState(null)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const intakeRes = await axios.get(`${import.meta.env.VITE_API_URL}/intakes/active`)
-        setIntakes(intakeRes.data.data)
-      } catch (err) {
-        console.error('Failed to load intakes', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [])
-
-  useEffect(() => {
-    if (!formData.intake_id) {
-      setProgrammes([])
-      return
-    }
-    const fetchProgrammes = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/programmes?intake_id=${formData.intake_id}`)
-        setProgrammes(res.data.data)
-      } catch (err) {
-        console.error('Failed to load programmes', err)
-      }
-    }
-    fetchProgrammes()
-  }, [formData.intake_id])
+  const { data: progRes } = useApiQuery(
+    formData.intake_id ? `/programmes?intake_id=${formData.intake_id}` : null,
+    ['programmes', formData.intake_id],
+    { enabled: !!formData.intake_id }
+  )
+  const programmes = progRes?.data || []
 
   const handleChoiceChange = (index, value) => {
     const newChoices = [...formData.choices]

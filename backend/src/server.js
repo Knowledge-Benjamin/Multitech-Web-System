@@ -67,16 +67,27 @@ app.use(helmet({
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:3000',
   'https://multitech-web-system.onrender.com',
   'https://www.multitech-web-system.onrender.com'
 ]
 
 const corsOrigin = process.env.CORS_ORIGIN || ''
-if (corsOrigin) allowedOrigins.push(corsOrigin)
+if (corsOrigin) {
+  // Support comma-separated list of origins
+  const additionalOrigins = corsOrigin.split(',').map(o => o.trim()).filter(Boolean)
+  allowedOrigins.push(...additionalOrigins)
+}
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin) {
+      callback(null, true)
+      return
+    }
+    // Remove trailing slash if present for strict equality matching
+    const cleanOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin
+    if (allowedOrigins.includes(cleanOrigin)) {
       callback(null, true)
       return
     }

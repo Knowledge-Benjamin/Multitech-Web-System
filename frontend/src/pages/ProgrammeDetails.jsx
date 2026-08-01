@@ -67,9 +67,9 @@ export default function ProgrammeDetails() {
   const totalIntl = (parseFloat(programme.international_tuition_fee) || 0) + intlFuncTotal + customTotalIntl
 
   const renderStatusBadge = () => {
-    if (programme.intake_status === 'open') {
+    if (programme.live_intake_status === 'open') {
       return <span className="status-badge open">Applications Open</span>
-    } else if (programme.intake_status === 'scheduled') {
+    } else if (programme.live_intake_status === 'scheduled') {
       return (
         <span className="status-badge scheduled">
           Opens: {new Date(programme.application_start_date).toLocaleDateString()}
@@ -114,7 +114,7 @@ export default function ProgrammeDetails() {
             {renderStatusBadge()}
           </div>
           
-          {programme.intake_status === 'open' && (
+          {programme.live_intake_status === 'open' && (
             <Link to={`/apply?programme=${programme.id}`} className="button button-accent apply-btn">Apply Now</Link>
           )}
         </div>

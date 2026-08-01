@@ -25,14 +25,35 @@ const slugify = (value) => String(value || '')
 export const getProgrammes = asyncHandler(async (req, res) => {
   const { type, level, intake_id } = req.query
 
-  let query = 'SELECT p.* FROM programmes p'
+  let query
   const params = []
-  
+
   if (intake_id) {
-    query += " JOIN programme_intakes pi ON pi.programme_id = p.id WHERE p.active = true AND pi.intake_id = $1 AND pi.intake_status = 'open'"
+    // Fetching programmes for a specific intake (Apply page)
+    query = `SELECT p.*,
+      pi.id as programme_intake_id,
+      pi.intake_status as live_intake_status
+    FROM programmes p
+    JOIN programme_intakes pi ON pi.programme_id = p.id
+    WHERE p.active = true AND pi.intake_id = $1 AND pi.intake_status = 'open'`
     params.push(intake_id)
   } else {
-    query += ' WHERE p.active = true'
+    // Public listing — derive live status from the most recent open intake
+    query = `SELECT p.*,
+      COALESCE(
+        (
+          SELECT pi.intake_status
+          FROM programme_intakes pi
+          JOIN intakes i ON i.id = pi.intake_id
+          WHERE pi.programme_id = p.id
+            AND i.status != 'closed'
+          ORDER BY i.created_at DESC
+          LIMIT 1
+        ),
+        'closed'
+      ) AS live_intake_status
+    FROM programmes p
+    WHERE p.active = true`
   }
 
   if (type) {
@@ -43,11 +64,6 @@ export const getProgrammes = asyncHandler(async (req, res) => {
   if (level) {
     params.push(level)
     query += ` AND p.level = $${params.length}`
-  }
-
-  if (intake_id) {
-    // Add pi.id as programme_intake_id to help the frontend submit the application
-    query = query.replace('SELECT p.*', 'SELECT p.*, pi.id as programme_intake_id')
   }
 
   query += ' ORDER BY p.name ASC'
@@ -61,10 +77,26 @@ export const getProgrammeById = asyncHandler(async (req, res) => {
   const { id } = req.params
   const isNumericId = /^\d+$/.test(id)
 
+  // Derive live intake_status from the most recent non-closed intake linked to this programme
+  const liveStatusSubquery = `
+    COALESCE(
+      (
+        SELECT pi.intake_status
+        FROM programme_intakes pi
+        JOIN intakes i ON i.id = pi.intake_id
+        WHERE pi.programme_id = p.id
+          AND i.status != 'closed'
+        ORDER BY i.created_at DESC
+        LIMIT 1
+      ),
+      'closed'
+    ) AS live_intake_status
+  `
+
   const result = await pool.query(
     isNumericId
-      ? 'SELECT * FROM programmes WHERE id = $1'
-      : 'SELECT * FROM programmes WHERE active = true AND slug = $1',
+      ? `SELECT p.*, ${liveStatusSubquery} FROM programmes p WHERE p.id = $1`
+      : `SELECT p.*, ${liveStatusSubquery} FROM programmes p WHERE p.active = true AND p.slug = $1`,
     [id]
   )
 

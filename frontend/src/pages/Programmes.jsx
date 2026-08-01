@@ -222,7 +222,7 @@ export default function Programmes() {
         ) : filteredProgrammes.length > 0 ? (
           isMobile && filteredProgrammes.length > 1 ? (
             <div className="programmes-mobile-deck">
-              <div className="programmes-mobile-hint">Swipe or tap the top card to shuffle through programmes</div>
+              <div className="programmes-mobile-hint">Swipe the top card to shuffle through programmes</div>
               <div className="programmes-mobile-counter">{activeIndex + 1} / {filteredProgrammes.length}</div>
               <div className="programmes-mobile-stack" role="presentation">
                 {deckCards.map((programme, stackIndex) => {
@@ -247,7 +247,7 @@ export default function Programmes() {
                       onPointerUp={isTopCard ? handleCardPointerEnd : undefined}
                       onPointerCancel={isTopCard ? handleCardPointerEnd : undefined}
                     >
-                      {renderProgrammeCard(programme, (activeIndex + stackIndex) % filteredProgrammes.length, isTopCard ? handleTopCardTap : undefined)}
+                      {renderProgrammeCard(programme, (activeIndex + stackIndex) % filteredProgrammes.length, undefined)}
                     </div>
                   )
                 })}

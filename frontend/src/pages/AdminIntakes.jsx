@@ -12,7 +12,7 @@ export default function AdminIntakes() {
   const [editMode, setEditMode] = useState(false)
   const [formData, setFormData] = useState({
     id: '', name: '', application_start_date: '', application_end_date: '',
-    application_fee: '', status: 'open', linkedProgrammes: []
+    application_fee: '', international_fee: '', status: 'open', linkedProgrammes: []
   })
   
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function AdminIntakes() {
   const openAddModal = () => {
     setFormData({
       id: '', name: '', application_start_date: '', application_end_date: '',
-      application_fee: '', status: 'open', linkedProgrammes: []
+      application_fee: '', international_fee: '', status: 'open', linkedProgrammes: []
     })
     setEditMode(false)
     setShowModal(true)
@@ -53,6 +53,7 @@ export default function AdminIntakes() {
       application_start_date: intake.application_start_date ? intake.application_start_date.split('T')[0] : '',
       application_end_date: intake.application_end_date ? intake.application_end_date.split('T')[0] : '',
       application_fee: intake.application_fee,
+      international_fee: intake.international_fee || '',
       status: intake.status,
       linkedProgrammes: intake.programmes ? intake.programmes.map(p => ({
         programme_id: p.programme_id,
@@ -112,7 +113,8 @@ export default function AdminIntakes() {
               <tr>
                 <th>Name</th>
                 <th>Application Window</th>
-                <th>Fee (KES)</th>
+                <th>Local Fee (UGX)</th>
+                <th>Intl. Fee (USD)</th>
                 <th>Status</th>
                 <th>Programmes Linked</th>
                 <th>Actions</th>
@@ -127,7 +129,8 @@ export default function AdminIntakes() {
                     {' — '}
                     {intake.application_end_date ? new Date(intake.application_end_date).toLocaleDateString() : 'N/A'}
                   </td>
-                  <td>{Number(intake.application_fee).toLocaleString()}</td>
+                  <td>{Number(intake.application_fee).toLocaleString()} UGX</td>
+                  <td>{intake.international_fee && Number(intake.international_fee) > 0 ? `$${Number(intake.international_fee).toLocaleString()}` : <span style={{color:'#aaa', fontSize:'0.8rem'}}>Not set</span>}</td>
                   <td><span className={`status-badge status-${intake.status}`}>{intake.status}</span></td>
                   <td>{intake.programmes ? intake.programmes.length : 0} programme(s)</td>
                   <td>
@@ -160,10 +163,23 @@ export default function AdminIntakes() {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Application Fee (KES) *</label>
-                    <input type="number" step="0.01" value={formData.application_fee} onChange={e => setFormData({...formData, application_fee: e.target.value})} required className="form-control" placeholder="e.g. 2000"/>
+                    <label>Local Fee — UGX (Ugandans) *</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 600, color: '#475569', minWidth: '36px' }}>UGX</span>
+                      <input type="number" step="0.01" value={formData.application_fee} onChange={e => setFormData({...formData, application_fee: e.target.value})} required className="form-control" placeholder="e.g. 50000"/>
+                    </div>
                   </div>
                   <div className="form-group">
+                    <label>International Fee — USD</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 600, color: '#475569', minWidth: '36px' }}>USD</span>
+                      <input type="number" step="0.01" value={formData.international_fee} onChange={e => setFormData({...formData, international_fee: e.target.value})} className="form-control" placeholder="e.g. 20"/>
+                    </div>
+                    <small style={{ color: '#64748b', fontSize: '0.78rem' }}>Leave blank if same terms apply</small>
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group" style={{ flex: 1 }}>
                     <label>Status *</label>
                     <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="form-control">
                       <option value="open">Open (Accepting Applications)</option>

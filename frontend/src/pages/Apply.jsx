@@ -242,9 +242,14 @@ export default function Apply() {
               ) : (
                 <select name="intake_id" value={formData.intake_id} onChange={(e) => { handleInputChange(e); setFormData(p => ({...p, choices: ['']})) }} required className="form-control">
                   <option value="">-- Select an Intake --</option>
-                  {intakes.map(i => (
-                    <option key={i.id} value={i.id}>{i.name} (Fee: {i.application_fee})</option>
-                  ))}
+                  {intakes.map(i => {
+                    const hasIntlFee = i.international_fee && Number(i.international_fee) > 0
+                    return (
+                      <option key={i.id} value={i.id}>
+                        {i.name} — Local: UGX {Number(i.application_fee).toLocaleString()}{hasIntlFee ? ` | Intl: $${Number(i.international_fee).toLocaleString()}` : ''}
+                      </option>
+                    )
+                  })}
                 </select>
               )}
             </div>
@@ -531,10 +536,17 @@ export default function Apply() {
             </div>
           </div>
         )
-      case 6:
+      case 6: {
+        const selectedIntake = intakes.find(i => i.id.toString() === formData.intake_id)
+        const isUgandan = formData.nationality?.toLowerCase().includes('ugand')
+        const hasIntlFee = selectedIntake?.international_fee && Number(selectedIntake.international_fee) > 0
+        const applicableFee = (!isUgandan && hasIntlFee)
+          ? { amount: Number(selectedIntake.international_fee), currency: 'USD', label: 'International Applicant Fee' }
+          : { amount: Number(selectedIntake?.application_fee || 0), currency: 'UGX', label: 'Local Applicant Fee' }
+
         return (
           <div className="step-content">
-            <h2>Review & Submit</h2>
+            <h2>Review &amp; Submit</h2>
             <div className="review-section">
               <h3>Programme</h3>
               <p>{programmes.find(p => p.id.toString() === formData.programme_id)?.name}</p>
@@ -543,10 +555,21 @@ export default function Apply() {
               <p>Name: {formData.first_name} {formData.middle_name} {formData.last_name}</p>
               <p>Email: {formData.email}</p>
               <p>Phone: {formData.phone}</p>
+              <p>Nationality: {formData.nationality}</p>
               
               <h3>Documents</h3>
               <p>Passport Photo: {files.passport_photo ? 'Provided' : 'Missing'}</p>
               <p>Academic Docs: {files.academic_docs.length} file(s)</p>
+
+              <div style={{ marginTop: '20px', padding: '16px', background: isUgandan || !hasIntlFee ? '#f0fdf4' : '#eff6ff', border: `1px solid ${isUgandan || !hasIntlFee ? '#bbf7d0' : '#bfdbfe'}`, borderRadius: '10px' }}>
+                <h3 style={{ margin: '0 0 8px', color: '#1e293b', fontSize: '1rem' }}>💳 Application Fee</h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>{applicableFee.label} ({isUgandan ? 'Ugandan Resident' : 'International Applicant'})</p>
+                <div style={{ fontSize: '1.8rem', fontWeight: 700, color: isUgandan || !hasIntlFee ? '#15803d' : '#1d4ed8', marginTop: '6px' }}>
+                  {applicableFee.currency === 'USD' ? '$' : 'UGX '}{applicableFee.amount.toLocaleString()}
+                  <span style={{ fontSize: '0.85rem', fontWeight: 400, marginLeft: '6px', color: '#64748b' }}>{applicableFee.currency}</span>
+                </div>
+                <p style={{ margin: '10px 0 0', fontSize: '0.8rem', color: '#64748b' }}>Payment instructions will be sent to your email after submission.</p>
+              </div>
             </div>
 
             {submitError && <div className="error-message">{submitError}</div>}
@@ -559,6 +582,7 @@ export default function Apply() {
             </div>
           </div>
         )
+      }
       default:
         return null
     }

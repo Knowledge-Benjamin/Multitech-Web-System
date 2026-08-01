@@ -32,16 +32,16 @@ export const getActiveIntakes = asyncHandler(async (req, res) => {
 })
 
 export const createIntake = asyncHandler(async (req, res) => {
-  const { name, application_start_date, application_end_date, application_fee, status, linkedProgrammes } = req.body
+  const { name, application_start_date, application_end_date, application_fee, international_fee, status, linkedProgrammes } = req.body
 
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
 
     const result = await client.query(
-      `INSERT INTO intakes (name, application_start_date, application_end_date, application_fee, status) 
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [name, application_start_date, application_end_date, application_fee || 0, status || 'open']
+      `INSERT INTO intakes (name, application_start_date, application_end_date, application_fee, international_fee, status) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [name, application_start_date, application_end_date, application_fee || 0, international_fee || 0, status || 'open']
     )
     const intake = result.rows[0]
 
@@ -66,7 +66,7 @@ export const createIntake = asyncHandler(async (req, res) => {
 
 export const updateIntake = asyncHandler(async (req, res) => {
   const { id } = req.params
-  const { name, application_start_date, application_end_date, application_fee, status, linkedProgrammes } = req.body
+  const { name, application_start_date, application_end_date, application_fee, international_fee, status, linkedProgrammes } = req.body
 
   const client = await pool.connect()
   try {
@@ -75,9 +75,9 @@ export const updateIntake = asyncHandler(async (req, res) => {
     const result = await client.query(
       `UPDATE intakes 
        SET name = $1, application_start_date = $2, application_end_date = $3, 
-           application_fee = $4, status = $5, updated_at = NOW() 
-       WHERE id = $6 RETURNING *`,
-      [name, application_start_date, application_end_date, application_fee, status, id]
+           application_fee = $4, international_fee = $5, status = $6, updated_at = NOW() 
+       WHERE id = $7 RETURNING *`,
+      [name, application_start_date, application_end_date, application_fee, international_fee || 0, status, id]
     )
     if (result.rows.length === 0) {
       await client.query('ROLLBACK')

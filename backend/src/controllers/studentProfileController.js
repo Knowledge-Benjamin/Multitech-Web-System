@@ -353,6 +353,7 @@ export const getMyEnrollments = asyncHandler(async (req, res) => {
       c.credits,
       c.target_year,
       c.target_semester,
+      c.modules,
       t.name as term_name
     FROM course_registrations cr
     JOIN student_term_enrollments ste ON cr.student_term_enrollment_id = ste.id

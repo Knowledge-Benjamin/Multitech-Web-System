@@ -41,26 +41,20 @@ export default function AdminProgrammes() {
     duration: '',
     capacity: '',
     requirements: '',
-    curriculum: '[]',
     career_prospects: '',
-    intake_status: 'closed',
-    application_start_date: '',
-    application_end_date: '',
     is_supplementary: false,
     national_tuition_fee: '',
     international_tuition_fee: ''
   })
   
-  // Internal state for curriculum dynamic list
-  const [curriculumItems, setCurriculumItems] = useState([])
-  const [newCurriculumItem, setNewCurriculumItem] = useState('')
-
   // ── Course Units state ────────────────────────────────────────────────────
   const [courseUnits, setCourseUnits] = useState([])
   const [cuLoading, setCuLoading] = useState(false)
   const [cuError, setCuError] = useState('')
   const [cuSuccess, setCuSuccess] = useState('')
   const [cuForm, setCuForm] = useState({ programme_id: '', course_code: '', name: '', credits: 3, target_year: 1, target_semester: 1 })
+  const [cuModules, setCuModules] = useState([])
+  const [newCuModule, setNewCuModule] = useState('')
   const [cuEditId, setCuEditId] = useState(null)
 
   const navigate = useNavigate()
@@ -121,15 +115,15 @@ export default function AdminProgrammes() {
     }))
   }
 
-  const handleAddCurriculumItem = () => {
-    if (newCurriculumItem.trim()) {
-      setCurriculumItems(prev => [...prev, newCurriculumItem.trim()])
-      setNewCurriculumItem('')
+  const handleAddCuModule = () => {
+    if (newCuModule.trim()) {
+      setCuModules([...cuModules, newCuModule.trim()])
+      setNewCuModule('')
     }
   }
 
-  const handleRemoveCurriculumItem = (index) => {
-    setCurriculumItems(prev => prev.filter((_, i) => i !== index))
+  const handleRemoveCuModule = (index) => {
+    setCuModules(cuModules.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async (e) => {
@@ -140,7 +134,6 @@ export default function AdminProgrammes() {
     
     const submitData = {
       ...formData,
-      curriculum: JSON.stringify(curriculumItems),
       capacity: formData.capacity === '' ? 50 : Number(formData.capacity) || 50,
       tuition_fee: formData.tuition_fee === '' ? '' : Number(formData.tuition_fee),
       national_tuition_fee: formData.national_tuition_fee === '' ? '' : Number(formData.national_tuition_fee),
@@ -194,22 +187,12 @@ export default function AdminProgrammes() {
       duration: programme.duration || '',
       capacity: programme.capacity || '',
       requirements: programme.requirements || '',
-      curriculum: programme.curriculum ? JSON.stringify(programme.curriculum) : '[]',
       career_prospects: programme.career_prospects || '',
-      intake_status: programme.intake_status || 'closed',
-      application_start_date: programme.application_start_date ? programme.application_start_date.split('T')[0] : '',
-      application_end_date: programme.application_end_date ? programme.application_end_date.split('T')[0] : '',
       is_supplementary: programme.is_supplementary || false,
       national_tuition_fee: programme.national_tuition_fee || '',
       international_tuition_fee: programme.international_tuition_fee || ''
     })
     
-    try {
-      setCurriculumItems(programme.curriculum ? (typeof programme.curriculum === 'string' ? JSON.parse(programme.curriculum) : programme.curriculum) : [])
-    } catch(e) {
-      setCurriculumItems([])
-    }
-
     setEditingId(programme.id)
     setFile(null)
     setFormTab('basic')
@@ -221,11 +204,9 @@ export default function AdminProgrammes() {
     setEditingId(null)
     setFormData({
       name: '', type: 'undergraduate', level: '', description: '', duration: '', capacity: '',
-      requirements: '', curriculum: '[]', career_prospects: '',
-      intake_status: 'closed', application_start_date: '', application_end_date: '', is_supplementary: false,
-      national_tuition_fee: '', international_tuition_fee: ''
+      requirements: '', career_prospects: '',
+      is_supplementary: false, national_tuition_fee: '', international_tuition_fee: ''
     })
-    setCurriculumItems([])
     setFile(null)
     setFormTab('basic')
   }
@@ -267,29 +248,44 @@ export default function AdminProgrammes() {
 
   const handleCUSubmit = async (e) => {
     e.preventDefault()
-    setCuError(''); setCuSuccess('')
+    setCuError('')
+    setCuSuccess('')
     const token = localStorage.getItem('adminToken')
+    
+    const payload = { ...cuForm, modules: cuModules }
+
     try {
       if (cuEditId) {
-        await axios.put(`${import.meta.env.VITE_API_URL}/course-units/${cuEditId}`, cuForm, { headers: { Authorization: `Bearer ${token}` } })
-        setCuSuccess('Course unit updated.')
+        await axios.put(`${import.meta.env.VITE_API_URL}/course-units/${cuEditId}`, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setCuSuccess('Course unit updated successfully!')
       } else {
-        await axios.post(`${import.meta.env.VITE_API_URL}/course-units`, cuForm, { headers: { Authorization: `Bearer ${token}` } })
-        setCuSuccess('Course unit created.')
+        await axios.post(`${import.meta.env.VITE_API_URL}/course-units`, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setCuSuccess('Course unit created successfully!')
       }
-      window.__multitechInvalidateCaches?.(['course-units'])
-      setCuForm({ programme_id: cuForm.programme_id, course_code: '', name: '', credits: 3, target_year: 1, target_semester: 1 })
+      setCuForm({ programme_id: '', course_code: '', name: '', credits: 3, target_year: 1, target_semester: 1 })
+      setCuModules([])
       setCuEditId(null)
       fetchCourseUnits()
     } catch (err) {
-      setCuError(err.response?.data?.message || 'Failed to save course unit.')
+      setCuError(err.response?.data?.message || 'Failed to save course unit')
     }
   }
 
-  const handleCUEdit = (unit) => {
-    setCuEditId(unit.id)
-    setCuForm({ programme_id: unit.programme_id, course_code: unit.course_code, name: unit.name, credits: unit.credits, target_year: unit.target_year, target_semester: unit.target_semester })
-    setCuError(''); setCuSuccess('')
+  const handleCUEdit = (cu) => {
+    setCuForm({
+      programme_id: cu.programme_id,
+      course_code: cu.course_code,
+      name: cu.name,
+      credits: cu.credits,
+      target_year: cu.target_year,
+      target_semester: cu.target_semester
+    })
+    setCuModules(cu.modules || [])
+    setCuEditId(cu.id)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -481,71 +477,46 @@ export default function AdminProgrammes() {
                         <label>Career Prospects</label>
                         <textarea name="career_prospects" value={formData.career_prospects} onChange={handleChange} rows="4" placeholder="What careers does this lead to?" />
                       </div>
-
-                      <div className="form-group full-width">
-                        <label>Curriculum Summary (List of modules/topics)</label>
-                        <div className="curriculum-builder">
-                          <div className="add-item-row" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-                            <input type="text" value={newCurriculumItem} onChange={(e) => setNewCurriculumItem(e.target.value)} placeholder="Add a module or topic" onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleAddCurriculumItem(); } }} style={{ flex: 1, padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }} />
-                            <button type="button" onClick={handleAddCurriculumItem} className="btn-secondary">Add</button>
-                          </div>
-                          {curriculumItems.length > 0 && (
-                            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                              {curriculumItems.map((item, index) => (
-                                <li key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', border: '1px solid #eee', marginBottom: '0.5rem', borderRadius: '4px', background: '#f9f9f9' }}>
-                                  <span>{item}</span>
-                                  <button type="button" onClick={() => handleRemoveCurriculumItem(index)} style={{ background: 'none', border: 'none', color: 'red', cursor: 'pointer' }}>&times;</button>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      </div>
                     </div>
                   )}
 
-                  {/* Intake & Fees Tab */}
+                  {/* Fees & Intake Tab */}
                   {formTab === 'fees_intake' && (
                     <div className="tab-pane">
-                      <div className="settings-section" style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem' }}>
-                        <h3 style={{ marginTop: 0 }}>Intake Management</h3>
-                        <div className="form-row">
-                          <div className="form-group">
-                            <label>Intake Status</label>
-                            <select name="intake_status" value={formData.intake_status} onChange={handleChange}>
-                              <option value="open">Open (Accepting Applications)</option>
-                              <option value="scheduled">Scheduled (Opens later)</option>
-                              <option value="closed">Closed</option>
-                            </select>
-                          </div>
-                          <div className="form-group checkbox-align">
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', height: '100%', cursor: 'pointer' }}>
-                              <input type="checkbox" name="is_supplementary" checked={formData.is_supplementary} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
-                              Supplementary / Short Course
-                              <small style={{ display: 'block', color: '#666', fontWeight: 'normal', marginLeft: '1.5rem' }}>Students can apply for this even if enrolled in another programme.</small>
-                            </label>
-                          </div>
-                        </div>
 
-                        {formData.intake_status === 'scheduled' && (
-                          <div className="form-row">
-                            <div className="form-group">
-                              <label>Application Start Date</label>
-                              <input type="date" name="application_start_date" value={formData.application_start_date} onChange={handleChange} />
-                            </div>
-                            <div className="form-group">
-                              <label>Application End Date</label>
-                              <input type="date" name="application_end_date" value={formData.application_end_date} onChange={handleChange} />
-                            </div>
-                          </div>
-                        )}
+                      {/* Intake Info Banner */}
+                      <div style={{ background: '#e8f4fd', border: '1px solid #bee3f8', borderRadius: '8px', padding: '1.25rem 1.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                        <span style={{ fontSize: '1.5rem' }}>📅</span>
+                        <div>
+                          <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Intake & Application Windows are managed via Intakes</strong>
+                          <p style={{ margin: 0, fontSize: '0.9rem', color: '#555' }}>
+                            This programme's availability for applications is controlled by the intakes it is linked to.
+                            Open/close dates and application fees are set on a per-intake basis.
+                            To link this programme to an intake or adjust dates, go to{' '}
+                            <a href="/admin/intakes" style={{ color: '#0077cc', textDecoration: 'underline' }}>Manage Intakes</a>.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Supplementary toggle — a programme-level flag */}
+                      <div className="settings-section" style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem' }}>
+                        <h3 style={{ marginTop: 0 }}>Programme Type</h3>
+                        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
+                          <input type="checkbox" name="is_supplementary" checked={formData.is_supplementary} onChange={handleChange} style={{ width: '18px', height: '18px', marginTop: '2px' }} />
+                          <span>
+                            <strong>Supplementary / Short Course</strong>
+                            <small style={{ display: 'block', color: '#666', fontWeight: 'normal', marginTop: '0.2rem' }}>
+                              Students can apply for this alongside an existing programme enrolment.
+                            </small>
+                          </span>
+                        </label>
                       </div>
 
                       <div className="settings-section" style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px' }}>
                         <h3 style={{ marginTop: 0 }}>Tuition Fees</h3>
                         <div className="form-row">
                           <div className="form-group">
-                            <label>National Tuition Fee (UGX)</label>
+                            <label>National Tuition Fee (KES)</label>
                             <input type="number" name="national_tuition_fee" value={formData.national_tuition_fee} onChange={handleChange} placeholder="e.g. 1500000" />
                           </div>
                           <div className="form-group">
@@ -613,15 +584,15 @@ export default function AdminProgrammes() {
                           </td>
                           <td style={{ textTransform: 'capitalize' }}>{prog.type}</td>
                           <td>
-                            <span style={{ 
-                              padding: '0.2rem 0.5rem', 
-                              borderRadius: '4px', 
-                              fontSize: '0.8rem',
-                              backgroundColor: prog.intake_status === 'open' ? '#d4edda' : prog.intake_status === 'scheduled' ? '#fff3cd' : '#f8d7da',
-                              color: prog.intake_status === 'open' ? '#155724' : prog.intake_status === 'scheduled' ? '#856404' : '#721c24'
-                            }}>
-                              {prog.intake_status.toUpperCase()}
-                            </span>
+                            {prog.is_supplementary ? (
+                              <span style={{ padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
+                                Short Course
+                              </span>
+                            ) : (
+                              <span style={{ padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', backgroundColor: '#f3f4f6', color: '#374151' }}>
+                                Main Programme
+                              </span>
+                            )}
                           </td>
                           <td className="actions">
                             <button onClick={() => handleEdit(prog)} className="btn-edit">
@@ -705,10 +676,38 @@ export default function AdminProgrammes() {
                     <option value={2}>Semester 2</option>
                   </select>
                 </div>
+                
+                <div style={{ gridColumn: '1 / -1', marginTop: '1rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#374151', marginBottom: '10px' }}>Modules / Topics Outline (Optional)</label>
+                  <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: '12px' }}>List the syllabus topics covered in this course unit. These will be visible to students and act as a guide for lecturers.</p>
+                  
+                  <div className="add-item-row" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <input 
+                      type="text" 
+                      value={newCuModule} 
+                      onChange={(e) => setNewCuModule(e.target.value)} 
+                      placeholder="e.g. Module 1: Introduction to Programming" 
+                      onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleAddCuModule(); } }} 
+                      style={{ flex: 1, padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem' }} 
+                    />
+                    <button type="button" onClick={handleAddCuModule} className="btn-secondary" style={{ padding: '0 20px', borderRadius: '8px' }}>Add Topic</button>
+                  </div>
+                  
+                  {cuModules.length > 0 && (
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                      {cuModules.map((item, index) => (
+                        <li key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', border: '1px solid #e5e7eb', marginBottom: '8px', borderRadius: '8px', background: '#f9fafb' }}>
+                          <span style={{ fontSize: '0.9rem', color: '#374151' }}>{index + 1}. {item}</span>
+                          <button type="button" onClick={() => handleRemoveCuModule(index)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold' }}>&times;</button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
                 <button type="submit" className="btn-primary">{cuEditId ? 'Update Unit' : 'Create Unit'}</button>
-                {cuEditId && <button type="button" className="btn-secondary" onClick={() => { setCuEditId(null); setCuForm({ programme_id: '', course_code: '', name: '', credits: 3, target_year: 1, target_semester: 1 }) }}>Cancel Edit</button>}
+                {cuEditId && <button type="button" className="btn-secondary" onClick={() => { setCuEditId(null); setCuForm({ programme_id: '', course_code: '', name: '', credits: 3, target_year: 1, target_semester: 1 }); setCuModules([]); }}>Cancel Edit</button>}
               </div>
             </form>
 
@@ -730,7 +729,14 @@ export default function AdminProgrammes() {
                   {courseUnits.map((unit, i) => (
                     <tr key={unit.id} style={{ borderTop: '1px solid #f1f5f9', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                       <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontWeight: 700, color: '#6366f1', fontSize: '0.95rem' }}>{unit.course_code}</td>
-                      <td style={{ padding: '12px 16px', color: '#1e293b' }}>{unit.name}</td>
+                      <td style={{ padding: '12px 16px', color: '#1e293b' }}>
+                        {unit.name}
+                        {unit.modules && unit.modules.length > 0 && (
+                          <span style={{ marginLeft: '8px', fontSize: '0.7rem', background: '#dcfce7', color: '#166534', padding: '2px 6px', borderRadius: '12px' }}>
+                            {unit.modules.length} Modules
+                          </span>
+                        )}
+                      </td>
                       <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '0.875rem' }}>{unit.programme_name}</td>
                       <td style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>Y{unit.target_year} S{unit.target_semester}</td>
                       <td style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{unit.credits}</td>

@@ -88,7 +88,19 @@ export default function StudentCourses() {
                         {enrollments.map(enr => (
                           <tr key={enr.registration_id}>
                             <td style={{ fontWeight: 600 }}>{enr.course_code}</td>
-                            <td>{enr.course_name}</td>
+                            <td>
+                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{enr.course_name}</div>
+                              {enr.modules && enr.modules.length > 0 && (
+                                <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#64748b', background: '#f8fafc', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                                  <strong style={{ color: '#475569' }}>Syllabus Topics:</strong>
+                                  <ul style={{ paddingLeft: '16px', margin: '4px 0 0 0' }}>
+                                    {enr.modules.map((mod, idx) => (
+                                      <li key={idx} style={{ marginBottom: '2px' }}>{mod}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </td>
                             <td>{enr.term_name}</td>
                             <td>{enr.credits}</td>
                             <td>

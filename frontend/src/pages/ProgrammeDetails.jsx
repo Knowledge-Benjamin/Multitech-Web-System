@@ -13,6 +13,7 @@ const slugify = (value) => String(value || '')
 export default function ProgrammeDetails() {
   const { slug } = useParams()
   const [programme, setProgramme] = useState(null)
+  const [courseUnits, setCourseUnits] = useState([])
   const [programmeFees, setProgrammeFees] = useState([])
   const [functionalFees, setFunctionalFees] = useState([])
   const [loading, setLoading] = useState(true)
@@ -22,6 +23,9 @@ export default function ProgrammeDetails() {
       try {
         const progRes = await axios.get(`${import.meta.env.VITE_API_URL}/programmes/${slug}`)
         setProgramme(progRes.data.data)
+
+        const cuRes = await axios.get(`${import.meta.env.VITE_API_URL}/course-units?programme_id=${progRes.data.data?.id}`)
+        setCourseUnits(cuRes.data.data || [])
 
         const customFeesRes = await axios.get(`${import.meta.env.VITE_API_URL}/programme-fees/programme/${progRes.data.data?.id}`)
         setProgrammeFees(customFeesRes.data.data || [])
@@ -80,6 +84,25 @@ export default function ProgrammeDetails() {
     return <span className="status-badge closed">Applications Closed</span>
   }
 
+  // Group Course Units
+  const groupedCourseUnits = courseUnits.reduce((acc, cu) => {
+    const key = `Year ${cu.target_year} - Semester ${cu.target_semester}`;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(cu);
+    return acc;
+  }, {});
+
+  // Sort groups by Year then Semester
+  const sortedGroupKeys = Object.keys(groupedCourseUnits).sort((a, b) => {
+    // Expected format: "Year 1 - Semester 1"
+    const aMatch = a.match(/Year (\d+) - Semester (\d+)/);
+    const bMatch = b.match(/Year (\d+) - Semester (\d+)/);
+    if (!aMatch || !bMatch) return a.localeCompare(b);
+    
+    if (aMatch[1] !== bMatch[1]) return Number(aMatch[1]) - Number(bMatch[1]);
+    return Number(aMatch[2]) - Number(bMatch[2]);
+  });
+
   return (
     <div className="programme-details-page">
       {/* Hero Section */}
@@ -123,14 +146,46 @@ export default function ProgrammeDetails() {
             </section>
           )}
 
-          {programme.curriculum && programme.curriculum.length > 0 && (
+          {courseUnits && courseUnits.length > 0 && (
             <section className="detail-section">
-              <h2>Curriculum Summary</h2>
-              <ul className="curriculum-list">
-                {programme.curriculum.map((item, idx) => (
-                  <li key={idx}>{item}</li>
+              <h2>Curriculum Structure</h2>
+              <div className="curriculum-accordion">
+                {sortedGroupKeys.map(groupKey => (
+                  <div key={groupKey} style={{ marginBottom: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.1rem', color: '#1e1b4b', borderBottom: '2px solid #e0e7ff', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+                      {groupKey}
+                    </h3>
+                    <div style={{ display: 'grid', gap: '1rem' }}>
+                      {groupedCourseUnits[groupKey].map(cu => (
+                        <div key={cu.id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                              <div style={{ fontWeight: 600, color: '#0f172a', marginBottom: '0.25rem' }}>
+                                <span style={{ color: '#4338ca', marginRight: '8px' }}>{cu.course_code}</span>
+                                {cu.name}
+                              </div>
+                              <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                                Credits: {cu.credits}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {cu.modules && cu.modules.length > 0 && (
+                            <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0' }}>
+                              <strong style={{ fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.5rem' }}>Modules/Topics Covered:</strong>
+                              <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: '#475569' }}>
+                                {cu.modules.map((mod, idx) => (
+                                  <li key={idx} style={{ marginBottom: '0.25rem' }}>{mod}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </section>
           )}
         </div>

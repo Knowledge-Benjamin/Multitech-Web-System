@@ -265,6 +265,18 @@ export default function LecturerCourseDetails() {
               </button>
             </div>
 
+            {course?.modules && course.modules.length > 0 && (
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', marginBottom: '24px', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem', color: '#1e293b' }}>Official Syllabus (Topics)</h3>
+                <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: '#64748b' }}>These are the modules assigned to this course unit by the administrator.</p>
+                <ul style={{ margin: 0, paddingLeft: '20px', color: '#334155', fontSize: '0.9rem' }}>
+                  {course.modules.map((mod, idx) => (
+                    <li key={idx} style={{ marginBottom: '6px' }}>{mod}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {uploadSuccess && <div className="alert-success">✅ {uploadSuccess}</div>}
 
             {showUploadForm && (

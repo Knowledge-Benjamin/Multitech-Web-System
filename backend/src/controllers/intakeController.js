@@ -50,8 +50,7 @@ export const createIntake = asyncHandler(async (req, res) => {
     if (linkedProgrammes && linkedProgrammes.length > 0) {
       for (const lp of linkedProgrammes) {
         await client.query(
-          `INSERT INTO programme_intakes (intake_id, programme_id, intake_status) VALUES ($1, $2, $3)
-           ON CONFLICT (intake_id, programme_id) DO UPDATE SET intake_status = $3`,
+          `INSERT INTO programme_intakes (intake_id, programme_id, intake_status) VALUES ($1, $2, $3)`,
           [intake.id, lp.programme_id, lp.intake_status || 'open']
         )
       }

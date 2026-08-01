@@ -16,7 +16,7 @@ export default function AdminApplications() {
   if (statusFilter !== 'all') queryParams.status = statusFilter
   if (appliedSearch) queryParams.search = appliedSearch
 
-  const { data: applicationsData, isLoading: loading, refetch: fetchApplications } = useApiQuery('/applications', 'adminApplications', {
+  const { data: applicationsData, isLoading: loading, refetch: fetchApplications } = useApiQuery('/applications', 'adminApps', {
     axiosOptions: { 
       headers: { Authorization: `Bearer ${token}` },
       params: queryParams

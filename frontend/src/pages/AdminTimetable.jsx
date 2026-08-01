@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
+import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 
 const API = import.meta.env.VITE_API_URL
@@ -8,13 +9,22 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 export default function AdminTimetable() {
   const token = localStorage.getItem('adminToken')
   const headers = { Authorization: `Bearer ${token}` }
+  const axiosOptions = { headers }
 
-  // Lists
-  const [schedules, setSchedules] = useState([])
-  const [rooms, setRooms] = useState([])
-  const [courses, setCourses] = useState([])
-  const [lecturers, setLecturers] = useState([])
-  const [terms, setTerms] = useState([])
+  // Queries using useApiQuery
+  const { data: schedulesData, isLoading: loadingSchedules, refetch: refetchSchedules } = useApiQuery('/timetable/schedules', 'adminSchedules', { axiosOptions })
+  const { data: roomsData, isLoading: loadingRooms, refetch: refetchRooms } = useApiQuery('/timetable/rooms', 'adminRooms', { axiosOptions })
+  const { data: coursesData, isLoading: loadingCourses } = useApiQuery('/timetable/courses', 'adminCourses', { axiosOptions })
+  const { data: lecturersData, isLoading: loadingLecturers } = useApiQuery('/timetable/lecturers', 'adminLecturers', { axiosOptions })
+  const { data: termsData, isLoading: loadingTerms } = useApiQuery('/timetable/terms', 'adminTerms', { axiosOptions })
+
+  const schedules = schedulesData?.schedules || []
+  const rooms = roomsData?.rooms || []
+  const courses = coursesData?.courses || []
+  const lecturers = lecturersData?.lecturers || []
+  const terms = termsData?.terms || []
+
+  const loading = loadingSchedules || loadingRooms || loadingCourses || loadingLecturers || loadingTerms
 
   // Schedule form
   const [schedForm, setSchedForm] = useState({
@@ -26,34 +36,9 @@ export default function AdminTimetable() {
 
   const [activeTab, setActiveTab] = useState('schedules') // schedules | rooms
   const [filterDay, setFilterDay] = useState('All')
-  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-
-  useEffect(() => { loadAll() }, [])
-
-  const loadAll = async () => {
-    setLoading(true)
-    try {
-      const [s, r, c, l, t] = await Promise.all([
-        axios.get(`${API}/timetable/schedules`, { headers }),
-        axios.get(`${API}/timetable/rooms`, { headers }),
-        axios.get(`${API}/timetable/courses`, { headers }),
-        axios.get(`${API}/timetable/lecturers`, { headers }),
-        axios.get(`${API}/timetable/terms`, { headers }),
-      ])
-      setSchedules(s.data.schedules || [])
-      setRooms(r.data.rooms || [])
-      setCourses(c.data.courses || [])
-      setLecturers(l.data.lecturers || [])
-      setTerms(t.data.terms || [])
-    } catch (e) {
-      setError('Failed to load timetable data.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const notify = (msg, isError = false) => {
     if (isError) { setError(msg); setSuccess('') }
@@ -68,7 +53,7 @@ export default function AdminTimetable() {
       await axios.post(`${API}/timetable/schedules`, schedForm, { headers })
       notify('Class schedule created successfully!')
       setSchedForm({ courseId: '', roomId: '', lecturerId: '', academicTermId: '', dayOfWeek: 'Monday', startTime: '', endTime: '' })
-      await loadAll()
+      refetchSchedules()
     } catch (err) {
       notify(err.response?.data?.message || 'Failed to create schedule.', true)
     } finally {
@@ -81,7 +66,7 @@ export default function AdminTimetable() {
     try {
       await axios.delete(`${API}/timetable/schedules/${id}`, { headers })
       notify('Schedule deleted.')
-      await loadAll()
+      refetchSchedules()
     } catch { notify('Failed to delete schedule.', true) }
   }
 
@@ -92,7 +77,7 @@ export default function AdminTimetable() {
       await axios.post(`${API}/timetable/rooms`, roomForm, { headers })
       notify('Room created successfully!')
       setRoomForm({ name: '', capacity: '', type: 'Classroom', building: '' })
-      await loadAll()
+      refetchRooms()
     } catch (err) {
       notify(err.response?.data?.message || 'Failed to create room.', true)
     } finally {
@@ -105,7 +90,7 @@ export default function AdminTimetable() {
     try {
       await axios.delete(`${API}/timetable/rooms/${id}`, { headers })
       notify('Room deactivated.')
-      await loadAll()
+      refetchRooms()
     } catch { notify('Failed to deactivate room.', true) }
   }
 

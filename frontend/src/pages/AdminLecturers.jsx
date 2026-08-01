@@ -9,7 +9,6 @@ const API = import.meta.env.VITE_API_URL
 export default function AdminLecturers() {
   const [view, setView] = useState('list') // 'list' | 'create' | 'assign'
   const [selectedLecturer, setSelectedLecturer] = useState(null)
-  const [assignments, setAssignments] = useState([])
 
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '' })
   const [assignForm, setAssignForm] = useState({ course_id: '', academic_term_id: '' })
@@ -29,23 +28,22 @@ export default function AdminLecturers() {
   const { data: coursesData, isLoading: loadingCourses } = useApiQuery('/course-units', 'adminCourseUnits', {
     axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
   })
-  
+
+  const { data: assignmentsData, refetch: fetchAssignments } = useApiQuery(
+    selectedLecturer ? `/admin/lecturers/${selectedLecturer.id}/assignments` : '/admin/lecturers',
+    'adminLecturerAssignments',
+    {
+      axiosOptions: { headers: { Authorization: `Bearer ${token}` } },
+      queryOptions: { enabled: !!selectedLecturer }
+    }
+  )
+
   const lecturers = lecturersData?.data || []
   const terms = termsData?.data || []
   const courses = coursesData?.data || []
-  
-  const loading = loadingLecturers || loadingTerms || loadingCourses
+  const assignments = assignmentsData?.data || []
 
-  const fetchAssignments = async (lecturerId) => {
-    try {
-      const res = await axios.get(`${API}/admin/lecturers/${lecturerId}/assignments`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setAssignments(res.data.data)
-    } catch (err) {
-      console.error('Failed to load assignments:', err)
-    }
-  }
+  const loading = loadingLecturers || loadingTerms || loadingCourses
 
   const handleCreate = async (e) => {
     e.preventDefault()
@@ -73,9 +71,8 @@ export default function AdminLecturers() {
     }
   }
 
-  const openAssign = async (lecturer) => {
+  const openAssign = (lecturer) => {
     setSelectedLecturer(lecturer)
-    await fetchAssignments(lecturer.id)
     setView('assign')
   }
 
@@ -90,7 +87,7 @@ export default function AdminLecturers() {
       }, { headers: { Authorization: `Bearer ${token}` } })
       setSuccess('Course assigned!')
       setAssignForm({ course_id: '', academic_term_id: '' })
-      fetchAssignments(selectedLecturer.id)
+      fetchAssignments()
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to assign course.')
     }
@@ -102,7 +99,7 @@ export default function AdminLecturers() {
       await axios.delete(`${API}/admin/lecturers/assignments/${assignmentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      fetchAssignments(selectedLecturer.id)
+      fetchAssignments()
     } catch (err) {
       setError('Failed to remove assignment.')
     }

@@ -20,18 +20,14 @@ export const getIntakes = asyncHandler(async (req, res) => {
 })
 
 export const getActiveIntakes = asyncHandler(async (req, res) => {
-  const now = new Date().toISOString().split('T')[0]
+  // Trust the admin's status field as the source of truth.
+  // Return any intake that is NOT closed, regardless of dates.
+  // Date fields are for display/reference only — admin manually opens/closes intakes.
   const result = await pool.query(`
     SELECT * FROM intakes 
-    WHERE (
-      -- 'open' means admin has explicitly opened it; show if not yet past end date
-      (status = 'open' AND (application_end_date IS NULL OR application_end_date >= $1))
-      OR
-      -- 'upcoming' means it will open; show once the start date has arrived
-      (status = 'upcoming' AND application_start_date <= $1 AND (application_end_date IS NULL OR application_end_date >= $1))
-    )
+    WHERE status != 'closed'
     ORDER BY created_at DESC
-  `, [now])
+  `)
   res.json({ success: true, data: result.rows })
 })
 
@@ -45,7 +41,7 @@ export const createIntake = asyncHandler(async (req, res) => {
     const result = await client.query(
       `INSERT INTO intakes (name, application_start_date, application_end_date, application_fee, status) 
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [name, application_start_date, application_end_date, application_fee || 0, status || 'active']
+      [name, application_start_date, application_end_date, application_fee || 0, status || 'open']
     )
     const intake = result.rows[0]
 

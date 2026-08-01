@@ -173,8 +173,16 @@ export default function AdminIntakes() {
                   </div>
                 </div>
 
-                <h3 style={{marginTop: '1.5rem'}}>Linked Programmes</h3>
-                <p style={{fontSize: '0.85rem', color: '#666', marginBottom: '0.75rem'}}>Select which programmes are available for this intake.</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <div>
+                    <h3 style={{ margin: 0 }}>Linked Programmes</h3>
+                    <p style={{fontSize: '0.85rem', color: '#666', margin: '4px 0 0 0'}}>Select which programmes are available for this intake.</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button type="button" className="button" style={{ padding: '4px 8px', fontSize: '0.8rem', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }} onClick={() => setFormData(prev => ({ ...prev, linkedProgrammes: programmes.map(p => ({ programme_id: p.id, intake_status: 'open' })) }))}>Select All</button>
+                    <button type="button" className="button" style={{ padding: '4px 8px', fontSize: '0.8rem', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }} onClick={() => setFormData(prev => ({ ...prev, linkedProgrammes: [] }))}>Clear All</button>
+                  </div>
+                </div>
                 <div className="programmes-list">
                   {programmes.map(prog => (
                     <label key={prog.id} className="programme-checkbox">

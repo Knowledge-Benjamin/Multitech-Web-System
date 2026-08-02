@@ -236,4 +236,11 @@
   .about-page .carousel-title {
     font-size: 2rem;
   }
+
+  .about-page .carousel-excerpt {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }

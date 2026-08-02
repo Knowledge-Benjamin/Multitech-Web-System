@@ -32,14 +32,25 @@ export const getProgrammes = asyncHandler(async (req, res) => {
     // Fetching programmes for a specific intake (Apply page)
     query = `SELECT p.*,
       pi.id as programme_intake_id,
-      pi.intake_status as live_intake_status
+      pi.intake_status as live_intake_status,
+      (
+        SELECT json_agg(cp.campus_id)
+        FROM campus_programmes cp
+        WHERE cp.programme_id = p.id
+      ) AS campus_ids
     FROM programmes p
     JOIN programme_intakes pi ON pi.programme_id = p.id
     WHERE p.active = true AND pi.intake_id = $1 AND pi.intake_status = 'open'`
     params.push(intake_id)
   } else {
-    // Public listing — derive live status from the most recent open intake
+    // Public listing — derive live status, faculty_id, and campuses array
     query = `SELECT p.*,
+      d.faculty_id,
+      (
+        SELECT json_agg(cp.campus_id)
+        FROM campus_programmes cp
+        WHERE cp.programme_id = p.id
+      ) AS campus_ids,
       COALESCE(
         (
           SELECT pi.intake_status
@@ -53,6 +64,7 @@ export const getProgrammes = asyncHandler(async (req, res) => {
         'closed'
       ) AS live_intake_status
     FROM programmes p
+    LEFT JOIN departments d ON d.id = p.department_id
     WHERE p.active = true`
   }
 

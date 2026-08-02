@@ -26,10 +26,15 @@ const AdminHomeReasons = lazy(() => import('./pages/AdminHomeReasons'))
 const AdminMessages = lazy(() => import('./pages/AdminMessages'))
 const AdminCommunications = lazy(() => import('./pages/AdminCommunications'))
 const AdminSettings = lazy(() => import('./pages/AdminSettings'))
+const AdminCampuses = lazy(() => import('./pages/AdminCampuses'))
+const AdminFaculties = lazy(() => import('./pages/AdminFaculties'))
+const AdminDepartments = lazy(() => import('./pages/AdminDepartments'))
 const Articles = lazy(() => import('./pages/Articles'))
 const ArticleView = lazy(() => import('./pages/ArticleView'))
 const About = lazy(() => import('./pages/About'))
 const ContactUs = lazy(() => import('./pages/ContactUs'))
+const Campuses = lazy(() => import('./pages/Campuses'))
+const CampusDetails = lazy(() => import('./pages/CampusDetails'))
 const StudentLogin = lazy(() => import('./pages/StudentLogin'))
 const StudentDashboard = lazy(() => import('./pages/StudentDashboard'))
 const StudentFinances = lazy(() => import('./pages/StudentFinances'))
@@ -209,6 +214,30 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/campuses"
+          element={
+            <ProtectedRoute>
+              <AdminCampuses />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/faculties"
+          element={
+            <ProtectedRoute>
+              <AdminFaculties />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/departments"
+          element={
+            <ProtectedRoute>
+              <AdminDepartments />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Lecturer Routes */}
         <Route path="/lecturer/login" element={<LecturerLogin />} />
@@ -243,6 +272,8 @@ function App() {
                   <Route path="/apply" element={<Apply />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<ContactUs />} />
+                  <Route path="/campuses" element={<Campuses />} />
+                  <Route path="/campuses/:slug" element={<CampusDetails />} />
                   <Route path="/articles" element={<Articles />} />
                   <Route path="/articles/:slug" element={<ArticleView />} />
                   <Route path="*" element={<NotFound />} />

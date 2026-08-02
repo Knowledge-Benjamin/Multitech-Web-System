@@ -102,6 +102,22 @@ export default function AdminSidebar() {
           <span className="sidebar-text">Communications</span>
         </Link>
 
+        {/* Academic Structure Group */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '0.5rem 0', paddingTop: '0.5rem' }}>
+          <Link to="/admin/campuses" className={`nav-item ${isActive('/admin/campuses') ? 'active' : ''}`}>
+            <span className="nav-icon">🏛️</span>
+            <span className="sidebar-text">Campuses</span>
+          </Link>
+          <Link to="/admin/faculties" className={`nav-item ${isActive('/admin/faculties') ? 'active' : ''}`}>
+            <span className="nav-icon">🎓</span>
+            <span className="sidebar-text">Faculties</span>
+          </Link>
+          <Link to="/admin/departments" className={`nav-item ${isActive('/admin/departments') ? 'active' : ''}`}>
+            <span className="nav-icon">🏢</span>
+            <span className="sidebar-text">Departments</span>
+          </Link>
+        </div>
+
         {/* Academic Operations Group */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '0.5rem 0', paddingTop: '0.5rem' }}>
           <Link to="/admin/timetable" className={`nav-item ${isActive('/admin/timetable') ? 'active' : ''}`}>

@@ -9,7 +9,12 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 export default function Programmes() {
   const { data: progRes, isLoading: loading, refetch } = useApiQuery('/programmes', 'programmes')
+  const { data: campRes, isLoading: loadingCampuses } = useApiQuery('/campuses', 'publicCampuses')
+  const { data: facRes, isLoading: loadingFaculties } = useApiQuery('/faculties', 'publicFaculties')
+  
   const programmes = progRes?.data || []
+  const campuses = campRes?.data || []
+  const faculties = facRes?.data || []
   
   const [activeIndex, setActiveIndex] = useState(0)
   const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false))
@@ -21,7 +26,13 @@ export default function Programmes() {
 
   const [searchParams, setSearchParams] = useSearchParams()
   const initialFilter = searchParams.get('filter') || 'all'
+  const initialCampus = searchParams.get('campus') || 'all'
+  const initialFaculty = searchParams.get('faculty') || 'all'
+  
   const [filter, setFilter] = useState(initialFilter)
+  const [campusFilter, setCampusFilter] = useState(initialCampus)
+  const [facultyFilter, setFacultyFilter] = useState(initialFaculty)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     const handleProgrammeChanged = () => {
@@ -57,20 +68,52 @@ export default function Programmes() {
   useEffect(() => {
     setActiveIndex(0)
     setPage(1)
-  }, [filter, programmes.length])
+  }, [filter, campusFilter, facultyFilter, searchQuery, programmes.length])
+
+  const updateQueryParams = (newFilter, newCampus, newFaculty) => {
+    const params = {}
+    if (newFilter !== 'all') params.filter = newFilter
+    if (newCampus !== 'all') params.campus = newCampus
+    if (newFaculty !== 'all') params.faculty = newFaculty
+    setSearchParams(params)
+  }
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter)
-    if (newFilter === 'all') {
-      setSearchParams({})
-    } else {
-      setSearchParams({ filter: newFilter })
-    }
+    updateQueryParams(newFilter, campusFilter, facultyFilter)
+  }
+  
+  const handleCampusChange = (e) => {
+    const newCampus = e.target.value
+    setCampusFilter(newCampus)
+    updateQueryParams(filter, newCampus, facultyFilter)
+  }
+  
+  const handleFacultyChange = (e) => {
+    const newFaculty = e.target.value
+    setFacultyFilter(newFaculty)
+    updateQueryParams(filter, campusFilter, newFaculty)
   }
 
+  const filteredProgrammes = programmes.filter((programme) => {
+    // Search Query Match
+    const matchesSearch = programme.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (programme.description && programme.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    
+    // Type Filter Match
+    const matchesType = filter === 'all' || programme.type === filter
+    
+    // Campus Filter Match
+    const matchesCampus = campusFilter === 'all' || 
+                          (programme.campus_ids && programme.campus_ids.includes(Number(campusFilter)))
+                          
+    // Faculty Filter Match
+    const matchesFaculty = facultyFilter === 'all' || 
+                           (programme.faculty_id && programme.faculty_id === Number(facultyFilter))
+                           
+    return matchesSearch && matchesType && matchesCampus && matchesFaculty
+  })
 
-
-  const filteredProgrammes = filter === 'all' ? programmes : programmes.filter((programme) => programme.type === filter)
   const totalPages = Math.max(1, Math.ceil(filteredProgrammes.length / DESKTOP_PAGE_SIZE))
   const desktopProgrammes = filteredProgrammes.slice((page - 1) * DESKTOP_PAGE_SIZE, page * DESKTOP_PAGE_SIZE)
 
@@ -217,7 +260,43 @@ export default function Programmes() {
           </button>
         </div>
 
-        {loading ? (
+        {/* Enhanced Search and Structure Filters */}
+        <div className="search-filter-bar" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem', background: 'rgba(255,255,255,0.8)', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', backdropFilter: 'blur(10px)' }}>
+          <div className="search-group" style={{ flex: '1 1 300px' }}>
+            <input 
+              type="text" 
+              placeholder="Search programmes by name or keyword..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', outline: 'none' }}
+            />
+          </div>
+          <div className="dropdown-group" style={{ display: 'flex', gap: '1rem', flex: '1 1 300px' }}>
+            <select 
+              value={campusFilter} 
+              onChange={handleCampusChange}
+              style={{ flex: 1, padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', outline: 'none', background: 'white' }}
+            >
+              <option value="all">All Campuses</option>
+              {campuses.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            
+            <select 
+              value={facultyFilter} 
+              onChange={handleFacultyChange}
+              style={{ flex: 1, padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', outline: 'none', background: 'white' }}
+            >
+              <option value="all">All Faculties</option>
+              {faculties.map(f => (
+                <option key={f.id} value={f.id}>{f.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {(loading || loadingCampuses || loadingFaculties) ? (
           <div className="loading">Loading programmes...</div>
         ) : filteredProgrammes.length > 0 ? (
           isMobile && filteredProgrammes.length > 1 ? (

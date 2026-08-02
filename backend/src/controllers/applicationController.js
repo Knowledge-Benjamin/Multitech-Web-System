@@ -31,11 +31,15 @@ export const getApplications = asyncHandler(async (req, res) => {
          'programme_intake_id', ac.programme_intake_id,
          'preference_order', ac.preference_order,
          'status', ac.status,
-         'programme_name', p.name
+         'reviewer_notes', ac.reviewer_notes,
+         'programme_name', p.name,
+         'campus_id', ac.campus_id,
+         'campus_name', ca.name
        ) ORDER BY ac.preference_order)
        FROM application_choices ac
        JOIN programme_intakes pi ON ac.programme_intake_id = pi.id
        JOIN programmes p ON pi.programme_id = p.id
+       LEFT JOIN campuses ca ON ac.campus_id = ca.id
        WHERE ac.application_id = a.id
       ) AS choices
     FROM applications a
@@ -68,11 +72,15 @@ export const getApplicationById = asyncHandler(async (req, res) => {
          'programme_intake_id', ac.programme_intake_id,
          'preference_order', ac.preference_order,
          'status', ac.status,
-         'programme_name', p.name
+         'reviewer_notes', ac.reviewer_notes,
+         'programme_name', p.name,
+         'campus_id', ac.campus_id,
+         'campus_name', ca.name
        ) ORDER BY ac.preference_order)
        FROM application_choices ac
        JOIN programme_intakes pi ON ac.programme_intake_id = pi.id
        JOIN programmes p ON pi.programme_id = p.id
+       LEFT JOIN campuses ca ON ac.campus_id = ca.id
        WHERE ac.application_id = a.id
       ) AS choices
      FROM applications a
@@ -148,11 +156,16 @@ export const createApplication = asyncHandler(async (req, res) => {
       return res.status(400).json({ success: false, message: 'This intake is not currently accepting applications' })
     }
 
-    // --- Validate each programme_intake_id belongs to this intake ---
+    // --- Validate each programme_intake_id belongs to this intake and is offered at the chosen campus ---
     const choiceRows = []
     for (const choice of parsedChoices) {
+      if (!choice.campus_id) {
+        await client.query('ROLLBACK')
+        return res.status(400).json({ success: false, message: `Campus selection is required for all choices.` })
+      }
+      
       const piRes = await client.query(
-        `SELECT pi.id, p.name as programme_name
+        `SELECT pi.id, p.name as programme_name, p.id as programme_id
          FROM programme_intakes pi
          JOIN programmes p ON p.id = pi.programme_id
          WHERE pi.id = $1 AND pi.intake_id = $2 AND p.active = true`,
@@ -162,7 +175,24 @@ export const createApplication = asyncHandler(async (req, res) => {
         await client.query('ROLLBACK')
         return res.status(400).json({ success: false, message: `Programme choice ${choice.preference_order} is not available for this intake` })
       }
-      choiceRows.push({ programme_intake_id: choice.programme_intake_id, preference_order: choice.preference_order, ...piRes.rows[0] })
+      
+      // Validate campus
+      const campusRes = await client.query(
+        `SELECT * FROM campus_programmes WHERE programme_id = $1 AND campus_id = $2`,
+        [piRes.rows[0].programme_id, choice.campus_id]
+      )
+      
+      if (campusRes.rows.length === 0) {
+        await client.query('ROLLBACK')
+        return res.status(400).json({ success: false, message: `The programme "${piRes.rows[0].programme_name}" is not offered at the selected campus.` })
+      }
+      
+      choiceRows.push({ 
+        programme_intake_id: choice.programme_intake_id, 
+        campus_id: choice.campus_id, 
+        preference_order: choice.preference_order, 
+        ...piRes.rows[0] 
+      })
     }
 
     // --- Single enrolment: block duplicate for same intake ---
@@ -230,9 +260,9 @@ export const createApplication = asyncHandler(async (req, res) => {
     // --- Insert application choices ---
     for (const choice of choiceRows) {
       await client.query(
-        `INSERT INTO application_choices (application_id, programme_intake_id, preference_order, status)
-         VALUES ($1, $2, $3, 'pending')`,
-        [application.id, choice.programme_intake_id, choice.preference_order]
+        `INSERT INTO application_choices (application_id, programme_intake_id, campus_id, preference_order, status)
+         VALUES ($1, $2, $3, $4, 'pending')`,
+        [application.id, choice.programme_intake_id, choice.campus_id, choice.preference_order]
       )
     }
 

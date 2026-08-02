@@ -8,6 +8,7 @@ import Seo from '../components/Seo'
 export default function About() {
   const [visible, setVisible] = useState(false)
   const [activeSection, setActiveSection] = useState(null)
+  const [expandedMain, setExpandedMain] = useState(false)
 
   const { data: heroRes, isLoading: heroLoading } = useApiQuery('/about', 'aboutHero')
   const hero = heroRes?.data || null
@@ -88,9 +89,25 @@ export default function About() {
       {hero?.content && (
         <section className="container about-main-content">
           <div 
-            className="rich-text"
+            className={`rich-text ${!expandedMain ? 'collapsed' : ''}`}
             dangerouslySetInnerHTML={{ __html: hero.content.replace(/\n/g, '<br/>') }}
+            style={!expandedMain ? {
+              display: '-webkit-box',
+              WebkitLineClamp: 5,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)'
+            } : {}}
           />
+          <button 
+            type="button"
+            onClick={() => setExpandedMain(!expandedMain)} 
+            className="button button-outline" 
+            style={{ marginTop: '1.5rem', alignSelf: 'flex-start' }}
+          >
+            {expandedMain ? 'Read Less' : 'Continue Reading'}
+          </button>
         </section>
       )}
 

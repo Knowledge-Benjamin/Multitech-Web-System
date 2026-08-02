@@ -60,6 +60,7 @@ export default function About() {
                 loading="eager"
                 decoding="async"
                 fetchPriority="high"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
               />
             ) : (
               <div className="carousel-img" style={{ backgroundColor: '#003366' }} />
@@ -109,7 +110,14 @@ export default function About() {
 
             <div className="about-content-panel">
               <h3>{currentSection?.title || 'About Our School'}</h3>
-              <p>{currentSection?.content || 'Our about page is being updated with new sections. Please check back soon.'}</p>
+              {currentSection?.content ? (
+                <div
+                  className="rich-text"
+                  dangerouslySetInnerHTML={{ __html: currentSection.content.replace(/\n/g, '<br/>') }}
+                />
+              ) : (
+                <p>Our about page is being updated with new sections. Please check back soon.</p>
+              )}
               {currentSection?.section_type === 'staff' && (
                 <div className="staff-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
                   {((currentSection.metadata && currentSection.metadata.staff_members) || []).map((m, i) => (
@@ -145,13 +153,6 @@ export default function About() {
         )}
       </section>
 
-      {/* Empty viewport-height spacer as requested */}
-      <div style={{ minHeight: '100vh' }} />
-
-      <section className="container about-copy">
-        <h2>Our Story</h2>
-        <p>Multitech Business School is dedicated to providing industry-focused education, equipping students with practical skills and foundational theory necessary for a successful career.</p>
-      </section>
     </div>
   )
 }

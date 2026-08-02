@@ -31,6 +31,10 @@ export default function Home() {
   const { data: latestRes, isLoading: latestLoading } = useApiQuery('/articles', 'latestArticles')
   const latestArticles = (latestRes?.data || []).slice(0, 4)
 
+  // Fetch About content for homepage meta description (search engine snippet)
+  const { data: aboutRes } = useApiQuery('/about', 'aboutHero')
+  const aboutExcerpt = aboutRes?.data?.excerpt || null
+
   useEffect(() => {
     if (!heroLoading) {
       setTimeout(() => setHeroVisible(true), 30)
@@ -101,7 +105,7 @@ export default function Home() {
     <div className="home">
       <Seo
         title="Multitech Business School"
-        description="Discover academic programmes, admissions, and student opportunities at Multitech Business School in Uganda."
+        description={aboutExcerpt || 'Discover academic programmes, admissions, and student opportunities at Multitech Business School in Uganda.'}
         path="/"
         keywords={['higher education', 'business school', 'Uganda', 'admissions']}
       />

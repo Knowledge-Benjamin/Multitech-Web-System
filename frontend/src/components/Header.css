@@ -1,7 +1,7 @@
 .header {
-  background-color: rgba(0, 82, 204, 0.25);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background-color: rgba(5, 5, 10, 0.92);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   color: white;
   position: fixed;
   top: 0;
@@ -10,14 +10,14 @@
   width: 100%;
   z-index: var(--z-index-fixed);
   box-shadow: none;
-  transition: box-shadow var(--transition-base), background-color var(--transition-base), backdrop-filter var(--transition-base);
+  transition: box-shadow 0.3s ease, background-color 0.35s ease, backdrop-filter 0.35s ease;
 }
 
 .header.scrolled {
-  box-shadow: var(--shadow-md);
-  background-color: rgba(0, 82, 204, 0.50);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+  background-color: rgba(10, 10, 20, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .header-container {

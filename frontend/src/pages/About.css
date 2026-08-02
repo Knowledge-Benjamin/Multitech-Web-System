@@ -128,3 +128,32 @@
     grid-template-columns: 1fr;
   }
 }
+
+.about-content-panel .rich-text {
+  line-height: 1.85;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.about-content-panel .rich-text p,
+.about-content-panel .rich-text br + br {
+  margin-bottom: var(--spacing-md);
+}
+
+.about-content-panel .rich-text ul,
+.about-content-panel .rich-text ol {
+  padding-left: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.about-content-panel .rich-text li {
+  margin-bottom: var(--spacing-sm);
+}
+
+.about-content-panel .rich-text h2,
+.about-content-panel .rich-text h3,
+.about-content-panel .rich-text h4 {
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-secondary);
+}

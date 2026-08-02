@@ -229,8 +229,12 @@
 }
 
 @media (max-width: 768px) {
+  .about-page .hero-carousel-container {
+    min-height: 350px;
+  }
+
   .about-page .carousel-content {
-    padding: 6rem 1.5rem 3rem 1.5rem;
+    padding: 4.5rem 1.25rem 2.5rem 1.25rem;
   }
   
   .about-page .carousel-title {
@@ -242,5 +246,6 @@
     -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    margin-bottom: 1rem;
   }
 }

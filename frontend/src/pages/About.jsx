@@ -85,6 +85,15 @@ export default function About() {
         </section>
       )}
 
+      {hero?.content && (
+        <section className="container about-main-content">
+          <div 
+            className="rich-text"
+            dangerouslySetInnerHTML={{ __html: hero.content.replace(/\n/g, '<br/>') }}
+          />
+        </section>
+      )}
+
       <section className="about-details-section">
         {sections.length > 0 ? (
           <div className="about-details-grid">

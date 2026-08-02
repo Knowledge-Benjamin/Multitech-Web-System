@@ -1,7 +1,7 @@
 .header {
-  background-color: rgba(5, 5, 10, 0.92);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: white;
   position: fixed;
   top: 0;
@@ -15,9 +15,9 @@
 
 .header.scrolled {
   box-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
-  background-color: rgba(10, 10, 20, 0.72);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .header-container {

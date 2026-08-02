@@ -26,7 +26,7 @@ export default function Apply() {
   // Form State
   const [formData, setFormData] = useState({
     intake_id: '',
-    choices: [],
+    choices: [{ programme_intake_id: '', campus_id: '' }],
 
     first_name: '',
     middle_name: '',
@@ -72,15 +72,22 @@ export default function Apply() {
   )
   const programmes = progRes?.data || []
 
-  const handleChoiceChange = (index, value) => {
+  const { data: campRes, isLoading: loadingCampuses } = useApiQuery('/campuses', 'activeCampuses')
+  const campuses = campRes?.data || []
+
+  const handleChoiceChange = (index, field, value) => {
     const newChoices = [...formData.choices]
-    newChoices[index] = value
+    newChoices[index] = { ...newChoices[index], [field]: value }
+    // If programme changes, reset campus
+    if (field === 'programme_intake_id') {
+      newChoices[index].campus_id = ''
+    }
     setFormData(prev => ({ ...prev, choices: newChoices }))
   }
 
   const addChoice = () => {
     if (formData.choices.length < 3) {
-      setFormData(prev => ({ ...prev, choices: [...prev.choices, ''] }))
+      setFormData(prev => ({ ...prev, choices: [...prev.choices, { programme_intake_id: '', campus_id: '' }] }))
     }
   }
 
@@ -144,7 +151,13 @@ export default function Apply() {
       if (key === 'academic_history') {
         form.append(key, JSON.stringify(formData[key]))
       } else if (key === 'choices') {
-        const formattedChoices = formData.choices.filter(c => c).map((c, i) => ({ programme_intake_id: parseInt(c), preference_order: i + 1 }))
+        const formattedChoices = formData.choices
+          .filter(c => c.programme_intake_id && c.campus_id)
+          .map((c, i) => ({ 
+            programme_intake_id: parseInt(c.programme_intake_id), 
+            campus_id: parseInt(c.campus_id),
+            preference_order: i + 1 
+          }))
         form.append(key, JSON.stringify(formattedChoices))
       } else {
         form.append(key, formData[key])
@@ -218,7 +231,7 @@ export default function Apply() {
               {loading ? (
                 <p>Loading intakes...</p>
               ) : (
-                <select name="intake_id" value={formData.intake_id} onChange={(e) => { handleInputChange(e); setFormData(p => ({...p, choices: ['']})) }} required className="form-control">
+                <select name="intake_id" value={formData.intake_id} onChange={(e) => { handleInputChange(e); setFormData(p => ({...p, choices: [{ programme_intake_id: '', campus_id: '' }]})) }} required className="form-control">
                   <option value="">-- Select an Intake --</option>
                   {intakes.map(i => {
                     const hasIntlFee = i.international_fee && Number(i.international_fee) > 0
@@ -237,27 +250,50 @@ export default function Apply() {
                 <h3>Your Programme Choices (Ranked in Order of Preference)</h3>
                 <p className="text-sm text-gray-500 mb-4">You can select up to 3 choices for this intake.</p>
                 
-                {formData.choices.map((choiceId, index) => (
-                  <div key={index} className="form-group choice-group">
-                    <label>Choice {index + 1} {index === 0 && '*'}</label>
-                    <div className="choice-input-wrapper" style={{display: 'flex', gap: '10px'}}>
+                {formData.choices.map((choice, index) => {
+                  const selectedProg = programmes.find(p => p.programme_intake_id.toString() === choice.programme_intake_id)
+                  const availableCampuses = selectedProg?.campus_ids || []
+                  
+                  return (
+                  <div key={index} className="form-group choice-group" style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
+                    <label style={{ fontWeight: 'bold' }}>Choice {index + 1} {index === 0 && '*'}</label>
+                    <div className="choice-input-wrapper" style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
                       <select 
-                        value={choiceId} 
-                        onChange={(e) => handleChoiceChange(index, e.target.value)} 
+                        value={choice.programme_intake_id} 
+                        onChange={(e) => handleChoiceChange(index, 'programme_intake_id', e.target.value)} 
                         required={index === 0}
                         className="form-control"
+                        style={{ flex: '1 1 250px' }}
                       >
                         <option value="">-- Select Programme --</option>
                         {programmes.map(p => (
                           <option key={p.id} value={p.programme_intake_id}>{p.name} ({p.level})</option>
                         ))}
                       </select>
+                      
+                      <select 
+                        value={choice.campus_id} 
+                        onChange={(e) => handleChoiceChange(index, 'campus_id', e.target.value)} 
+                        required={index === 0 || !!choice.programme_intake_id}
+                        disabled={!choice.programme_intake_id}
+                        className="form-control"
+                        style={{ flex: '1 1 200px' }}
+                      >
+                        <option value="">-- Select Campus --</option>
+                        {campuses.filter(c => availableCampuses.includes(c.id)).map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                      
                       {index > 0 && (
                         <button type="button" onClick={() => removeChoice(index)} className="button button-danger">Remove</button>
                       )}
                     </div>
+                    {choice.programme_intake_id && availableCampuses.length === 0 && (
+                      <p style={{ color: '#d32f2f', fontSize: '0.85rem', marginTop: '5px' }}>This programme is not currently assigned to any campus.</p>
+                    )}
                   </div>
-                ))}
+                )})}
 
                 {formData.choices.length < 3 && (
                   <button type="button" onClick={addChoice} className="button button-secondary mt-2">+ Add Another Choice</button>
@@ -266,7 +302,7 @@ export default function Apply() {
             )}
 
             <div className="step-actions">
-              <button type="button" className="button button-primary" onClick={nextStep} disabled={!formData.intake_id || !formData.choices[0]}>Next Step</button>
+              <button type="button" className="button button-primary" onClick={nextStep} disabled={!formData.intake_id || !formData.choices[0].programme_intake_id || !formData.choices[0].campus_id}>Next Step</button>
             </div>
           </div>
         )
@@ -526,8 +562,17 @@ export default function Apply() {
           <div className="step-content">
             <h2>Review &amp; Submit</h2>
             <div className="review-section">
-              <h3>Programme</h3>
-              <p>{programmes.find(p => p.id.toString() === formData.programme_id)?.name}</p>
+              <h3>Programme Choices</h3>
+              {formData.choices.filter(c => c.programme_intake_id).map((choice, i) => {
+                const prog = programmes.find(p => p.programme_intake_id.toString() === choice.programme_intake_id)
+                const campus = campuses.find(c => c.id.toString() === choice.campus_id)
+                return (
+                  <p key={i} style={{marginBottom: '4px'}}>
+                    <strong>Choice {i + 1}:</strong> {prog?.name || '—'} 
+                    {campus && <span style={{color: '#555'}}> @ {campus.name}</span>}
+                  </p>
+                )
+              })}
               
               <h3>Personal Details</h3>
               <p>Name: {formData.first_name} {formData.middle_name} {formData.last_name}</p>

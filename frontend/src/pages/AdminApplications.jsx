@@ -403,6 +403,11 @@ export default function AdminApplications() {
                         <div key={choice.id} style={{border: '1px solid #e0e0e0', borderRadius: '8px', padding: '12px', marginBottom: '10px'}}>
                           <p style={{fontWeight: 600, marginBottom: '4px'}}>
                             Choice {choice.preference_order}: {choice.programme_name}
+                            {choice.campus_name && (
+                              <span style={{fontWeight: 400, fontSize: '0.85rem', color: '#555', marginLeft: '8px'}}>
+                                @ {choice.campus_name}
+                              </span>
+                            )}
                           </p>
                           <p style={{marginBottom: '8px'}}>
                             <span className={`status-badge status-${choice.status}`}>{choice.status.toUpperCase()}</span>

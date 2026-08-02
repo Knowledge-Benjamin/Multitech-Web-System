@@ -68,6 +68,73 @@ const initializeDatabase = async () => {
 
     await ensureProgrammeColumns()
 
+    // Academic Structure & Campuses
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS faculties (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE,
+        description TEXT,
+        dean_name VARCHAR(255),
+        featured_image_url TEXT,
+        file_id TEXT,
+        status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+        display_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS departments (
+        id SERIAL PRIMARY KEY,
+        faculty_id INTEGER REFERENCES faculties(id) ON DELETE SET NULL,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE,
+        description TEXT,
+        hod_name VARCHAR(255),
+        status VARCHAR(20) DEFAULT 'active',
+        display_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS campuses (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE,
+        tagline VARCHAR(255),
+        description TEXT,
+        address TEXT,
+        city VARCHAR(100),
+        phone VARCHAR(50),
+        email VARCHAR(255),
+        map_embed_url TEXT,
+        featured_image_url TEXT,
+        file_id TEXT,
+        status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+        display_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    // Link departments to programmes
+    await ensureTableColumns('programmes', [
+      ['department_id', 'INTEGER REFERENCES departments(id) ON DELETE SET NULL']
+    ])
+
+    // Campus-Programme Junction
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS campus_programmes (
+        campus_id INTEGER REFERENCES campuses(id) ON DELETE CASCADE,
+        programme_id INTEGER REFERENCES programmes(id) ON DELETE CASCADE,
+        PRIMARY KEY (campus_id, programme_id)
+      )
+    `)
+
     // Intakes and application workflow tables
     await pool.query(`
       CREATE TABLE IF NOT EXISTS intakes (
@@ -187,6 +254,7 @@ const initializeDatabase = async () => {
         id SERIAL PRIMARY KEY,
         application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,
         programme_intake_id INTEGER REFERENCES programme_intakes(id) ON DELETE CASCADE,
+        campus_id INTEGER REFERENCES campuses(id) ON DELETE SET NULL,
         preference_order INTEGER NOT NULL,
         status VARCHAR(30) DEFAULT 'pending',
         reviewer_notes TEXT,
@@ -194,6 +262,11 @@ const initializeDatabase = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `)
+    await ensureTableColumns('application_choices', [
+      ['status', "VARCHAR(30) DEFAULT 'pending'"],
+      ['reviewer_notes', 'TEXT'],
+      ['campus_id', 'INTEGER REFERENCES campuses(id) ON DELETE SET NULL']
+    ])
 
     // Announcements table
     await pool.query(`

@@ -9,7 +9,8 @@
     "dev": "nodemon src/server.js",
     "migrate": "node src/scripts/migrate.js",
     "seed": "node src/scripts/seed.js",
-    "seed:admin": "node src/scripts/seedAdmin.js"
+    "seed:admin": "node src/scripts/seedAdmin.js",
+    "migrate:unlinked": "node src/scripts/migrateUnlinked.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

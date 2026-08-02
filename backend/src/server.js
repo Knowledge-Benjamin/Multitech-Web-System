@@ -38,6 +38,9 @@ import lecturerRoutes from './routes/lecturer.js'
 import adminLecturersRoutes from './routes/adminLecturers.js'
 import courseUnitsRoutes from './routes/courseUnits.js'
 import intakesRoutes from './routes/intakes.js'
+import campusesRoutes from './routes/campuses.js'
+import facultiesRoutes from './routes/faculties.js'
+import departmentsRoutes from './routes/departments.js'
 dotenv.config()
 
 if (!process.env.JWT_SECRET) {
@@ -152,6 +155,9 @@ const initializeApp = async () => {
   app.use('/api/admin/lecturers', adminLecturersRoutes)
   app.use('/api/course-units', courseUnitsRoutes)
   app.use('/api/intakes', intakesRoutes)
+  app.use('/api/campuses', campusesRoutes)
+  app.use('/api/faculties', facultiesRoutes)
+  app.use('/api/departments', departmentsRoutes)
 
   // 404 handler
   app.use('*', (req, res) => {

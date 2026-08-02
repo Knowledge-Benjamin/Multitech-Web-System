@@ -1,6 +1,6 @@
 import pool from '../config/database.js'
 import { asyncHandler } from '../utils/helpers.js'
-import { uploadToDrive, deleteFromDrive } from '../utils/googleDrive.js'
+import { uploadToDrive, deleteFromDrive } from '../utils/googleDriveService.js'
 
 const slugify = (value) => String(value || '')
   .toLowerCase()

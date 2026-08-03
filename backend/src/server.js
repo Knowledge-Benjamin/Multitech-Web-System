@@ -39,6 +39,7 @@ import adminLecturersRoutes from './routes/adminLecturers.js'
 import courseUnitsRoutes from './routes/courseUnits.js'
 import intakesRoutes from './routes/intakes.js'
 import campusesRoutes from './routes/campuses.js'
+import adminCampusesRoutes from './routes/adminCampuses.js'
 import facultiesRoutes from './routes/faculties.js'
 import departmentsRoutes from './routes/departments.js'
 dotenv.config()
@@ -133,6 +134,7 @@ const initializeApp = async () => {
   // API Routes
   app.use('/api/auth', authRoutes)
   app.use('/api/admin', adminRoutes)
+  app.use('/api/admin/campuses', adminCampusesRoutes)
   app.use('/api/programmes', programmeRoutes)
   app.use('/api/programme-categories', programmeCategoriesRoutes)
   app.use('/api/applications', applicationRoutes)

@@ -74,7 +74,27 @@ export default function AdminHomeReasons() {
         <div className="admin-form-section">
           <h2>{isEditing? 'Edit Reason':'Create New Reason'}</h2>
           <form onSubmit={handleSubmit} className="admin-form">
-            <div className="form-group"><label>Icon</label><input name="icon" value={form.icon} onChange={handleInput} placeholder="e.g. ⭐ or 🎓" /></div>
+            <div className="form-group">
+              <label>Icon</label>
+              <select name="icon" value={form.icon} onChange={handleInput} required>
+                <option value="">Select an icon...</option>
+                <option value="Award">Award</option>
+                <option value="BookOpen">Book</option>
+                <option value="Building">Building</option>
+                <option value="Briefcase">Briefcase</option>
+                <option value="GraduationCap">Graduation Cap</option>
+                <option value="Globe">Globe</option>
+                <option value="Users">Users</option>
+                <option value="TrendingUp">Trending Up</option>
+                <option value="Target">Target</option>
+                <option value="Shield">Shield</option>
+                <option value="CheckCircle">Check Circle</option>
+                <option value="Lightbulb">Lightbulb</option>
+                <option value="Star">Star</option>
+                <option value="Rocket">Rocket</option>
+                <option value="MonitorPlay">Online Learning</option>
+              </select>
+            </div>
             <div className="form-group"><label>Title *</label><input name="title" value={form.title} onChange={handleInput} required /></div>
             <div className="form-group"><label>Points / Explanation</label>
               {form.points.map((p,idx)=>(

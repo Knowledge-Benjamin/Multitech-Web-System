@@ -36,50 +36,50 @@ export const getAdminUser = asyncHandler(async (req, res) => {
   })
 })
 
+// Allowed roles — enforced at controller level as defence-in-depth
+const VALID_ADMIN_ROLES = ['admin', 'teacher']
+
 // Create admin user
 export const createAdminUser = asyncHandler(async (req, res) => {
   const { username, email, password, role } = req.body
 
-  if (!username || !email || !password) {
-    return res.status(400).json({
-      success: false,
-      message: 'Username, email, and password are required'
-    })
-  }
+  // Whitelist role — prevent role escalation via body injection
+  const assignedRole = VALID_ADMIN_ROLES.includes(role) ? role : 'admin'
 
-  const hashedPassword = await bcrypt.hash(password, 10)
+  const hashedPassword = await bcrypt.hash(password, 12)
 
   try {
-    const assignedRole = role || 'admin';
     const result = await pool.query(
       'INSERT INTO admin_users (username, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, username, email, role, status',
       [username, email, hashedPassword, assignedRole]
     )
 
     // Admin Sync: Provision teacher in Exam Portal
+    // NOTE: We send a signed one-time-token — NOT the plaintext password
     if (assignedRole === 'teacher' || assignedRole === 'admin') {
       import('crypto').then((crypto) => {
-        const payload = JSON.stringify({
-          name: username,
-          email: email,
-          password: password, // Send plaintext password to be hashed by Exam Portal
-          role: assignedRole,
-        });
-
-        const secret = process.env.EXAM_PORTAL_WEBHOOK_SECRET;
+        const secret = process.env.EXAM_PORTAL_WEBHOOK_SECRET
         if (secret) {
-          const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
-          // Exam Portal runs on 3001 locally
-          fetch('http://localhost:3001/api/webhooks/provision-teacher', {
+          // One-time provision token — Exam Portal must enforce its own password reset flow
+          const provisionToken = crypto.randomBytes(32).toString('hex')
+          const payload = JSON.stringify({
+            name: username,
+            email: email,
+            provision_token: provisionToken,
+            role: assignedRole,
+          })
+          const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex')
+          const examPortalUrl = process.env.EXAM_PORTAL_URL || 'http://localhost:3001'
+          fetch(`${examPortalUrl}/api/webhooks/provision-teacher`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'x-erp-signature': signature,
             },
             body: payload,
-          }).catch(err => console.warn('[adminSync] Failed to provision teacher in Exam Portal:', err.message));
+          }).catch(err => console.warn('[adminSync] Failed to provision teacher in Exam Portal:', err.message))
         }
-      });
+      })
     }
 
     res.status(201).json({
@@ -98,10 +98,21 @@ export const createAdminUser = asyncHandler(async (req, res) => {
   }
 })
 
+// Allowed statuses
+const VALID_STATUSES = ['active', 'inactive']
+
 // Update admin user
 export const updateAdminUser = asyncHandler(async (req, res) => {
   const { id } = req.params
-  const { email, role, status } = req.body
+  let { email, role, status } = req.body
+
+  // Whitelist role and status values — defence-in-depth
+  if (role && !VALID_ADMIN_ROLES.includes(role)) {
+    return res.status(400).json({ success: false, message: 'Invalid role value' })
+  }
+  if (status && !VALID_STATUSES.includes(status)) {
+    return res.status(400).json({ success: false, message: 'Invalid status value' })
+  }
 
   const result = await pool.query(
     'UPDATE admin_users SET email = $1, role = $2, status = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4 RETURNING id, username, email, role, status',

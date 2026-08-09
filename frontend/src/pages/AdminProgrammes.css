@@ -1,16 +1,5 @@
 /* AdminProgrammes.css */
 
-.admin-layout {
-  display: flex;
-  min-height: 100vh;
-  background: var(--color-bg-light);
-}
-
-.admin-content {
-  flex: 1;
-  padding: var(--spacing-2xl);
-}
-
 .content-header {
   display: flex;
   justify-content: space-between;
@@ -202,10 +191,6 @@ form {
 }
 
 @media (max-width: 768px) {
-  .admin-content {
-    padding: var(--spacing-lg);
-  }
-
   .content-header {
     flex-direction: column;
     gap: var(--spacing-lg);

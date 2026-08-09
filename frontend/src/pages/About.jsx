@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useApiQuery } from '../hooks/useApiQuery'
+import { useScrollFade } from '../hooks/useScrollFade'
 import './Home.css'
 import './About.css'
 import Seo from '../components/Seo'
@@ -30,10 +31,12 @@ export default function About() {
     }
   }, [sections, activeSection])
 
+  useScrollFade()
+
   const currentSection = sections.find(section => section.id === activeSection) || sections[0] || null
 
   return (
-    <div className="about-page">
+    <div className="scope-about about-page">
       <Seo
         title="About Multitech Business School"
         description="Learn about Multitech Business School's mission, programmes, and commitment to practical business education."
@@ -60,7 +63,7 @@ export default function About() {
                 alt={hero.title}
                 loading="eager"
                 decoding="async"
-                fetchPriority="high"
+                fetchpriority="high"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
               />
             ) : (
@@ -87,7 +90,7 @@ export default function About() {
       )}
 
       {hero?.content && (
-        <section className="container about-main-content">
+        <section className="container about-main-content fade-in-section">
           <div 
             className={`rich-text ${!expandedMain ? 'collapsed' : ''}`}
             dangerouslySetInnerHTML={{ __html: hero.content.replace(/\n/g, '<br/>') }}
@@ -111,7 +114,7 @@ export default function About() {
         </section>
       )}
 
-      <section className="about-details-section">
+      <section className="about-details-section fade-in-section">
         {sections.length > 0 ? (
           <div className="about-details-grid">
             <div className="about-nav-card">

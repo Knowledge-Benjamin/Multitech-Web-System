@@ -93,7 +93,7 @@ export default function AdminDepartments() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-admindepartments admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">

@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 
 import { useApiQuery } from '../hooks/useApiQuery'
+import { useScrollFade } from '../hooks/useScrollFade'
 import './ProgrammeDetails.css'
 
 const slugify = (value) => String(value || '')
@@ -37,13 +38,15 @@ export default function ProgrammeDetails() {
 
   const loading = loadingProg || (!!progId && (loadingCu || loadingPf || loadingFf))
 
+  useScrollFade()
+
   if (loading) {
     return <div className="programme-details-page"><div className="container"><p>Loading programme details...</p></div></div>
   }
 
   if (!programme) {
     return (
-      <div className="programme-details-page">
+      <div className="scope-programmedetails programme-details-page">
         <div className="container">
           <h2>Programme Not Found</h2>
           <p>We could not find the programme you are looking for.</p>
@@ -113,6 +116,25 @@ export default function ProgrammeDetails() {
             <span><i className="icon-clock"></i> Duration: {programme.duration}</span>
             {renderStatusBadge()}
           </div>
+          {programme.campuses && programme.campuses.length > 0 && (
+            <div className="hero-campuses" style={{ marginTop: '1rem', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.9rem', opacity: 0.9, display: 'flex', alignItems: 'center' }}>Available at:</span>
+              {programme.campuses.map(campus => (
+                <Link key={campus.id} to={`/campuses/${campus.slug}`} className="campus-badge" style={{
+                  background: 'rgba(255,255,255,0.15)',
+                  padding: '4px 12px',
+                  borderRadius: '100px',
+                  fontSize: '0.85rem',
+                  color: '#fff',
+                  textDecoration: 'none',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  transition: 'background 0.2s'
+                }}>
+                  {campus.name}
+                </Link>
+              ))}
+            </div>
+          )}
           
           {programme.live_intake_status === 'open' && (
             <Link to={`/apply?programme=${programme.id}`} className="button button-accent apply-btn">Apply Now</Link>

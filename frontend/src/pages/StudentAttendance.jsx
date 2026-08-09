@@ -38,7 +38,7 @@ export default function StudentAttendance() {
   }
 
   return (
-    <div className="student-layout">
+    <div className="scope-studentattendance student-layout">
       <StudentSidebar />
       <main className="student-content" style={{ background: '#0f172a', padding: '2rem', color: '#f1f5f9' }}>
         <h1 style={{ margin: '0 0 0.5rem 0' }}>📈 My Attendance</h1>

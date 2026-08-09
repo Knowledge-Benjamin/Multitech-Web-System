@@ -63,9 +63,61 @@
 }
 
 .programmes-section h2 {
+  position: relative;
   text-align: center;
   margin-bottom: var(--spacing-2xl);
   color: var(--color-secondary);
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* General fade-in section styles for scroll animations */
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  will-change: opacity, transform;
+}
+
+.fade-in-section.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Generalized section titles for underline animation */
+.section-title {
+  position: relative;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 0.5rem;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 4px;
+  background-color: var(--color-primary);
+  border-radius: 2px;
+}
+
+.is-visible .section-title::after,
+.section-title.animate-underline::after {
+  animation: expandUnderline 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.2s;
+}
+
+@keyframes expandUnderline {
+  from {
+    width: 0;
+  }
+  to {
+    width: 115%;
+  }
 }
 
 .programmes-grid {
@@ -807,7 +859,7 @@
 
 .home-contact-section {
   padding: 4rem 0;
-  background: white;
+  background: #f8fafc;
 }
 
 .home-contact-inner {

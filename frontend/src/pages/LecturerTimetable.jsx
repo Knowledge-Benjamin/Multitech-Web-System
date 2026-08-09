@@ -36,7 +36,7 @@ export default function LecturerTimetable() {
   }
 
   return (
-    <div className="lecturer-layout">
+    <div className="scope-lecturertimetable lecturer-layout">
       <LecturerSidebar />
       <main className="lecturer-main">
         <header className="lecturer-topbar">

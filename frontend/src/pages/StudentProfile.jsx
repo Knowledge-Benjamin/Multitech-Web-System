@@ -10,7 +10,7 @@ export default function StudentProfile() {
   const data = resData?.data
 
   return (
-    <div className="admin-layout">
+    <div className="scope-studentprofile admin-layout">
       <StudentSidebar />
       <main className="admin-content" style={{ background: 'var(--color-background)' }}>
         <header className="content-header">

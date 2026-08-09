@@ -98,7 +98,7 @@ export default function AdminFaculties() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminfaculties admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">

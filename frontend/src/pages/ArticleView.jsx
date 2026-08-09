@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useApiQuery } from '../hooks/useApiQuery'
+import { useScrollFade } from '../hooks/useScrollFade'
 import Seo from '../components/Seo'
 
 export default function ArticleView() {
@@ -8,13 +9,14 @@ export default function ArticleView() {
   const { data: response, isLoading: loading, isError } = useApiQuery(`/articles/${slug}`, `article-${slug}`)
   const article = response?.data || null
   const error = isError ? 'Failed to load article.' : ''
+  useScrollFade()
 
   if (loading) return <div className="container" style={{ padding: '4rem 2rem' }}><h2>Loading...</h2></div>
   if (error) return <div className="container" style={{ padding: '4rem 2rem' }}><h2>{error}</h2><Link to="/articles">Back to Articles</Link></div>
   if (!article) return null
 
   return (
-    <div className="container" style={{ padding: '4rem 2rem', maxWidth: '800px', margin: '0 auto' }}>
+    <div className="scope-articleview container fade-in-section" style={{ padding: '4rem 2rem', maxWidth: '800px', margin: '0 auto' }}>
       <Seo
         title={article.title}
         description={article.excerpt || article.title}
@@ -37,7 +39,7 @@ export default function ArticleView() {
           alt={article.title}
           loading="eager"
           decoding="async"
-          fetchPriority="high"
+          fetchpriority="high"
           style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', borderRadius: '8px', marginBottom: '2rem' }}
         />
       )}

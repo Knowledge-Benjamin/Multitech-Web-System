@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
+import './StudentLogin.css'
 
 export default function StudentLogin() {
   const [formData, setFormData] = useState({ email: '', password: '' })
@@ -29,51 +30,55 @@ export default function StudentLogin() {
   }
 
   return (
-    <div className="admin-login-container" style={{ background: 'var(--color-background)' }}>
-      <div className="login-card" style={{ maxWidth: '450px' }}>
-        <div className="login-header">
+    <div className="student-login-wrapper">
+      <a href="/" className="student-login-back">
+        ← Back to Home
+      </a>
+      <div className="student-login-card">
+        <div className="student-login-header">
           <h2>Student Portal</h2>
           <p>Login to access your academic dashboard</p>
         </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && <div className="student-login-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
+        <form onSubmit={handleSubmit} className="student-login-form">
+          <div className="student-login-group">
             <label htmlFor="email">Email Address</label>
             <input
               type="email"
               id="email"
-              className="form-control"
+              className="student-login-input"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="e.g. student@example.com"
               required
             />
           </div>
 
-          <div className="form-group">
+          <div className="student-login-group">
             <label htmlFor="password">Password (Reference Number)</label>
             <input
               type="password"
               id="password"
-              className="form-control"
+              className="student-login-input"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="••••••••"
               required
             />
           </div>
 
           <button 
             type="submit" 
-            className="button button-primary" 
-            style={{ width: '100%', marginTop: '1rem', padding: '1rem' }}
+            className="student-login-btn"
             disabled={loading}
           >
             {loading ? 'Logging in...' : 'Sign In'}
           </button>
         </form>
-        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-          <Link to="/apply" style={{ color: 'var(--color-primary)' }}>New student? Apply here.</Link>
+        <div className="student-login-footer">
+          <Link to="/apply">New student? Apply here.</Link>
         </div>
       </div>
     </div>

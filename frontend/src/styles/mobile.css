@@ -44,21 +44,21 @@
   }
 
   section {
-    padding: var(--spacing-2xl) var(--spacing-md) !important;
+    padding: var(--spacing-2xl) var(--spacing-md);
   }
 
   /* Typography Adjustments */
   h1 {
-    font-size: var(--font-size-3xl) !important;
+    font-size: var(--font-size-3xl);
     line-height: 1.2;
   }
 
   h2 {
-    font-size: var(--font-size-2xl) !important;
+    font-size: var(--font-size-2xl);
   }
 
   h3 {
-    font-size: var(--font-size-lg) !important;
+    font-size: var(--font-size-lg);
   }
 
   /* Button sizing for touch */
@@ -67,8 +67,8 @@
   .btn-primary,
   .btn-secondary,
   .btn-danger {
-    padding: var(--spacing-md) var(--spacing-lg) !important;
-    font-size: var(--font-size-base) !important;
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-base);
     min-height: 44px;
     width: 100%;
     border-radius: var(--border-radius-md);
@@ -76,10 +76,10 @@
 
   .home .carousel-dot,
   .home .carousel-arrow {
-    width: auto !important;
-    min-height: 0 !important;
-    min-width: 0 !important;
-    padding: 0 !important;
+    width: auto;
+    min-height: 0;
+    min-width: 0;
+    padding: 0;
     border-radius: 999px;
   }
 
@@ -92,15 +92,15 @@
   input,
   textarea,
   select {
-    font-size: 16px !important; /* Prevents zoom on iOS */
-    padding: 12px var(--spacing-md) !important;
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 12px var(--spacing-md);
     width: 100%;
     min-height: 44px;
     border-radius: var(--border-radius-md);
   }
 
   .form-group {
-    margin-bottom: var(--spacing-lg) !important;
+    margin-bottom: var(--spacing-lg);
   }
 
   .form-row {
@@ -120,7 +120,7 @@
 
   table th,
   table td {
-    padding: var(--spacing-sm) !important;
+    padding: var(--spacing-sm);
   }
 
   /* Hide table columns on mobile */
@@ -131,20 +131,20 @@
   /* Grids */
   .grid,
   .programmes-grid {
-    grid-template-columns: 1fr !important;
-    gap: var(--spacing-md) !important;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
   }
 
   .grid-2 {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
   }
 
   .grid-3 {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
   }
 
   .grid-4 {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
   }
 
   /* Flexbox */
@@ -157,13 +157,13 @@
   }
 
   .gap-lg {
-    gap: var(--spacing-md) !important;
+    gap: var(--spacing-md);
   }
 
   /* Cards */
   .card {
-    padding: var(--spacing-lg) !important;
-    margin-bottom: var(--spacing-md) !important;
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
     border-radius: var(--border-radius-md);
   }
 
@@ -174,7 +174,7 @@
 
   .sidebar,
   .admin-sidebar {
-    width: 100% !important;
+    width: 100%;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -202,7 +202,7 @@
 
   .sidebar a,
   .admin-sidebar a {
-    padding: var(--spacing-sm) var(--spacing-md) !important;
+    padding: var(--spacing-sm) var(--spacing-md);
     font-size: var(--font-size-sm);
     white-space: nowrap;
   }
@@ -214,7 +214,7 @@
   }
 
   .content-header {
-    padding: var(--spacing-lg) var(--spacing-md) !important;
+    padding: var(--spacing-lg) var(--spacing-md);
   }
 
   /* Tabs */
@@ -230,7 +230,7 @@
   }
 
   .tab-btn {
-    padding: var(--spacing-md) var(--spacing-sm) !important;
+    padding: var(--spacing-md) var(--spacing-sm);
     font-size: var(--font-size-sm);
     white-space: nowrap;
     flex: 0 0 auto;
@@ -238,14 +238,14 @@
   }
 
   .tab-content {
-    padding: var(--spacing-lg) !important;
+    padding: var(--spacing-lg);
     border-radius: 0;
   }
 
   /* Modals */
   .modal,
   .dialog {
-    width: 90vw !important;
+    width: 90vw;
     max-width: 100%;
     max-height: 90vh;
     border-radius: var(--border-radius-lg);
@@ -253,12 +253,12 @@
 
   .modal-header,
   .dialog-header {
-    padding: var(--spacing-lg) !important;
+    padding: var(--spacing-lg);
   }
 
   .modal-body,
   .dialog-body {
-    padding: var(--spacing-lg) !important;
+    padding: var(--spacing-lg);
     max-height: 60vh;
     overflow-y: auto;
   }
@@ -289,7 +289,7 @@
 
   /* Lists */
   .list-item {
-    padding: var(--spacing-md) !important;
+    padding: var(--spacing-md);
   }
 
   /* Badges */
@@ -301,11 +301,11 @@
 
   /* Spacing utilities */
   .p-lg {
-    padding: var(--spacing-md) !important;
+    padding: var(--spacing-md);
   }
 
   .m-lg {
-    margin: var(--spacing-md) !important;
+    margin: var(--spacing-md);
   }
 
   /* Visibility */
@@ -340,11 +340,11 @@
 /* ===== LANDSCAPE PHONES (640px - 768px) ===== */
 @media (min-width: 641px) and (max-width: 768px) {
   .grid-2 {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .programmes-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .hero {
@@ -354,7 +354,7 @@
 
   .sidebar,
   .admin-sidebar {
-    width: 200px !important;
+    width: 200px;
   }
 
   .admin-content {
@@ -376,15 +376,15 @@
 /* ===== TABLETS (768px - 1024px) ===== */
 @media (min-width: 769px) and (max-width: 1024px) {
   .grid-3 {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .grid-4 {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .programmes-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .hide-tablet {
@@ -393,18 +393,18 @@
 
   .sidebar,
   .admin-sidebar {
-    width: 250px !important;
+    width: 250px;
   }
 }
 
 /* ===== SMALL LAPTOPS (1024px - 1280px) ===== */
 @media (min-width: 1025px) and (max-width: 1280px) {
   .grid-4 {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .programmes-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -415,11 +415,11 @@
   }
 
   .grid-4 {
-    grid-template-columns: repeat(4, 1fr) !important;
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .programmes-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   }
 }
 

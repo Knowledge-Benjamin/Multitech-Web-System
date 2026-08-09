@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import ProgrammeCard from '../components/ProgrammeCard'
 import { useApiQuery } from '../hooks/useApiQuery'
+import { useScrollFade } from '../hooks/useScrollFade'
 import './Programmes.css'
 
 const DESKTOP_PAGE_SIZE = 6
@@ -50,6 +51,8 @@ export default function Programmes() {
       window.removeEventListener('multitech:programmes-updated', handleProgrammeChanged)
     }
   }, [refetch])
+
+  useScrollFade()
 
   useEffect(() => {
     const queryFilter = searchParams.get('filter')
@@ -214,7 +217,7 @@ export default function Programmes() {
   const deckCards = getDeckCards(activeIndex, filteredProgrammes)
 
   return (
-    <div className="programmes-page">
+    <div className="scope-programmes programmes-page">
       <div className="page-header">
         <h1>Our Programmes</h1>
         <p>Explore our wide range of educational offerings</p>

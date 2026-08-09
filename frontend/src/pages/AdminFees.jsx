@@ -123,7 +123,7 @@ export default function AdminFees() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminfees admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">

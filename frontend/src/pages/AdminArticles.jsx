@@ -169,7 +169,7 @@ export default function AdminArticles() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminarticles admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">

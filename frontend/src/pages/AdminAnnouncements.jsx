@@ -90,7 +90,7 @@ export default function AdminAnnouncements() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminannouncements admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">

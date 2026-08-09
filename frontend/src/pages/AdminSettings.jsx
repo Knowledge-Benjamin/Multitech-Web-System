@@ -239,7 +239,7 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminsettings admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">

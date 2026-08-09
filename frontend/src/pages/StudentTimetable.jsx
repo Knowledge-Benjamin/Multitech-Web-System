@@ -30,7 +30,7 @@ export default function StudentTimetable() {
   }, {})
 
   return (
-    <div className="admin-layout">
+    <div className="scope-studenttimetable admin-layout">
       <StudentSidebar />
       <main className="admin-content student-dashboard-main">
         <div className="timetable-container" style={{ padding: '24px' }}>

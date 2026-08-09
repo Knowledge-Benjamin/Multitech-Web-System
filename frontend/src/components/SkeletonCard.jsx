@@ -2,7 +2,7 @@ import './SkeletonCard.css'
 
 export default function SkeletonCard() {
   return (
-    <div className="programme-card skeleton-card">
+    <div className="scope-skeletoncard programme-card skeleton-card">
       <div className="skeleton-image" />
       <div className="programme-card-overlay">
         <div className="programme-card-content">

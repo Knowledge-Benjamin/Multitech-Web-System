@@ -114,7 +114,7 @@ export default function AdminMessages() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminmessages admin-layout">
       <AdminSidebar />
       <main className="admin-content admin-messages-page">
         <header className="content-header">

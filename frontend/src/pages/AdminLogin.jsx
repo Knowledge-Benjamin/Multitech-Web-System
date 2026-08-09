@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
-import './AdminLogin.css'
+import './StudentLogin.css'
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('')
@@ -36,49 +36,51 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="admin-login-container">
-      <div className="login-box">
-        <div className="login-header">
-          <h1>Admin Portal</h1>
-          <p>Multitech Business School</p>
+    <div className="student-login-wrapper">
+      <a href="/" className="student-login-back">
+        ← Back to Home
+      </a>
+      <div className="student-login-card">
+        <div className="student-login-header">
+          <h2>Admin Portal</h2>
+          <p>Multitech Business School — Staff Access</p>
         </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && <div className="student-login-error">{error}</div>}
 
-        <form onSubmit={handleLogin} className="login-form">
-          <div className="form-group">
+        <form onSubmit={handleLogin} className="student-login-form">
+          <div className="student-login-group">
             <label htmlFor="username">Username</label>
             <input
               type="text"
               id="username"
+              className="student-login-input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
+              placeholder="Enter your username"
               required
             />
           </div>
 
-          <div className="form-group">
+          <div className="student-login-group">
             <label htmlFor="password">Password</label>
             <input
               type="password"
               id="password"
+              className="student-login-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
+              placeholder="••••••••"
               required
             />
           </div>
 
-          <button type="submit" className="btn-login" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+          <button type="submit" className="student-login-btn" disabled={loading}>
+            {loading ? 'Logging in...' : 'Sign In'}
           </button>
         </form>
-
-        <div className="login-footer">
-          <p>Default: Knowledge / Knowben0181?</p>
-        </div>
       </div>
     </div>
   )
 }
+

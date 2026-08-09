@@ -20,12 +20,28 @@ export const getHeroCarouselArticles = asyncHandler(async (req, res) => {
 
 export const getArticleById = asyncHandler(async (req, res) => {
   const { id } = req.params
-  const result = await pool.query('SELECT * FROM articles WHERE id = $1', [id])
+
+  // Validate the param — must be either a positive integer or a clean slug
+  const isNumeric = /^\d+$/.test(id)
+  const isSlug    = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(id)
+
+  if (!isNumeric && !isSlug) {
+    return res.status(400).json({ success: false, message: 'Invalid article identifier.' })
+  }
+
+  let result
+  if (isNumeric) {
+    result = await pool.query('SELECT * FROM articles WHERE id = $1', [parseInt(id, 10)])
+  } else {
+    result = await pool.query('SELECT * FROM articles WHERE slug = $1', [id])
+  }
+
   if (result.rows.length === 0) {
     return res.status(404).json({ success: false, message: 'Article not found' })
   }
   res.json({ success: true, data: result.rows[0] })
 })
+
 
 export const getAdminArticles = asyncHandler(async (req, res) => {
   const result = await pool.query('SELECT * FROM articles ORDER BY created_at DESC')

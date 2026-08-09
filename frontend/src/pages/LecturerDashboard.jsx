@@ -16,7 +16,7 @@ export default function LecturerDashboard() {
   const getFileIcon = (count) => count > 0 ? '📂' : '📁'
 
   return (
-    <div className="lecturer-layout">
+    <div className="scope-lecturerdashboard lecturer-layout">
       {/* Sidebar */}
       <LecturerSidebar />
 

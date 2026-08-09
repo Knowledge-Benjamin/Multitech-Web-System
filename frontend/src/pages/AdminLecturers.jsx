@@ -106,7 +106,7 @@ export default function AdminLecturers() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminlecturers admin-layout">
       <AdminSidebar />
       <main className="admin-content" style={{ padding: '2rem' }}>
         {/* Header */}

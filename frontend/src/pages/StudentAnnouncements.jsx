@@ -11,7 +11,7 @@ export default function StudentAnnouncements() {
   const announcements = data?.data || []
 
   return (
-    <div className="admin-layout">
+    <div className="scope-studentannouncements admin-layout">
       <StudentSidebar />
       <main className="admin-content student-dashboard-main">
         <div style={{ padding: '24px' }}>

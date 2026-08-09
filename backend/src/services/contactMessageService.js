@@ -30,12 +30,15 @@ export const queueContactMessageDelivery = async (messageRecord) => {
         pageUrl: messageRecord.page_url
       })
 
+      // Strip CR/LF from replyTo to prevent email header injection
+      const safeReplyTo = (messageRecord.sender_email || '').replace(/[\r\n]/g, '')
+
       const email = await buildEmailMessage({
         to: messageRecord.destination_email,
         subject: body.subject,
         text: body.text,
         html: body.html,
-        replyTo: messageRecord.sender_email
+        replyTo: safeReplyTo
       })
 
       await sendEmail(email)

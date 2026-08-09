@@ -21,7 +21,7 @@ export default function StudentCourses() {
   const error = enrollError || materialsError
 
   return (
-    <div className="admin-layout">
+    <div className="scope-studentcourses admin-layout">
       <StudentSidebar />
       <main className="admin-content student-dashboard-main">
         <div style={{ padding: '24px' }}>

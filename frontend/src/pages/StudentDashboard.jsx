@@ -60,7 +60,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-studentdashboard admin-layout">
       <StudentSidebar />
       <main className="admin-content student-dashboard-main">
         <header className="dashboard-header">
@@ -114,6 +114,49 @@ export default function StudentDashboard() {
           <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
             <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(0, 82, 204, 0.1)', borderLeftColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          </div>
+        ) : data?.isApplicantOnly ? (
+          <div className="student-grid" style={{ gridTemplateColumns: '1fr' }}>
+            <div className="student-card">
+              <div className="card-header">
+                <div className="card-icon icon-blue">📄</div>
+                <h3>Application Status</h3>
+              </div>
+              <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontSize: '0.9rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Application Reference</span>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#0f172a', marginTop: '0.25rem' }}>{data.applicationInfo?.reference_number}</div>
+                  </div>
+                  <div>
+                    <span className={`status-badge status-${data.applicationInfo?.status}`}>{data.applicationInfo?.status?.toUpperCase()}</span>
+                  </div>
+                </div>
+              </div>
+
+              <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>Your Programme Choices</h4>
+              <div style={{ display: 'grid', gap: '1rem' }}>
+                {data.applicationChoices?.map((choice) => (
+                  <div key={choice.id} style={{ padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', color: '#0f172a' }}>{choice.preference_order}. {choice.programme_name}</div>
+                      <div style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '0.25rem' }}>
+                        Campus: <strong>{choice.campus_name || 'Main Campus'}</strong>
+                      </div>
+                      {choice.reviewer_notes && (
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#475569', background: '#f1f5f9', padding: '0.5rem', borderRadius: '4px' }}>
+                          <em>Note:</em> {choice.reviewer_notes}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <span className={`status-badge status-${choice.status}`}>{choice.status.toUpperCase()}</span>
+                    </div>
+                  </div>
+                ))}
+                {!data.applicationChoices?.length && <p>No choices found.</p>}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="student-grid">

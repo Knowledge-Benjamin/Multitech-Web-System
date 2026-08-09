@@ -105,10 +105,21 @@ export const getProgrammeById = asyncHandler(async (req, res) => {
     ) AS live_intake_status
   `
 
+  const campusesSubquery = `
+    COALESCE(
+      (
+        SELECT json_agg(json_build_object('id', c.id, 'name', c.name, 'slug', c.slug))
+        FROM campus_programmes cp
+        JOIN campuses c ON c.id = cp.campus_id
+        WHERE cp.programme_id = p.id
+      ), '[]'::json
+    ) AS campuses
+  `
+
   const result = await pool.query(
     isNumericId
-      ? `SELECT p.*, ${liveStatusSubquery} FROM programmes p WHERE p.id = $1`
-      : `SELECT p.*, ${liveStatusSubquery} FROM programmes p WHERE p.active = true AND p.slug = $1`,
+      ? `SELECT p.*, ${liveStatusSubquery}, ${campusesSubquery} FROM programmes p WHERE p.id = $1`
+      : `SELECT p.*, ${liveStatusSubquery}, ${campusesSubquery} FROM programmes p WHERE p.active = true AND p.slug = $1`,
     [id]
   )
 

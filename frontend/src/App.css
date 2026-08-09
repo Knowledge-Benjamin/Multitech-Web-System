@@ -95,3 +95,30 @@
     padding-bottom: 60px;
   }
 }
+
+/* ========================================
+   Global Admin Layout Styles
+   ======================================== */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg-light);
+  /* Default margin to offset sidebar */
+  margin-left: 270px;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-content {
+  flex: 1;
+  padding: var(--spacing-2xl);
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .admin-layout {
+    margin-left: 0 !important;
+  }
+  .admin-content {
+    padding: var(--spacing-lg);
+  }
+}

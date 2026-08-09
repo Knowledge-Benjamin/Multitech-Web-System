@@ -62,7 +62,7 @@
   }
 
   /* Button sizing for touch */
-  button,
+  button:not(.view-toggle-btn):not(.pagination-btn):not(.pagination-number),
   .button,
   .btn-primary,
   .btn-secondary,
@@ -75,7 +75,12 @@
   }
 
   .home .carousel-dot,
-  .home .carousel-arrow {
+  .home .carousel-arrow,
+  .latest-articles-carousel__dot,
+  .reasons-arrow,
+  .view-toggle-btn,
+  .pagination-btn,
+  .pagination-number {
     width: auto;
     min-height: 0;
     min-width: 0;
@@ -446,7 +451,7 @@
 /* Touch device optimizations */
 @media (hover: none) and (pointer: coarse) {
   /* Larger touch targets */
-  button,
+  button:not(.carousel-dot):not(.carousel-arrow):not(.latest-articles-carousel__dot):not(.reasons-arrow),
   a,
   input {
     min-height: 48px;

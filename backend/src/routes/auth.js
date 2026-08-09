@@ -1,18 +1,13 @@
 import express from 'express'
 import { loginAdmin, verifyToken, getDashboardStats } from '../controllers/authController.js'
 import { authMiddleware, adminOnly } from '../middleware/authMiddleware.js'
-import rateLimit from 'express-rate-limit'
+import { loginLimiter } from '../middleware/rateLimiter.js'
+import { validateAdminLogin } from '../middleware/validate.js'
 
 const router = express.Router()
 
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 login requests per 15 minutes
-  message: { success: false, message: 'Too many login attempts, please try again later.' }
-})
-
 // Public routes
-router.post('/login', loginLimiter, loginAdmin)
+router.post('/login', loginLimiter, validateAdminLogin, loginAdmin)
 router.get('/verify', verifyToken)
 
 // Protected routes

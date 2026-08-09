@@ -6,11 +6,15 @@ import dns from 'dns'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 
+// Load env vars FIRST, before any other imports that might depend on them
+dotenv.config()
+
 // Force IPv4-only DNS globally to avoid ENETUNREACH on IPv6 addresses
 dns.setDefaultResultOrder('ipv4first')
 
 import errorHandler from './middleware/errorHandler.js'
 import requestLogger from './middleware/requestLogger.js'
+import { apiLimiter } from './middleware/rateLimiter.js'
 import initAdmin from './config/initAdmin.js'
 import initializeDatabase from './config/migrate.js'
 
@@ -44,8 +48,6 @@ import facultiesRoutes from './routes/faculties.js'
 import adminFacultiesRoutes from './routes/adminFaculties.js'
 import departmentsRoutes from './routes/departments.js'
 import adminDepartmentsRoutes from './routes/adminDepartments.js'
-dotenv.config()
-
 if (!process.env.JWT_SECRET) {
   console.error('FATAL ERROR: JWT_SECRET environment variable is not defined.')
   process.exit(1)
@@ -63,6 +65,16 @@ const PORT = process.env.PORT || 3000
 
 // Disable ETag to prevent 304 Not Modified responses
 app.disable('etag')
+
+// Enforce HTTPS in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https') {
+      return res.redirect(301, `https://${req.header('host')}${req.url}`)
+    }
+    next()
+  })
+}
 
 // Security middleware
 app.use(helmet({
@@ -124,12 +136,17 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma']
 }))
 
-// Body parsing middleware — capture rawBody for HMAC signature verification
+// Body parsing middleware
+// Default size limit reduced to 500kb to prevent payload DOS
+// Routes that need larger payloads (e.g. image uploads) handle it via multer anyway
 app.use(express.json({
-  limit: '10mb',
+  limit: '500kb',
   verify: (req, _res, buf) => { req.rawBody = buf.toString() }
 }))
-app.use(express.urlencoded({ limit: '10mb', extended: true }))
+app.use(express.urlencoded({ limit: '500kb', extended: true }))
+
+// Apply global API rate limiter to all API routes
+app.use('/api', apiLimiter)
 
 // Request logging
 app.use(requestLogger)

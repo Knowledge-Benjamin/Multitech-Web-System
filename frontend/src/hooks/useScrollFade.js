@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export function useScrollFade(threshold = 0.1, rootMargin = '0px 0px -50px 0px') {
+export function useScrollFade(threshold = 0.1, rootMargin = '0px 0px -50px 0px', deps = []) {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -25,5 +25,5 @@ export function useScrollFade(threshold = 0.1, rootMargin = '0px 0px -50px 0px')
       clearTimeout(timeoutId);
       observer.disconnect();
     };
-  }, [threshold, rootMargin]);
+  }, [threshold, rootMargin, ...deps]);
 }

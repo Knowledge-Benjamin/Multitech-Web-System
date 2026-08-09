@@ -434,20 +434,6 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  body {
-    background: #1a1a1a;
-    color: #e0e0e0;
-  }
-
-  .card,
-  .modal {
-    background: #2d2d2d;
-    color: #e0e0e0;
-  }
-}
-
 /* High DPI screens */
 @media (min-device-pixel-ratio: 2) and (max-width: 640px) {
   input,

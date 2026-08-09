@@ -101,7 +101,7 @@ export default function AdminTimetable() {
     : schedules.filter(s => s.day_of_week === filterDay)
 
   return (
-    <div className="admin-layout">
+    <div className="scope-admintimetable admin-layout">
       <AdminSidebar />
       <main className="admin-content" style={{ background: 'var(--color-background)', padding: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>

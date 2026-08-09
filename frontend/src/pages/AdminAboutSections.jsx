@@ -186,7 +186,7 @@ export default function AdminAboutSections() {
 
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminaboutsections admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">

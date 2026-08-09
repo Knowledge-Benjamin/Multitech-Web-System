@@ -23,7 +23,7 @@ export default function StudentResults() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-studentresults admin-layout">
       <StudentSidebar />
       <main className="admin-content student-dashboard-main">
         <div className="results-container">

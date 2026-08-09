@@ -30,7 +30,7 @@ export default function Header() {
 
   return (
     <header ref={headerRef} className={`header ${scrolled ? 'scrolled' : ''}`}>
-      <div className="header-container container">
+      <div className="scope-header header-container container">
         <div className="header-logo">
           <Link to="/" className="logo-link">
             <img
@@ -39,7 +39,7 @@ export default function Header() {
               className="logo-image"
               loading="eager"
               decoding="async"
-              fetchPriority="high"
+              fetchpriority="high"
             />
           </Link>
         </div>

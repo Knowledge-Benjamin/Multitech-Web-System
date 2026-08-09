@@ -49,7 +49,7 @@ export default function AdminAttendanceReports() {
     .map(r => ({ x: Number(r.x_coord), y: Number(r.y_coord), name: r.username }))
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminattendancereports admin-layout">
       <AdminSidebar />
       <main className="admin-content" style={{ background: '#0f172a', padding: '2rem', color: '#f1f5f9' }}>
         <h1 style={{ margin: '0 0 0.5rem 0' }}>📋 Attendance Reports</h1>

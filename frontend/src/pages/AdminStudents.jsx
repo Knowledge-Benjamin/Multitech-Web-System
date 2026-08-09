@@ -132,7 +132,7 @@ export default function AdminStudents() {
     : []
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminstudents admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">

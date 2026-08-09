@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import axios from 'axios'
+import { Check } from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import './Apply.css'
 
@@ -189,9 +190,9 @@ export default function Apply() {
 
   if (successData) {
     return (
-      <div className="apply-page success-container">
+      <div className="scope-apply apply-page success-container">
         <div className="success-card">
-          <div className="success-icon">✓</div>
+          <div className="success-icon"><Check size={36} strokeWidth={3} /></div>
           <h1>Application Submitted!</h1>
           <p>Thank you for applying to Multitech Business School. Your application has been received.</p>
           
@@ -622,7 +623,7 @@ export default function Apply() {
         <div className="wizard-progress">
           {STEPS.map((step, idx) => (
             <div key={idx} className={`progress-step ${idx === currentStep ? 'active' : ''} ${idx < currentStep ? 'completed' : ''}`}>
-              <div className="step-number">{idx < currentStep ? '✓' : idx + 1}</div>
+              <div className="step-number">{idx < currentStep ? <Check size={16} strokeWidth={3} /> : idx + 1}</div>
               <div className="step-label">{step}</div>
             </div>
           ))}

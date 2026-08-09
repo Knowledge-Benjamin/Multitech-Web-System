@@ -11,7 +11,7 @@ export default function ProgrammeCard({ title, description, imageUrl, linkTo, on
           className="programme-card-image"
           loading="lazy"
           decoding="async"
-          fetchPriority="low"
+          fetchpriority="low"
         />
       ) : (
         <div className="programme-card-placeholder">No Image Available</div>
@@ -35,15 +35,19 @@ export default function ProgrammeCard({ title, description, imageUrl, linkTo, on
 
   if (linkTo) {
     return (
-      <Link to={linkTo} className="programme-card" onClick={handleClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
-        {cardContent}
-      </Link>
+      <div className="programme-card-wrap">
+        <Link to={linkTo} className="scope-programmecard programme-card" onClick={handleClick}>
+          {cardContent}
+        </Link>
+      </div>
     )
   }
 
   return (
-    <div className="programme-card" onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
-      {cardContent}
+    <div className="programme-card-wrap">
+      <div className="programme-card" onClick={onClick}>
+        {cardContent}
+      </div>
     </div>
   )
 }

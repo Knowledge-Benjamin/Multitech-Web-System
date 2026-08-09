@@ -3,10 +3,45 @@ import { asyncHandler } from '../utils/helpers.js'
 import crypto from 'crypto'
 
 export const getMyProfile = asyncHandler(async (req, res) => {
-  const { studentId } = req.student
+  const { studentId, applicationId } = req.student
 
+  // 1. Fetch Application Info & Choices
+  let applicationInfo = null
+  let applicationChoices = []
+  
+  if (applicationId) {
+    const appRes = await pool.query(`
+      SELECT a.*, i.name as intake_name
+      FROM applications a
+      JOIN intakes i ON a.intake_id = i.id
+      WHERE a.id = $1
+    `, [applicationId])
+    applicationInfo = appRes.rows[0]
+
+    if (applicationInfo) {
+      const choicesRes = await pool.query(`
+        SELECT ac.*, p.name as programme_name, c.name as campus_name
+        FROM application_choices ac
+        JOIN programme_intakes pi ON ac.programme_intake_id = pi.id
+        JOIN programmes p ON pi.programme_id = p.id
+        LEFT JOIN campuses c ON ac.campus_id = c.id
+        WHERE ac.application_id = $1
+        ORDER BY ac.preference_order ASC
+      `, [applicationId])
+      applicationChoices = choicesRes.rows
+    }
+  }
+
+  // If no studentId, they are just an applicant
   if (!studentId) {
-    return res.status(404).json({ success: false, message: 'Student record not found. Are you fully admitted?' })
+    return res.json({
+      success: true,
+      data: {
+        isApplicantOnly: true,
+        applicationInfo,
+        applicationChoices
+      }
+    })
   }
 
   // 1. Basic Student Info
@@ -67,6 +102,8 @@ export const getMyProfile = asyncHandler(async (req, res) => {
     data: {
       profile,
       currentEnrollment,
+      applicationInfo,
+      applicationChoices,
       financials: {
         currency,
         totalDue: Math.max(0, totalDue) // Don't show negative due if overpaid

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Rosario:wght@300;400;600;700&display=swap');
+/* Global CSS */
 
 :root {
   /* Primary Colors */
@@ -21,7 +21,7 @@
   --color-text-light: #999999;
   
   --color-bg-primary: #FFFFFF;
-  --color-bg-secondary: #F5F5F5;
+  --color-bg-secondary: #E8EAF0;
   --color-bg-tertiary: #EEEEEE;
   
   /* Status Colors */
@@ -31,7 +31,7 @@
   --color-info: #17a2b8;
   
   /* Typography */
-  --font-family-sans: 'Candara', 'Chandara', 'Rosario', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   --font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   
   --font-size-xs: 0.75rem;
@@ -41,12 +41,19 @@
   --font-size-xl: 1.25rem;
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
-  --font-size-4xl: 2.25rem;
+  --font-size-4xl: 2.5rem;
+  --font-size-5xl: 3rem;
   
+  /* Font Weights */
+  --font-weight-thin: 100;
+  --font-weight-extralight: 200;
   --font-weight-light: 300;
   --font-weight-normal: 400;
+  --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
   
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -100,7 +107,8 @@ html {
 body {
   font-family: var(--font-family-sans);
   font-size: var(--font-size-base);
-  line-height: 1.6;
+  font-weight: var(--font-weight-normal);
+  line-height: 1.65;
   color: var(--color-text-primary);
   background-color: var(--color-bg-primary);
   -webkit-font-smoothing: antialiased;
@@ -114,33 +122,40 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: var(--font-weight-bold);
   line-height: 1.2;
   color: var(--color-secondary);
+  letter-spacing: -0.02em; /* Tighter tracking for modern feel */
 }
 
 h1 {
   font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.03em;
 }
 
 h2 {
   font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
 }
 
 h3 {
   font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
 }
 
 h4 {
   font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
 }
 
 h5 {
   font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
 }
 
 h6 {
   font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
 }
 
 p {
@@ -166,7 +181,8 @@ button, .button {
   border-radius: var(--border-radius-md);
   font-family: var(--font-family-sans);
   font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium); /* Medium weight for buttons */
+  letter-spacing: 0.01em;
   cursor: pointer;
   transition: all var(--transition-fast);
   text-decoration: none;
@@ -233,7 +249,7 @@ input:focus, textarea:focus, select:focus {
 label {
   display: block;
   margin-bottom: var(--spacing-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium); /* Medium for labels */
   color: var(--color-text-primary);
 }
 
@@ -300,136 +316,3 @@ li {
   display: block !important;
 }
 
-/* ===== RESPONSIVE MEDIA QUERIES ===== */
-
-/* Tablets & Landscape (max-width: 1024px) */
-@media (max-width: 1024px) {
-  :root {
-    --spacing-3xl: 2.5rem;
-    --font-size-4xl: 2rem;
-  }
-
-  .container {
-    max-width: 960px;
-  }
-
-  section {
-    padding: var(--spacing-2xl) var(--spacing-lg);
-  }
-}
-
-/* Mobile & Small Tablets (max-width: 768px) */
-@media (max-width: 768px) {
-  :root {
-    --font-size-4xl: 1.875rem;
-    --font-size-3xl: 1.5rem;
-    --font-size-2xl: 1.25rem;
-    --spacing-3xl: 2rem;
-    --spacing-2xl: 1.5rem;
-  }
-  
-  body {
-    padding-top: var(--header-height, 70px);
-  }
-
-  h1 {
-    font-size: var(--font-size-3xl);
-  }
-
-  h2 {
-    font-size: var(--font-size-2xl);
-  }
-
-  h3 {
-    font-size: var(--font-size-lg);
-  }
-  
-  .container {
-    padding: 0 var(--spacing-md);
-    max-width: 100%;
-  }
-
-  main {
-    padding: 0;
-  }
-
-  section {
-    padding: var(--spacing-2xl) var(--spacing-md);
-  }
-
-  /* Touch-friendly UI */
-  button,
-  .button {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 10px 16px;
-  }
-
-  input,
-  textarea,
-  select {
-    font-size: 16px;
-    min-height: 44px;
-    padding: 10px 12px;
-  }
-
-  /* Remove animations on reduced motion */
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
-  }
-}
-
-/* Small Phones (max-width: 480px) */
-@media (max-width: 480px) {
-  :root {
-    --font-size-4xl: 1.5rem;
-    --font-size-3xl: 1.25rem;
-    --font-size-2xl: 1.125rem;
-    --spacing-xl: 1rem;
-    --spacing-2xl: 1.25rem;
-  }
-
-  body {
-    font-size: var(--font-size-sm);
-    padding-top: var(--header-height, 60px);
-  }
-
-  h1 {
-    font-size: var(--font-size-2xl);
-    line-height: 1.2;
-  }
-
-  h2 {
-    font-size: var(--font-size-lg);
-  }
-
-  h3 {
-    font-size: var(--font-size-base);
-  }
-
-  .container {
-    padding: 0 var(--spacing-sm);
-  }
-
-  section {
-    padding: var(--spacing-lg) var(--spacing-sm);
-  }
-
-  button,
-  .button {
-    padding: 10px 12px;
-    font-size: var(--font-size-sm);
-    width: 100%;
-  }
-
-  button.secondary {
-    width: auto;
-  }
-}

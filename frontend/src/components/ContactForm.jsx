@@ -35,17 +35,18 @@ export default function ContactForm({ pageUrl }) {
       setFormData({ name: '', email: '', subject: '', message: '' })
       setStatus({ loading: false, success: true, message: 'Message sent successfully. We will reply soon.' })
     } catch (error) {
-      console.error('Contact form submit error:', error)
-      setStatus({
-        loading: false,
-        success: false,
-        message: error.response?.data?.message || 'Failed to send your message. Please try again later.'
-      })
+      const status = error.response?.status
+      // Only surface validation errors (4xx) from the server — never expose 5xx internals
+      const safeMessage =
+        status && status >= 400 && status < 500
+          ? (error.response?.data?.message || 'Please check your details and try again.')
+          : 'Failed to send your message. Please try again later.'
+      setStatus({ loading: false, success: false, message: safeMessage })
     }
   }
 
   return (
-    <form className="contact-form" onSubmit={handleSubmit}>
+    <form className="scope-contactform contact-form" onSubmit={handleSubmit}>
       <div className="contact-form-row">
         <label htmlFor="name">Name</label>
         <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required />

@@ -67,7 +67,27 @@ app.disable('etag')
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
-  contentSecurityPolicy: false
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:     ["'self'"],
+      scriptSrc:      ["'self'"],
+      styleSrc:       ["'self'", "'unsafe-inline'"],
+      imgSrc:         [
+        "'self'",
+        'data:',
+        'blob:',
+        'https://lh3.googleusercontent.com',
+        'https://lh4.googleusercontent.com',
+        'https://drive.google.com',
+        'https://drive.usercontent.google.com'
+      ],
+      connectSrc:     ["'self'"],
+      fontSrc:        ["'self'", 'data:'],
+      objectSrc:      ["'none'"],
+      frameAncestors: ["'none'"],
+      baseUri:        ["'self'"]
+    }
+  }
 }))
 
 // CORS configuration
@@ -169,8 +189,7 @@ const initializeApp = async () => {
   app.use('*', (req, res) => {
     res.status(404).json({
       success: false,
-      message: 'Route not found',
-      path: req.originalUrl
+      message: 'Route not found'
     })
   })
 

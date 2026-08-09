@@ -194,7 +194,7 @@ export default function LecturerCourseDetails() {
   }
 
   if (isLoading) return (
-    <div className="lecturer-layout">
+    <div className="scope-lecturercoursedetails lecturer-layout">
       <div className="lecturer-loading" style={{ margin: 'auto' }}>
         <div className="spinner-ring"></div>
         <p>Loading course...</p>

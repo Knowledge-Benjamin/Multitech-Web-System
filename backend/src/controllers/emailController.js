@@ -13,16 +13,37 @@ import {
 export const sendContactMessage = asyncHandler(async (req, res) => {
   const { name, email, subject, message, pageUrl } = req.body
 
+  // Presence check
   if (!name || !email || !subject || !message) {
     return res.status(400).json({ success: false, message: 'Name, email, subject and message are required.' })
   }
 
+  // Length guards — prevent oversized payloads reaching DB / email service
+  if (name.trim().length > 100) {
+    return res.status(400).json({ success: false, message: 'Name must be 100 characters or fewer.' })
+  }
+  if (email.trim().length > 254) {
+    return res.status(400).json({ success: false, message: 'Email address is too long.' })
+  }
+  if (subject.trim().length > 200) {
+    return res.status(400).json({ success: false, message: 'Subject must be 200 characters or fewer.' })
+  }
+  if (message.trim().length > 5000) {
+    return res.status(400).json({ success: false, message: 'Message must be 5000 characters or fewer.' })
+  }
+
+  // Email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email.trim())) {
+    return res.status(400).json({ success: false, message: 'A valid email address is required.' })
+  }
+
   const destinationEmail = await getSetting('contact_destination_email')
   const savedMessage = await saveContactMessage({
-    sender_name: name,
-    sender_email: email,
-    subject,
-    message,
+    sender_name: name.trim(),
+    sender_email: email.trim().toLowerCase(),
+    subject: subject.trim(),
+    message: message.trim(),
     page_url: pageUrl,
     destination_email: destinationEmail || process.env.EMAIL_FROM_ADDRESS || 'inquiries@multitech.ac.ug'
   })

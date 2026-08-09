@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { BookOpen, ClipboardList, Megaphone, Users, Settings, LogOut, LayoutDashboard, FileText, ArrowRight } from 'lucide-react'
 import api from '../services/api'
 import './AdminDashboard.css'
 
@@ -40,7 +41,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="admin-container">
+    <div className="scope-admindashboard admin-container">
       <aside className="admin-sidebar">
         <div className="sidebar-header">
           <h2>ADMIN</h2>
@@ -49,29 +50,29 @@ export default function AdminDashboard() {
 
         <nav className="sidebar-nav">
           <Link to="/admin/dashboard" className="nav-item active">
-            📊 Dashboard
+            <LayoutDashboard size={16} /> Dashboard
           </Link>
           <Link to="/admin/programmes" className="nav-item">
-            📚 Programmes
+            <BookOpen size={16} /> Programmes
           </Link>
           <Link to="/admin/applications" className="nav-item">
-            📋 Applications
+            <ClipboardList size={16} /> Applications
           </Link>
           <Link to="/admin/announcements" className="nav-item">
-            📢 Announcements
+            <Megaphone size={16} /> Announcements
           </Link>
           <Link to="/admin/articles" className="nav-item">
-            📝 Articles & Posts
+            <FileText size={16} /> Articles &amp; Posts
           </Link>
           {admin.role === 'superadmin' && (
             <Link to="/admin/settings" className="nav-item">
-              ⚙️ Settings
+              <Settings size={16} /> Settings
             </Link>
           )}
         </nav>
 
         <button onClick={handleLogout} className="btn-logout">
-          🚪 Logout
+          <LogOut size={16} /> Logout
         </button>
       </aside>
 
@@ -83,7 +84,7 @@ export default function AdminDashboard() {
 
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-icon">📚</div>
+            <div className="stat-icon"><BookOpen size={22} /></div>
             <div className="stat-content">
               <h3>Programmes</h3>
               <p className="stat-number">{stats?.programmes || 0}</p>
@@ -91,7 +92,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">📋</div>
+            <div className="stat-icon"><ClipboardList size={22} /></div>
             <div className="stat-content">
               <h3>Applications</h3>
               <p className="stat-number">{stats?.applications || 0}</p>
@@ -99,7 +100,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">📢</div>
+            <div className="stat-icon"><Megaphone size={22} /></div>
             <div className="stat-content">
               <h3>Announcements</h3>
               <p className="stat-number">{stats?.announcements || 0}</p>
@@ -107,7 +108,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">👥</div>
+            <div className="stat-icon"><Users size={22} /></div>
             <div className="stat-content">
               <h3>Admin Users</h3>
               <p className="stat-number">{stats?.admins || 0}</p>

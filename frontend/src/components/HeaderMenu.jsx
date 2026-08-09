@@ -1,26 +1,29 @@
-import { Link } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 
 export default function HeaderMenu({ isMenuOpen, onLinkClick }) {
+  const navCls = ({ isActive }) => `nav-link${isActive ? ' active' : ''}`
+  const btnOutlineCls = ({ isActive }) => `nav-link button button-outline${isActive ? ' active' : ''}`
+
   return (
     <nav className={`header-nav ${isMenuOpen ? 'active' : ''}`}>
-      <Link to="/" className="nav-link" onClick={onLinkClick}>
+      <NavLink to="/" end className={navCls} onClick={onLinkClick}>
         Home
-      </Link>
-      <Link to="/programmes" className="nav-link" onClick={onLinkClick}>
+      </NavLink>
+      <NavLink to="/programmes" className={navCls} onClick={onLinkClick}>
         Programmes
-      </Link>
-      <Link to="/about" className="nav-link" onClick={onLinkClick}>
+      </NavLink>
+      <NavLink to="/about" className={navCls} onClick={onLinkClick}>
         About
-      </Link>
-      <Link to="/articles" className="nav-link" onClick={onLinkClick}>
+      </NavLink>
+      <NavLink to="/articles" className={navCls} onClick={onLinkClick}>
         Articles
-      </Link>
-      <Link to="/student/login" className="nav-link button button-outline" onClick={onLinkClick}>
+      </NavLink>
+      <NavLink to="/student/login" className={btnOutlineCls} onClick={onLinkClick}>
         Student Login
-      </Link>
-      <Link to="/programmes" className="nav-link button button-accent" onClick={onLinkClick}>
+      </NavLink>
+      <NavLink to="/apply" className="nav-link button button-accent" onClick={onLinkClick}>
         Apply Now
-      </Link>
+      </NavLink>
     </nav>
   )
 }

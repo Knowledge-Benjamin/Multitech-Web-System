@@ -1,3 +1,68 @@
+/* ========================================
+   Global Scroll Fade Animation
+   ======================================== */
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.75s ease-out, transform 0.75s ease-out;
+  will-change: opacity, transform;
+}
+
+.fade-in-section.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Staggered children — wrap child items in fade-in-item */
+.fade-in-section .fade-in-item {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.55s ease-out, transform 0.55s ease-out;
+}
+.fade-in-section.is-visible .fade-in-item {
+  opacity: 1;
+  transform: none;
+}
+.fade-in-section.is-visible .fade-in-item:nth-child(1) { transition-delay: 0.05s; }
+.fade-in-section.is-visible .fade-in-item:nth-child(2) { transition-delay: 0.1s; }
+.fade-in-section.is-visible .fade-in-item:nth-child(3) { transition-delay: 0.15s; }
+.fade-in-section.is-visible .fade-in-item:nth-child(4) { transition-delay: 0.2s; }
+.fade-in-section.is-visible .fade-in-item:nth-child(5) { transition-delay: 0.25s; }
+.fade-in-section.is-visible .fade-in-item:nth-child(6) { transition-delay: 0.3s; }
+
+/* ========================================
+   Global Section Title Underline Animation
+   ======================================== */
+.section-title {
+  position: relative;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 0.5rem;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 4px;
+  background-color: var(--color-primary);
+  border-radius: 2px;
+}
+
+.is-visible .section-title::after,
+.section-title.animate-underline::after {
+  animation: expandUnderline 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.2s;
+}
+
+@keyframes expandUnderline {
+  from { width: 0; }
+  to { width: 115%; }
+}
+
 .app-container {
   display: flex;
   flex-direction: column;

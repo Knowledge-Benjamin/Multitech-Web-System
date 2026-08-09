@@ -123,7 +123,7 @@ export default function AdminCalendar() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-admincalendar admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">

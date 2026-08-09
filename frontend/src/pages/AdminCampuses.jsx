@@ -151,7 +151,7 @@ export default function AdminCampuses() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-admincampuses admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">

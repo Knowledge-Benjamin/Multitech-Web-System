@@ -26,7 +26,7 @@ export default function StudentFinances() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-studentfinances admin-layout">
       <StudentSidebar />
       <main className="admin-content" style={{ background: 'var(--color-background)' }}>
         <header className="content-header hide-on-print">

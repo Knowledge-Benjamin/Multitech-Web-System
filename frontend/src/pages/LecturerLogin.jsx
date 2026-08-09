@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import './AdminLogin.css'
+import './StudentLogin.css'
 
 const API = import.meta.env.VITE_API_URL
 
@@ -29,40 +29,44 @@ export default function LecturerLogin() {
   }
 
   return (
-    <div className="admin-login-page">
-      <div className="admin-login-card">
-        <div className="admin-login-logo">
-          <span className="logo-icon">🎓</span>
-          <h1>Lecturer Portal</h1>
-          <p>Multitech Business School</p>
+    <div className="student-login-wrapper">
+      <a href="/" className="student-login-back">
+        ← Back to Home
+      </a>
+      <div className="student-login-card">
+        <div className="student-login-header">
+          <h2>Lecturer Portal</h2>
+          <p>Multitech Business School — Faculty Access</p>
         </div>
 
-        {error && <div className="admin-login-error">{error}</div>}
+        {error && <div className="student-login-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="admin-login-form">
-          <div className="form-group">
+        <form onSubmit={handleSubmit} className="student-login-form">
+          <div className="student-login-group">
             <label htmlFor="lecturer-email">Email Address</label>
             <input
               id="lecturer-email"
               type="email"
+              className="student-login-input"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="lecturer@multitech.ac.ug"
               required
             />
           </div>
-          <div className="form-group">
+          <div className="student-login-group">
             <label htmlFor="lecturer-password">Password</label>
             <input
               id="lecturer-password"
               type="password"
+              className="student-login-input"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              placeholder="••••••••"
               required
             />
           </div>
-          <button type="submit" className="admin-login-btn" disabled={loading}>
+          <button type="submit" className="student-login-btn" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
@@ -70,3 +74,4 @@ export default function LecturerLogin() {
     </div>
   )
 }
+

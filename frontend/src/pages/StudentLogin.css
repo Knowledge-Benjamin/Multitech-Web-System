@@ -1,0 +1,174 @@
+.student-login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: linear-gradient(135deg, rgba(0, 51, 102, 0.9) 0%, rgba(0, 0, 0, 0.8) 100%), url('/hero-campus.jpg') center/cover no-repeat;
+  padding: 2rem;
+}
+
+.student-login-back {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.25s ease;
+  z-index: 10;
+}
+
+.student-login-back:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transform: translateX(-3px);
+}
+
+
+.student-login-card {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  color: #fff;
+  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.student-login-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.student-login-header h2 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.7));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.student-login-header p {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+.student-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.student-login-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.student-login-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.student-login-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.student-login-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
+}
+
+.student-login-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.student-login-btn {
+  background: var(--color-accent-blue, #0066cc);
+  color: #fff;
+  border: none;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 16px rgba(0, 102, 204, 0.3);
+}
+
+.student-login-btn:hover:not(:disabled) {
+  background: #0055b3;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px rgba(0, 102, 204, 0.4);
+}
+
+.student-login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.student-login-error {
+  background: rgba(220, 38, 38, 0.15);
+  border-left: 4px solid #ef4444;
+  color: #fca5a5;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.student-login-footer {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.95rem;
+}
+
+.student-login-footer a {
+  color: var(--color-accent-yellow, #f0c040);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.student-login-footer a:hover {
+  color: #fff;
+  text-decoration: underline;
+}

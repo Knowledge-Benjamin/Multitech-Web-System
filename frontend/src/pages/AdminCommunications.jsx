@@ -75,7 +75,7 @@ export default function AdminCommunications() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-admincommunications admin-layout">
       <AdminSidebar />
       <main className="admin-content admin-communications-page">
         <header className="content-header">

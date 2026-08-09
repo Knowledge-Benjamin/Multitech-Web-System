@@ -64,7 +64,7 @@ export default function AdminHomeReasons() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminhomereasons admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header"><h1>Manage Homepage Reasons</h1></header>

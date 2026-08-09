@@ -107,7 +107,7 @@ export default function AdminApplications() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminapplications admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">

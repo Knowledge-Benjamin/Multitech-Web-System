@@ -1,19 +1,21 @@
 import { useApiQuery } from '../hooks/useApiQuery'
+import { useScrollFade } from '../hooks/useScrollFade'
 import ProgrammeCard from '../components/ProgrammeCard'
 import '../pages/Programmes.css'
 
 export default function Campuses() {
   const { data: res, isLoading } = useApiQuery('/campuses', 'campuses')
   const campuses = res?.data || []
+  useScrollFade()
 
   return (
-    <div className="programmes-page">
+    <div className="scope-campuses programmes-page">
       <div className="page-header">
         <h1>Our Campuses</h1>
         <p>Discover our beautiful campus locations</p>
       </div>
 
-      <div className="container">
+      <div className="container fade-in-section">
         {isLoading ? (
           <div className="loading">Loading campuses...</div>
         ) : campuses.length > 0 ? (

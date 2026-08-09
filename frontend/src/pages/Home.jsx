@@ -18,6 +18,31 @@ export default function Home() {
   const [heroVisible, setHeroVisible] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [scrollSnaps, setScrollSnaps] = useState([])
+  const [programmesInView, setProgrammesInView] = useState(false)
+  const programmesRef = useRef(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            if (entry.target === programmesRef.current) setProgrammesInView(true);
+          } else {
+            // Optional: remove class to fade out when scrolling away
+            entry.target.classList.remove('is-visible');
+            if (entry.target === programmesRef.current) setProgrammesInView(false);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    );
+    
+    const sections = document.querySelectorAll('.fade-in-section');
+    sections.forEach((section) => observer.observe(section));
+    
+    return () => observer.disconnect();
+  }, [])
 
   const { data: heroRes, isLoading: heroLoading } = useApiQuery('/articles/carousel', 'heroArticles')
   const heroArticles = heroRes?.data || []
@@ -30,6 +55,9 @@ export default function Home() {
 
   const { data: latestRes, isLoading: latestLoading } = useApiQuery('/articles', 'latestArticles')
   const latestArticles = (latestRes?.data || []).slice(0, 4)
+
+  const { data: campusesRes, isLoading: campusesLoading } = useApiQuery('/campuses', 'campuses')
+  const campuses = campusesRes?.data || []
 
   // Fetch About content for homepage meta description (search engine snippet)
   const { data: aboutRes } = useApiQuery('/about', 'aboutHero')
@@ -102,7 +130,7 @@ export default function Home() {
 
 
   return (
-    <div className="home">
+    <div className="scope-home home">
       <Seo
         title="Multitech Business School"
         description={aboutExcerpt || 'Discover academic programmes, admissions, and student opportunities at Multitech Business School in Uganda.'}
@@ -110,7 +138,7 @@ export default function Home() {
         keywords={['higher education', 'business school', 'Uganda', 'admissions']}
       />
       {lcpHeroImage?.featured_image_url && (
-        <link rel="preload" as="image" href={lcpHeroImage.featured_image_url} fetchPriority="high" />
+        <link rel="preload" as="image" href={lcpHeroImage.featured_image_url} fetchpriority="high" />
       )}
       {/* Hero Banner — wait for data before rendering */}
       {heroLoading ? (
@@ -138,7 +166,7 @@ export default function Home() {
                         alt={article.title}
                         loading={index === 0 ? 'eager' : 'lazy'}
                         decoding="async"
-                        fetchPriority={index === 0 ? 'high' : 'low'}
+                        fetchpriority={index === 0 ? 'high' : 'low'}
                       />
                     ) : (
                       <div className="carousel-img" style={{ backgroundColor: '#003366' }} />
@@ -187,15 +215,15 @@ export default function Home() {
             </div>
           </div>
           <div className="hero-image">
-            <img src="/hero-campus.jpg" alt="Multitech Business School Campus" loading="eager" decoding="async" fetchPriority="high" />
+            <img src="/hero-campus.jpg" alt="Multitech Business School Campus" loading="eager" decoding="async" fetchpriority="high" />
           </div>
         </section>
       )}
 
       {/* Programmes Overview */}
-      <section className="programmes-section">
+      <section className="programmes-section fade-in-section" ref={programmesRef}>
         <div className="container">
-          <h2>Our Programmes</h2>
+          <h2 className="section-title">Our Programmes</h2>
           <div className="programmes-grid">
             {loadingCategories ? (
               <p>Loading programmes...</p>
@@ -215,11 +243,46 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Our Campuses */}
+      <section className="campuses-section fade-in-section" style={{ background: '#f8f9fa', padding: '4rem 0' }}>
+        <div className="container">
+          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '2rem', color: '#1a1a1a', fontSize: '2.5rem' }}>Our Campuses</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+            {campusesLoading ? (
+              <p style={{ textAlign: 'center', width: '100%' }}>Loading campuses...</p>
+            ) : campuses.length > 0 ? (
+              campuses.map(campus => (
+                <div key={campus.id} style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s ease' }}>
+                  {campus.featured_image_url && (
+                    <img 
+                      src={campus.featured_image_url} 
+                      alt={campus.name} 
+                      style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                    />
+                  )}
+                  <div style={{ padding: '1.5rem' }}>
+                    <h3 style={{ margin: '0 0 0.5rem 0', color: '#003366', fontSize: '1.4rem' }}>{campus.name}</h3>
+                    <p style={{ color: '#666', fontSize: '0.95rem', marginBottom: '1.5rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {campus.description || 'Discover our state-of-the-art facilities and vibrant student community at this campus.'}
+                    </p>
+                    <Link to={`/campuses/${campus.slug}`} className="button button-secondary" style={{ width: '100%', textAlign: 'center' }}>
+                      Explore Campus
+                    </Link>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p style={{ textAlign: 'center', width: '100%', color: '#666' }}>No campuses available.</p>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* Why Multitech Reasons Section (dynamic carousel) */}
-      <section className="reasons-section">
+      <section className="reasons-section fade-in-section">
         <div className="reasons-header">
           <div className="container">
-            <h2>Why Multitech Business School?</h2>
+            <h2 className="section-title">Why Multitech Business School?</h2>
             <p className="about-intro">Built for ambitious students seeking practical business education.</p>
           </div>
         </div>
@@ -245,11 +308,11 @@ export default function Home() {
         )}
       </section>
 
-      <section className="latest-articles-section">
+      <section className="latest-articles-section fade-in-section">
         <div className="latest-articles-container">
           <div className="latest-articles-copy">
             <span className="section-label">Latest News & Articles</span>
-            <h2>Stay up to date</h2>
+            <h2 className="section-title">Stay up to date</h2>
           </div>
 
           {latestLoading ? (
@@ -273,11 +336,11 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="home-contact-section">
+      <section className="home-contact-section fade-in-section">
         <div className="container home-contact-inner">
           <div className="home-contact-copy">
             <span className="section-label">Contact Us</span>
-            <h2>Have a question? Reach out to our team.</h2>
+            <h2 className="section-title">Have a question? Reach out to our team.</h2>
             <p>Send us your inquiry and our admissions team will reply as soon as possible.</p>
           </div>
           <ContactForm pageUrl="/" />

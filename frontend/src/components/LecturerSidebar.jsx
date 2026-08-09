@@ -1,5 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { LayoutDashboard, Clock, Radio, LogOut, GraduationCap } from 'lucide-react'
 import '../pages/LecturerDashboard.css'
 
 export default function LecturerSidebar() {
@@ -21,9 +22,9 @@ export default function LecturerSidebar() {
   const isActive = (path) => location.pathname === path
 
   return (
-    <aside className="lecturer-sidebar">
+    <aside className="scope-lecturersidebar lecturer-sidebar">
       <div className="sidebar-brand">
-        <span className="brand-icon">🎓</span>
+        <GraduationCap size={24} strokeWidth={1.5} />
         <div>
           <span className="brand-name">Multitech</span>
           <span className="brand-sub">Lecturer Portal</span>
@@ -42,18 +43,18 @@ export default function LecturerSidebar() {
 
       <nav className="sidebar-nav">
         <Link to="/lecturer/dashboard" className={`nav-item ${isActive('/lecturer/dashboard') ? 'active' : ''}`}>
-          <span>📊</span> Dashboard (Courses)
+          <LayoutDashboard size={18} /> Dashboard (Courses)
         </Link>
         <Link to="/lecturer/timetable" className={`nav-item ${isActive('/lecturer/timetable') ? 'active' : ''}`}>
-          <span>📅</span> My Timetable
+          <Clock size={18} /> My Timetable
         </Link>
         <Link to="/lecturer/attendance" className={`nav-item ${isActive('/lecturer/attendance') ? 'active' : ''}`}>
-          <span>📡</span> Live Attendance
+          <Radio size={18} /> Live Attendance
         </Link>
       </nav>
 
       <button className="sidebar-logout" onClick={handleLogout}>
-        <span>🚪</span> Logout
+        <LogOut size={18} /> Logout
       </button>
     </aside>
   )

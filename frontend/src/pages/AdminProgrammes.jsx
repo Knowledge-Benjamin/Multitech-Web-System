@@ -316,7 +316,7 @@ export default function AdminProgrammes() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-adminprogrammes admin-layout">
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">

@@ -23,7 +23,7 @@ export default function ReasonsCarousel({ reasons = [] }) {
   const scrollNext = () => emblaApi && emblaApi.scrollNext()
 
   return (
-    <section className="reasons-carousel">
+    <section className="scope-reasonscarousel reasons-carousel">
       <div className="reasons-embla" ref={emblaRef}>
         <div className="reasons-container">
           {reasons.map((r) => (

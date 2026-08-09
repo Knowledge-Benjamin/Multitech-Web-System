@@ -28,7 +28,7 @@ export default function LatestArticlesCarousel({ articles = [] }) {
   }, [emblaApi])
 
   return (
-    <div className="latest-articles-carousel" ref={emblaRef}>
+    <div className="scope-latestarticlescarousel latest-articles-carousel" ref={emblaRef}>
       <div className="latest-articles-carousel__container">
         {articles.map((article) => (
           <div className="latest-articles-carousel__slide" key={article.id}>
@@ -41,7 +41,7 @@ export default function LatestArticlesCarousel({ articles = [] }) {
                     className="programme-card-image"
                     loading="lazy"
                     decoding="async"
-                    fetchPriority="low"
+                    fetchpriority="low"
                   />
                 ) : (
                   <div className="programme-card-placeholder">No Image Available</div>

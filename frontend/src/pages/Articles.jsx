@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useApiQuery } from '../hooks/useApiQuery'
+import { useScrollFade } from '../hooks/useScrollFade'
 import './Articles.css'
 import ArticleCard from '../components/ArticleCard'
 import SkeletonCard from '../components/SkeletonCard'
@@ -16,6 +17,8 @@ export default function Articles() {
   const start = (currentPage - 1) * perPage
   const displayItems = articles.slice(start, start + perPage)
 
+  useScrollFade()
+
   const gotoPage = (n) => {
     if (n < 1 || n > totalPages) return
     setCurrentPage(n)
@@ -23,7 +26,7 @@ export default function Articles() {
   }
 
   return (
-    <div className="articles-page container">
+    <div className="scope-articles articles-page container">
       <Seo
         title="Articles and News"
         description="Read the latest articles, campus news, and insights from Multitech Business School."
@@ -33,7 +36,7 @@ export default function Articles() {
       <h1>Latest News & Articles</h1>
       <p className="article-intro">Stay updated with the latest from Multitech Business School.</p>
 
-      <div className="articles-grid">
+      <div className="articles-grid fade-in-section">
         {loading ? (
           // Show 8 skeleton cards while loading
           Array.from({ length: 8 }).map((_, idx) => <SkeletonCard key={`skeleton-${idx}`} />)

@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useApiQuery } from '../hooks/useApiQuery'
+import { useScrollFade } from '../hooks/useScrollFade'
 import ProgrammeCard from '../components/ProgrammeCard'
 import '../pages/ProgrammeDetails.css'
 
@@ -9,10 +10,11 @@ export default function CampusDetails() {
   const { data: res, isLoading } = useApiQuery(`/campuses/${slug}`, ['campus', slug])
   const campus = res?.data || null
   const programmes = campus?.programmes || []
+  useScrollFade()
 
   if (isLoading) {
     return (
-      <div className="programme-details-page">
+      <div className="scope-campusdetails programme-details-page">
         <div className="container"><p>Loading campus details...</p></div>
       </div>
     )
@@ -47,7 +49,7 @@ export default function CampusDetails() {
         </div>
       </div>
 
-      <div className="container details-container">
+      <div className="container details-container fade-in-section">
         <div className="details-main" style={{ width: '100%' }}>
           {campus.description && (
             <section className="detail-section">

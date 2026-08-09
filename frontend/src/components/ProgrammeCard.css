@@ -1,3 +1,10 @@
+/* ── Wrapper holds both the card and its reflection ── */
+.programme-card-wrap {
+  position: relative;
+  display: block;
+}
+
+/* ── The card itself ── */
 .programme-card {
   position: relative;
   display: block;
@@ -5,16 +12,33 @@
   aspect-ratio: 4/5;
   border-radius: var(--border-radius-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  /* Richer layered shadow */
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.10),
+    0 12px 28px rgba(0, 0, 0, 0.14),
+    0 24px 48px rgba(0, 0, 0, 0.08);
   transition: transform var(--transition-base), box-shadow var(--transition-base);
   text-decoration: none;
   background-color: var(--color-bg-secondary);
+  cursor: pointer;
+  /* Extremely subtle reflection — just a whisper of depth */
+  -webkit-box-reflect: below 2px
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent 92%,
+      rgba(0, 0, 0, 0.04) 100%
+    );
 }
 
 .programme-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-6px);
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.12),
+    0 20px 40px rgba(0, 0, 0, 0.18),
+    0 36px 60px rgba(0, 0, 0, 0.10);
 }
+
 
 .programme-card-image {
   width: 100%;
@@ -85,6 +109,7 @@
   padding: var(--spacing-xs) var(--spacing-md);
   font-size: var(--font-size-sm);
 }
+
 @media (max-width: 640px) {
   .programme-card {
     aspect-ratio: 3/4;
@@ -111,4 +136,9 @@
     padding: 0.75rem 1rem;
     font-size: 0.85rem;
   }
-}
+
+  /* Tone down reflection on small screens */
+  .programme-card-wrap::after {
+    height: 16%;
+  }
+}

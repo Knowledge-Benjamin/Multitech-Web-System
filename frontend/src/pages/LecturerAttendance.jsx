@@ -213,7 +213,7 @@ export default function LecturerAttendance() {
   }
 
   return (
-    <div className="la-page">
+    <div className="scope-lecturerattendance la-page">
       {/* ── Left Panel ────────────────────────────────────────────────────── */}
       <div className="la-left">
         <div style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>

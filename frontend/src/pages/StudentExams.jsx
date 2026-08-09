@@ -101,7 +101,7 @@ export default function StudentExams() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="scope-studentexams admin-layout">
       <StudentSidebar />
       <main className="admin-content student-dashboard-main">
         <div className="exams-container">

@@ -99,26 +99,51 @@
 /* ========================================
    Global Admin Layout Styles
    ======================================== */
-.admin-layout {
-  display: flex;
-  min-height: 100vh;
-  background: var(--color-bg-light);
-  /* Default margin to offset sidebar */
-  margin-left: 270px;
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+/* The sidebar is position:fixed. Admin pages fill the full viewport
+   and are offset by padding-left on the body. The JS toggles the
+   sidebar-collapsed class on body to switch between widths. */
+
+body.admin-page {
+  padding-top: 0 !important; /* No header on admin pages */
+  padding-left: 270px;
+  transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+body.admin-page.sidebar-collapsed {
+  padding-left: 80px;
+}
+
+/* Root wrapper for each admin page */
+.admin-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-bg-secondary, #f0f2f7);
+  width: 100%;
+}
+
+/* Main scrollable content area */
 .admin-content {
   flex: 1;
-  padding: var(--spacing-2xl);
+  padding: 2rem 2.5rem;
+  width: 100%;
   max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 1024px) {
+  .admin-content {
+    padding: 1.75rem 2rem;
+  }
 }
 
 @media (max-width: 768px) {
-  .admin-layout {
-    margin-left: 0 !important;
+  body.admin-page {
+    padding-left: 0 !important;
   }
+
   .admin-content {
-    padding: var(--spacing-lg);
+    padding: 1.25rem;
   }
 }

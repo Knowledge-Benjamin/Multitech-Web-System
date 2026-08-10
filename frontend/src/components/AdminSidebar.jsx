@@ -26,16 +26,26 @@ export default function AdminSidebar() {
     operations: true
   })
 
+  // Mount effect: mark body as admin page & apply initial collapse state
+  useEffect(() => {
+    document.body.classList.add('admin-page')
+    // Sync initial state
+    if (localStorage.getItem('sidebarCollapsed') === 'true') {
+      document.body.classList.add('sidebar-collapsed')
+    }
+    return () => {
+      document.body.classList.remove('admin-page', 'sidebar-collapsed')
+    }
+  }, [])
+
   useEffect(() => {
     if (isCollapsed) {
       document.body.classList.add('sidebar-collapsed')
       localStorage.setItem('sidebarCollapsed', 'true')
-      // Collapse all groups when sidebar collapses
       setExpandedGroups({ academics: false, website: false, structure: false, operations: false })
     } else {
       document.body.classList.remove('sidebar-collapsed')
       localStorage.setItem('sidebarCollapsed', 'false')
-      // Expand all groups when sidebar expands
       setExpandedGroups({ academics: true, website: true, structure: true, operations: true })
     }
   }, [isCollapsed])

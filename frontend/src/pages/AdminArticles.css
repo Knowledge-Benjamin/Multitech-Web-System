@@ -1,11 +1,5 @@
 /* AdminArticles.css */
-
-.admin-container {
-  margin-left: 250px;
-  padding: var(--spacing-2xl);
-  min-height: 100vh;
-  background: var(--color-bg-light, #f5f6fa);
-}
+/* Root layout handled globally via .admin-layout + body.admin-page */
 
 .admin-header {
   margin-bottom: var(--spacing-2xl);
@@ -18,7 +12,7 @@
   font-weight: var(--font-weight-bold, 700);
 }
 
-.admin-content {
+.articles-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-2xl);
@@ -278,17 +272,12 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .admin-content {
+  .articles-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .admin-container {
-    margin-left: 0;
-    padding: var(--spacing-lg);
-  }
-
   .form-actions {
     flex-direction: column;
   }

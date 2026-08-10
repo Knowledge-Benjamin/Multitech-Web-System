@@ -31,7 +31,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="admin-layout">
+      <div className="scope-admindashboard admin-layout">
         <AdminSidebar />
         <main className="admin-content">
           <div className="loading-state">

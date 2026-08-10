@@ -217,15 +217,6 @@
 
 /* ===== MOBILE RESPONSIVE (max-width: 640px) ===== */
 @media (max-width: 640px) {
-  .admin-layout {
-    flex-direction: column;
-  }
-
-  .admin-content {
-    margin-bottom: 80px;
-    padding: var(--spacing-md);
-  }
-
   .content-header {
     padding: var(--spacing-lg) var(--spacing-md);
     margin-bottom: var(--spacing-lg);
@@ -429,10 +420,6 @@
 
 /* ===== TABLET (641px - 1024px) ===== */
 @media (min-width: 641px) and (max-width: 1024px) {
-  .admin-content {
-    margin-bottom: 0;
-  }
-
   .settings-tabs {
     flex-wrap: wrap;
   }

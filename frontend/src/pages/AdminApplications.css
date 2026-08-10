@@ -1,15 +1,3 @@
-.admin-layout {
-  display: flex;
-  min-height: 100vh;
-  background: var(--color-bg-light);
-}
-
-.admin-content {
-  flex: 1;
-  padding: var(--spacing-2xl);
-  overflow-y: auto;
-}
-
 .content-header {
   margin-bottom: var(--spacing-2xl);
 }

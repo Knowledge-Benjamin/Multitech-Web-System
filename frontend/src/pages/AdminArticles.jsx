@@ -173,16 +173,17 @@ export default function AdminArticles() {
       <AdminSidebar />
       <main className="admin-content">
         <header className="content-header">
-          <h1>Manage Articles & Posts</h1>
+          <h1>Manage Articles &amp; Posts</h1>
         </header>
 
         {error && <div className="alert alert-error">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
 
-        <div className="admin-form-section">
-          <h2>{isEditing ? 'Edit Article' : 'Create New Article'}</h2>
-          <form onSubmit={handleSubmit} className="admin-form">
-            <div className="form-group">
+        <div className="articles-grid">
+          <div className="admin-form-section">
+            <h2>{isEditing ? 'Edit Article' : 'Create New Article'}</h2>
+            <form onSubmit={handleSubmit} className="admin-form">
+              <div className="form-group">
               <label>Title *</label>
               <input type="text" name="title" value={formData.title} onChange={handleInputChange} required />
             </div>
@@ -262,49 +263,50 @@ export default function AdminArticles() {
               )}
             </div>
           </form>
-        </div>
+          </div>
 
-        <div className="admin-list-section">
-          <h2>All Articles</h2>
-          {loading && !articles.length ? (
-            <p>Loading...</p>
-          ) : (
-            <div className="data-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Pinned</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {articles.map(article => (
-                    <tr key={article.id}>
-                      <td>{article.title}</td>
-                      <td>
-                        <span className={`status-badge status-${article.status || 'draft'}`}>
-                          {(article.status || 'draft').toUpperCase()}
-                        </span>
-                      </td>
-                      <td>{new Date(article.created_at).toLocaleDateString()}</td>
-                      <td>{article.is_pinned ? 'Yes' : 'No'}</td>
-                      <td>
-                        <button onClick={() => handleEdit(article)} className="button button-small button-secondary">Edit</button>
-                      </td>
-                    </tr>
-                  ))}
-                  {articles.length === 0 && (
+          <div className="admin-list-section">
+            <h2>All Articles</h2>
+            {loading && !articles.length ? (
+              <p>Loading...</p>
+            ) : (
+              <div className="data-table">
+                <table>
+                  <thead>
                     <tr>
-                      <td colSpan="5" style={{ textAlign: 'center' }}>No articles found</td>
+                      <th>Title</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th>Pinned</th>
+                      <th>Actions</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody>
+                    {articles.map(article => (
+                      <tr key={article.id}>
+                        <td>{article.title}</td>
+                        <td>
+                          <span className={`status-badge status-${article.status || 'draft'}`}>
+                            {(article.status || 'draft').toUpperCase()}
+                          </span>
+                        </td>
+                        <td>{new Date(article.created_at).toLocaleDateString()}</td>
+                        <td>{article.is_pinned ? 'Yes' : 'No'}</td>
+                        <td>
+                          <button onClick={() => handleEdit(article)} className="button button-small button-secondary">Edit</button>
+                        </td>
+                      </tr>
+                    ))}
+                    {articles.length === 0 && (
+                      <tr>
+                        <td colSpan="5" style={{ textAlign: 'center' }}>No articles found</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>

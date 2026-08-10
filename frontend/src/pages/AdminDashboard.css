@@ -1,3 +1,28 @@
+/* Loading State */
+.scope-admindashboard .loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1.25rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.scope-admindashboard .spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid rgba(0, 82, 204, 0.12);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Hero Section */
 .dashboard-hero {
   position: relative;

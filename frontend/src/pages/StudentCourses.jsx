@@ -8,10 +8,10 @@ export default function StudentCourses() {
   const [activeTab, setActiveTab] = useState('enrolled')
 
   const token = localStorage.getItem('studentToken')
-  const { data: enrollRes, isLoading: enrollLoading, error: enrollError } = useApiQuery(`${API}/student-profile/enrollments`, {
+  const { data: enrollRes, isLoading: enrollLoading, error: enrollError } = useApiQuery(`${API}/student-profile/enrollments`, 'studentEnrollments', {
     axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
   })
-  const { data: materialsRes, isLoading: materialsLoading, error: materialsError } = useApiQuery(`${API}/student-profile/materials`, {
+  const { data: materialsRes, isLoading: materialsLoading, error: materialsError } = useApiQuery(`${API}/student-profile/materials`, 'studentMaterials', {
     axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
   })
 

@@ -38,7 +38,7 @@ export default function StudentExams() {
 
   const token = localStorage.getItem('studentToken')
 
-  const { data, isLoading, error } = useApiQuery(`${API}/student-profile/exams`, {
+  const { data, isLoading, error } = useApiQuery(`${API}/student-profile/exams`, 'studentExams', {
     axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
   })
   const exams = data?.data || []

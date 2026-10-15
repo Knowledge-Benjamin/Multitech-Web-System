@@ -23,16 +23,22 @@ axios.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       const path = window.location.pathname
+      // Do not redirect if already on any login page
+      if (['/student/login', '/lecturer/login', '/admin/login', '/portal/login', '/login'].includes(path)) {
+        return Promise.reject(error)
+      }
       if (path.startsWith('/admin')) {
         localStorage.removeItem('adminToken')
+        localStorage.removeItem('adminUser')
         window.location.href = '/admin/login'
       } else if (path.startsWith('/student')) {
         localStorage.removeItem('studentToken')
-        window.location.href = '/student/login'
+        localStorage.removeItem('studentUser')
+        window.location.href = '/portal/login?tab=student'
       } else if (path.startsWith('/lecturer')) {
         localStorage.removeItem('lecturerToken')
         localStorage.removeItem('lecturerInfo')
-        window.location.href = '/lecturer/login'
+        window.location.href = '/portal/login?tab=lecturer'
       }
     }
     return Promise.reject(error)

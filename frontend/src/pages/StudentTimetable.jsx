@@ -16,7 +16,7 @@ function formatTime(timeStr) {
 
 export default function StudentTimetable() {
   const token = localStorage.getItem('studentToken')
-  const { data: resData, isLoading, error: apiError } = useApiQuery(`${API}/student-profile/timetable`, {
+  const { data: resData, isLoading, error: apiError } = useApiQuery(`${API}/student-profile/timetable`, 'studentTimetable', {
     axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
   })
 

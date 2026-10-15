@@ -9,7 +9,7 @@ export default function StudentAttendance() {
   const token = localStorage.getItem('studentToken')
   const headers = { Authorization: `Bearer ${token}` }
 
-  const { data, isLoading, error } = useApiQuery(`${API}/student-profile/attendance`, {
+  const { data, isLoading, error } = useApiQuery(`${API}/student-profile/attendance`, 'studentAttendance', {
     axiosOptions: { headers }
   })
   const stats = data?.data?.stats || []

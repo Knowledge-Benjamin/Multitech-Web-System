@@ -3,7 +3,7 @@ import StudentSidebar from '../components/StudentSidebar'
 
 export default function StudentProfile() {
   const token = localStorage.getItem('studentToken')
-  const { data: resData, isLoading } = useApiQuery(`${import.meta.env.VITE_API_URL}/student-profile`, {
+  const { data: resData, isLoading } = useApiQuery(`${import.meta.env.VITE_API_URL}/student-profile`, 'studentProfileDetails', {
     axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
   })
 

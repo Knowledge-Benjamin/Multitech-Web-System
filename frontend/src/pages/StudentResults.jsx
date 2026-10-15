@@ -4,7 +4,7 @@ import './StudentResults.css'
 
 export default function StudentResults() {
   const token = localStorage.getItem('studentToken')
-  const { data: resData, isLoading, error: apiError } = useApiQuery(`${import.meta.env.VITE_API_URL}/student-profile/results`, {
+  const { data: resData, isLoading, error: apiError } = useApiQuery(`${import.meta.env.VITE_API_URL}/student-profile/results`, 'studentResults', {
     axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
   })
 

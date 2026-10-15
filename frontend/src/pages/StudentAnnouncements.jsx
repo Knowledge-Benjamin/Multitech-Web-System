@@ -5,7 +5,7 @@ const API = import.meta.env.VITE_API_URL
 
 export default function StudentAnnouncements() {
   const token = localStorage.getItem('studentToken')
-  const { data, isLoading, error } = useApiQuery(`${API}/student-profile/announcements`, {
+  const { data, isLoading, error } = useApiQuery(`${API}/student-profile/announcements`, 'studentAnnouncements', {
     axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
   })
   const announcements = data?.data || []

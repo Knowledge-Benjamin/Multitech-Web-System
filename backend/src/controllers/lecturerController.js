@@ -85,13 +85,28 @@ export const getCourseDetails = async (req, res) => {
       WHERE cr.course_id = $1 AND ste.academic_term_id = $2
     `, [courseId, currentTerm.id])
 
+    // Online Exams created for this course in Exam Portal
+    let onlineExams = []
+    try {
+      const examsRes = await pool.query(`
+        SELECT id, exam_portal_id, erp_course_code, exam_title, start_time, end_time, duration_minutes, status, gate_url, created_at, updated_at
+        FROM erp_exams
+        WHERE erp_course_code = $1 AND status != 'archived'
+        ORDER BY start_time DESC
+      `, [course.course_code])
+      onlineExams = examsRes.rows
+    } catch (e) {
+      console.warn('Could not query erp_exams for lecturer course:', e.message)
+    }
+
     res.json({
       success: true,
       data: {
         course,
         term: currentTerm,
         materials: materialsRes.rows,
-        enrolled_students: parseInt(studentsRes.rows[0].enrolled_count)
+        enrolled_students: parseInt(studentsRes.rows[0].enrolled_count),
+        online_exams: onlineExams
       }
     })
   } catch (error) {

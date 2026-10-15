@@ -51,6 +51,7 @@ api.interceptors.response.use(
       } else if (url.includes('/lecturer') || url.includes('/lecturer-auth')) {
         localStorage.removeItem('lecturerToken')
         localStorage.removeItem('lecturerUser')
+        localStorage.removeItem('lecturerInfo')
       } else {
         // Default: clear admin tokens (most admin routes return 401 when session expires)
         localStorage.removeItem('adminToken')

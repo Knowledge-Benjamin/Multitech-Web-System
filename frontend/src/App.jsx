@@ -4,6 +4,7 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 import ProtectedRoute from './components/ProtectedRoute'
 import ProtectedStudentRoute from './components/ProtectedStudentRoute'
+import ProtectedLecturerRoute from './components/ProtectedLecturerRoute'
 import './App.css'
 
 const Home = lazy(() => import('./pages/Home'))
@@ -36,6 +37,7 @@ const About = lazy(() => import('./pages/About'))
 const ContactUs = lazy(() => import('./pages/ContactUs'))
 const Campuses = lazy(() => import('./pages/Campuses'))
 const CampusDetails = lazy(() => import('./pages/CampusDetails'))
+const PortalLogin = lazy(() => import('./pages/PortalLogin'))
 const StudentLogin = lazy(() => import('./pages/StudentLogin'))
 const StudentDashboard = lazy(() => import('./pages/StudentDashboard'))
 const StudentFinances = lazy(() => import('./pages/StudentFinances'))
@@ -240,12 +242,16 @@ function App() {
           }
         />
 
+        {/* Unified Portal & Auth Routes */}
+        <Route path="/portal/login" element={<PortalLogin />} />
+        <Route path="/login" element={<PortalLogin />} />
+
         {/* Lecturer Routes */}
         <Route path="/lecturer/login" element={<LecturerLogin />} />
-        <Route path="/lecturer/dashboard" element={<LecturerDashboard />} />
-        <Route path="/lecturer/courses/:courseId" element={<LecturerCourseDetails />} />
-        <Route path="/lecturer/timetable" element={<LecturerTimetable />} />
-        <Route path="/lecturer/attendance" element={<LecturerAttendance />} />
+        <Route path="/lecturer/dashboard" element={<ProtectedLecturerRoute><LecturerDashboard /></ProtectedLecturerRoute>} />
+        <Route path="/lecturer/courses/:courseId" element={<ProtectedLecturerRoute><LecturerCourseDetails /></ProtectedLecturerRoute>} />
+        <Route path="/lecturer/timetable" element={<ProtectedLecturerRoute><LecturerTimetable /></ProtectedLecturerRoute>} />
+        <Route path="/lecturer/attendance" element={<ProtectedLecturerRoute><LecturerAttendance /></ProtectedLecturerRoute>} />
 
         {/* Student Routes */}
         <Route path="/student/login" element={<StudentLogin />} />

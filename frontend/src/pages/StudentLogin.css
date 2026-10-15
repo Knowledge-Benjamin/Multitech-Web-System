@@ -172,3 +172,97 @@
   color: #fff;
   text-decoration: underline;
 }
+
+/* Portal Tab Switcher */
+.portal-tab-switch {
+  display: flex;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  padding: 4px;
+  margin-bottom: 2rem;
+  gap: 4px;
+}
+
+.portal-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.portal-tab-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.portal-tab-btn.active {
+  background: var(--color-primary, #0052CC);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 82, 204, 0.45);
+}
+
+/* Password input with toggle */
+.portal-input-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.portal-input-password-wrapper .student-login-input {
+  padding-right: 2.75rem;
+}
+
+.portal-password-toggle {
+  position: absolute;
+  right: 0.85rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.portal-password-toggle:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Admin Link Divider */
+.portal-admin-link {
+  display: block;
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.portal-admin-link a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 0.35rem;
+  transition: color 0.2s;
+}
+
+.portal-admin-link a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}

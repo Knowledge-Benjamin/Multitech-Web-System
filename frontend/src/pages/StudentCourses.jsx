@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import StudentSidebar from '../components/StudentSidebar'
 import { useApiQuery } from '../hooks/useApiQuery'
+import { BookOpen, FileText, Video, Download, Inbox, Layers } from 'lucide-react'
+import './AdminDashboard.css'
 
 const API = import.meta.env.VITE_API_URL
 
@@ -20,55 +22,89 @@ export default function StudentCourses() {
   const isLoading = enrollLoading || materialsLoading
   const error = enrollError || materialsError
 
+  const getFileIcon = (type) => {
+    if (type === 'pdf') return <FileText size={20} className="text-blue" />
+    if (type === 'video') return <Video size={20} className="text-indigo" />
+    return <FileText size={20} className="text-blue" />
+  }
+
   return (
-    <div className="scope-studentcourses admin-layout">
+    <div className="scope-studentcourses scope-admindashboard admin-layout fade-in-section is-visible">
       <StudentSidebar />
-      <main className="admin-content student-dashboard-main">
-        <div style={{ padding: '24px' }}>
-          <header style={{ marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '1.8rem', color: '#1e1b4b', marginBottom: '8px' }}>My Courses</h2>
-            <p style={{ color: '#6b7280' }}>View your officially registered courses and access learning materials.</p>
-          </header>
+      <main className="admin-content" style={{ background: 'var(--color-background)' }}>
+        <header className="content-header" style={{ marginBottom: '2rem' }}>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-secondary)', margin: '0 0 0.25rem 0' }}>Registered Courses</h1>
+          <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>Active course units and academic learning materials</p>
+        </header>
 
-          <div className="tabs" style={{ display: 'flex', gap: '20px', marginBottom: '24px', borderBottom: '2px solid #e5e7eb' }}>
-            <button 
-              className={`tab ${activeTab === 'enrolled' ? 'active' : ''}`}
-              onClick={() => setActiveTab('enrolled')}
-              style={{ padding: '10px 16px', background: 'none', border: 'none', borderBottom: activeTab === 'enrolled' ? '2px solid #6366f1' : 'none', color: activeTab === 'enrolled' ? '#6366f1' : '#64748b', fontWeight: activeTab === 'enrolled' ? '600' : '500', cursor: 'pointer', marginBottom: '-2px' }}
-            >
-              Enrolled Courses
-            </button>
-            <button 
-              className={`tab ${activeTab === 'materials' ? 'active' : ''}`}
-              onClick={() => setActiveTab('materials')}
-              style={{ padding: '10px 16px', background: 'none', border: 'none', borderBottom: activeTab === 'materials' ? '2px solid #6366f1' : 'none', color: activeTab === 'materials' ? '#6366f1' : '#64748b', fontWeight: activeTab === 'materials' ? '600' : '500', cursor: 'pointer', marginBottom: '-2px' }}
-            >
-              Course Materials
-            </button>
+        {/* Tab Selection */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '1.75rem' }}>
+          <button
+            onClick={() => setActiveTab('enrolled')}
+            className={`btn-text ${activeTab === 'enrolled' ? 'active' : ''}`}
+            style={{
+              padding: '0.65rem 1.25rem',
+              borderRadius: '8px',
+              border: activeTab === 'enrolled' ? '1px solid var(--color-primary)' : '1px solid rgba(0,0,0,0.08)',
+              background: activeTab === 'enrolled' ? 'var(--color-primary)' : 'white',
+              color: activeTab === 'enrolled' ? 'white' : 'var(--color-text)',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <BookOpen size={16} /> Course Units ({enrollments.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('materials')}
+            className={`btn-text ${activeTab === 'materials' ? 'active' : ''}`}
+            style={{
+              padding: '0.65rem 1.25rem',
+              borderRadius: '8px',
+              border: activeTab === 'materials' ? '1px solid var(--color-primary)' : '1px solid rgba(0,0,0,0.08)',
+              background: activeTab === 'materials' ? 'var(--color-primary)' : 'white',
+              color: activeTab === 'materials' ? 'white' : 'var(--color-text)',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <FileText size={16} /> Course Materials
+          </button>
+        </div>
+
+        {error && <div className="message-error" style={{ marginBottom: '1.5rem' }}>Unable to load courses or learning materials.</div>}
+
+        {isLoading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading course information...</p>
           </div>
-
-          {error && <div className="message-error">Failed to load your courses or materials.</div>}
-
-          {isLoading ? (
-            <div className="loading-spinner"><div className="spinner"></div></div>
-          ) : (
-            <>
-              {activeTab === 'enrolled' && (
-                <div className="table-responsive">
-                  {enrollments.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px', border: '1px solid #e5e7eb' }}>
-                      <span style={{ fontSize: '3rem', display: 'block', marginBottom: '16px' }}>📚</span>
-                      <h3 style={{ color: '#1e1b4b', marginBottom: '8px' }}>No Courses Registered</h3>
-                      <p style={{ color: '#6b7280' }}>You are not currently registered for any courses this term.</p>
-                    </div>
-                  ) : (
-                    <table className="admin-table">
+        ) : (
+          <>
+            {activeTab === 'enrolled' && (
+              <div className="recent-section">
+                {enrollments.length === 0 ? (
+                  <div className="empty-state" style={{ padding: '3.5rem', background: 'white', borderRadius: '16px', textAlign: 'center' }}>
+                    <Inbox size={40} style={{ color: 'var(--color-text-secondary)', marginBottom: '1rem' }} />
+                    <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-secondary)' }}>No Course Registrations</h3>
+                    <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>You are not officially registered for any course units in the current term.</p>
+                  </div>
+                ) : (
+                  <div className="table-container">
+                    <table className="modern-table">
                       <thead>
                         <tr>
-                          <th>Course Code</th>
-                          <th>Course Name</th>
-                          <th>Term</th>
-                          <th>Credits</th>
+                          <th>Code</th>
+                          <th>Course Name &amp; Syllabus</th>
+                          <th>Academic Term</th>
+                          <th>Credit Units</th>
                           <th>Type</th>
                           <th>Status</th>
                         </tr>
@@ -76,38 +112,28 @@ export default function StudentCourses() {
                       <tbody>
                         {enrollments.map(enr => (
                           <tr key={enr.registration_id}>
-                            <td style={{ fontWeight: 600 }}>{enr.course_code}</td>
                             <td>
-                              <div style={{ fontWeight: 500, color: '#1e293b' }}>{enr.course_name}</div>
+                              <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--color-primary)' }}>
+                                {enr.course_code}
+                              </span>
+                            </td>
+                            <td>
+                              <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{enr.course_name}</div>
                               {enr.modules && enr.modules.length > 0 && (
-                                <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#64748b', background: '#f8fafc', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                                  <strong style={{ color: '#475569' }}>Syllabus Topics:</strong>
-                                  <ul style={{ paddingLeft: '16px', margin: '4px 0 0 0' }}>
-                                    {enr.modules.map((mod, idx) => (
-                                      <li key={idx} style={{ marginBottom: '2px' }}>{mod}</li>
-                                    ))}
-                                  </ul>
+                                <div style={{ marginTop: '6px', fontSize: '0.8rem', color: '#64748b', background: '#f8fafc', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                                  <strong style={{ color: '#475569' }}>Key Modules:</strong> {enr.modules.join(', ')}
                                 </div>
                               )}
                             </td>
                             <td>{enr.term_name}</td>
-                            <td>{enr.credits}</td>
+                            <td><strong>{enr.credits} CU</strong></td>
                             <td>
-                              {enr.registration_type === 'retake' ? (
-                                <span style={{ fontSize: '0.8rem', background: '#fef08a', color: '#854d0e', padding: '2px 6px', borderRadius: '4px' }}>Retake</span>
-                              ) : (
-                                <span style={{ fontSize: '0.8rem', background: '#dbeafe', color: '#1e40af', padding: '2px 6px', borderRadius: '4px' }}>Normal</span>
-                              )}
+                              <span className="status-pill status-admitted" style={{ textTransform: 'capitalize' }}>
+                                {enr.registration_type || 'Normal'}
+                              </span>
                             </td>
                             <td>
-                              <span style={{ 
-                                fontSize: '0.8rem', 
-                                background: enr.registration_status === 'active' ? '#dcfce7' : '#fee2e2', 
-                                color: enr.registration_status === 'active' ? '#166534' : '#991b1b', 
-                                padding: '2px 6px', 
-                                borderRadius: '4px',
-                                textTransform: 'capitalize'
-                              }}>
+                              <span className={`status-pill status-${enr.registration_status === 'active' ? 'admitted' : 'pending'}`} style={{ textTransform: 'capitalize' }}>
                                 {enr.registration_status}
                               </span>
                             </td>
@@ -115,64 +141,81 @@ export default function StudentCourses() {
                         ))}
                       </tbody>
                     </table>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
+            )}
 
-              {activeTab === 'materials' && (
-                <div className="materials-container">
-                  {Object.keys(materials).length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px', border: '1px solid #e5e7eb' }}>
-                      <span style={{ fontSize: '3rem', display: 'block', marginBottom: '16px' }}>📄</span>
-                      <h3 style={{ color: '#1e1b4b', marginBottom: '8px' }}>No Materials Found</h3>
-                      <p style={{ color: '#6b7280' }}>No materials have been uploaded by your lecturers yet.</p>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'grid', gap: '20px' }}>
-                      {Object.values(materials).map((courseGroup) => (
-                        <div key={courseGroup.course_id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '20px' }}>
-                          <h3 style={{ margin: '0 0 16px', color: '#1e1b4b', borderBottom: '1px solid #f3f4f6', paddingBottom: '12px' }}>
-                            <span style={{ color: '#6366f1', marginRight: '8px' }}>{courseGroup.course_code}</span> 
+            {activeTab === 'materials' && (
+              <div className="recent-section">
+                {Object.keys(materials).length === 0 ? (
+                  <div className="empty-state" style={{ padding: '3.5rem', background: 'white', borderRadius: '16px', textAlign: 'center' }}>
+                    <Inbox size={40} style={{ color: 'var(--color-text-secondary)', marginBottom: '1rem' }} />
+                    <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-secondary)' }}>No Course Materials Published</h3>
+                    <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>Lecture slides and course resources will appear here once uploaded by your lecturers.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gap: '1.5rem' }}>
+                    {Object.values(materials).map((courseGroup) => (
+                      <div key={courseGroup.course_id} style={{ background: 'white', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.04)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--color-border)' }}>
+                          <span className="programme-tag" style={{ margin: 0 }}>{courseGroup.course_code}</span>
+                          <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--color-secondary)' }}>
                             {courseGroup.course_name}
                           </h3>
-                          
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
-                            {courseGroup.materials.map(mat => (
-                              <div key={mat.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                                  <div style={{ width: '40px', height: '40px', background: '#eef2ff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-                                    {mat.file_type === 'pdf' ? '📕' : mat.file_type === 'video' ? '🎬' : '📄'}
-                                  </div>
-                                  <div>
-                                    <h4 style={{ margin: '0 0 4px', fontSize: '1rem', color: '#1e293b' }}>{mat.title}</h4>
-                                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
-                                      {new Date(mat.uploaded_at).toLocaleDateString()}
-                                    </p>
-                                  </div>
-                                </div>
-                                <p style={{ color: '#475569', fontSize: '0.9rem', marginBottom: '16px', flex: 1 }}>{mat.description}</p>
-                                <a 
-                                  href={mat.url} 
-                                  target="_blank" 
-                                  rel="noreferrer"
-                                  style={{ display: 'block', textAlign: 'center', background: '#f8fafc', color: '#4f46e5', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '6px', fontWeight: 600, textDecoration: 'none', transition: 'all 0.2s' }}
-                                  onMouseOver={e => { e.currentTarget.style.background = '#4f46e5'; e.currentTarget.style.color = 'white' }}
-                                  onMouseOut={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#4f46e5' }}
-                                >
-                                  Open / Download
-                                </a>
-                              </div>
-                            ))}
-                          </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+                          {courseGroup.materials.map(mat => (
+                            <div key={mat.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column', height: '100%', background: '#fafafa' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.75rem' }}>
+                                <div className="stat-icon-wrapper bg-blue" style={{ width: '40px', height: '40px', borderRadius: '8px' }}>
+                                  {getFileIcon(mat.file_type)}
+                                </div>
+                                <div>
+                                  <h4 style={{ margin: '0 0 2px 0', fontSize: '0.95rem', color: 'var(--color-text)' }}>{mat.title}</h4>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                                    {new Date(mat.uploaded_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                  </span>
+                                </div>
+                              </div>
+                              {mat.description && (
+                                <p style={{ color: '#475569', fontSize: '0.85rem', marginBottom: '1rem', flex: 1, lineHeight: 1.4 }}>
+                                  {mat.description}
+                                </p>
+                              )}
+                              <a 
+                                href={mat.url} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                style={{ 
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '6px',
+                                  background: 'var(--color-primary)', 
+                                  color: 'white', 
+                                  padding: '8px 12px', 
+                                  borderRadius: '8px', 
+                                  fontWeight: 600, 
+                                  fontSize: '0.85rem',
+                                  textDecoration: 'none', 
+                                  marginTop: 'auto'
+                                }}
+                              >
+                                <Download size={14} /> Access Resource
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </main>
     </div>
   )

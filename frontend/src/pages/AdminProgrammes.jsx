@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { Calendar, CheckCircle, BookOpen } from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminProgrammes.css'
@@ -342,7 +343,7 @@ export default function AdminProgrammes() {
               className={`tab-btn ${activeMainTab === 'course_units' ? 'active' : ''}`}
               style={{ padding: '0.75rem 1.5rem', background: 'none', border: 'none', borderBottom: activeMainTab === 'course_units' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeMainTab === 'course_units' ? 'var(--color-primary)' : 'var(--color-text)', cursor: 'pointer', fontWeight: activeMainTab === 'course_units' ? '600' : '400' }}
             >
-              📚 Course Units
+              Course Units
             </button>
             <button
               onClick={() => setActiveMainTab('categories')}
@@ -447,7 +448,7 @@ export default function AdminProgrammes() {
 
                       {/* Intake Info Banner */}
                       <div style={{ background: '#e8f4fd', border: '1px solid #bee3f8', borderRadius: '8px', padding: '1.25rem 1.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-                        <span style={{ fontSize: '1.5rem' }}>📅</span>
+                        <Calendar size={22} style={{ color: '#0284c7', marginTop: '2px', flexShrink: 0 }} />
                         <div>
                           <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Intake & Application Windows are managed via Intakes</strong>
                           <p style={{ margin: 0, fontSize: '0.9rem', color: '#555' }}>
@@ -575,11 +576,11 @@ export default function AdminProgrammes() {
           </>
         ) : activeMainTab === 'course_units' ? (
           <div style={{ maxWidth: '900px' }}>
-            <h2 style={{ marginBottom: '1.5rem', color: '#1e1b4b' }}>📚 Course Units Management</h2>
+            <h2 style={{ marginBottom: '1.5rem', color: '#1e1b4b' }}>Course Units Management</h2>
             <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>Add individual course units (subjects) that belong to a programme. These are what lecturers teach, exams are created for, and students are registered in.</p>
 
             {cuError && <div style={{ background: '#fee2e2', color: '#991b1b', padding: '12px 16px', borderRadius: '8px', marginBottom: '1rem' }}>{cuError}</div>}
-            {cuSuccess && <div style={{ background: '#d1fae5', color: '#065f46', padding: '12px 16px', borderRadius: '8px', marginBottom: '1rem' }}>✅ {cuSuccess}</div>}
+            {cuSuccess && <div style={{ background: '#d1fae5', color: '#065f46', padding: '12px 16px', borderRadius: '8px', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={16} /> {cuSuccess}</div>}
 
             <form onSubmit={handleCUSubmit} style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', marginBottom: '2rem' }}>
               <h3 style={{ marginTop: 0, color: '#1e1b4b' }}>{cuEditId ? 'Edit Course Unit' : 'Add New Course Unit'}</h3>
@@ -711,7 +712,7 @@ export default function AdminProgrammes() {
               </table>
             ) : (
               <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '12px', color: '#9ca3af' }}>
-                <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📋</p>
+                <BookOpen size={40} style={{ color: '#9ca3af', marginBottom: '0.5rem' }} />
                 <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>No course units yet</p>
                 <p style={{ fontSize: '0.875rem' }}>Use the form above to add course units to your programmes.</p>
               </div>

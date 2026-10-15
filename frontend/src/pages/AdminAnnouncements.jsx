@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { MapPin, Calendar } from 'lucide-react'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminAnnouncements.css'
 
@@ -190,8 +191,8 @@ export default function AdminAnnouncements() {
                   </div>
 
                   <div className="ann-meta">
-                    <span>📍 {ann.campus || 'All'}</span>
-                    <span>📅 {new Date(ann.created_at).toLocaleDateString()}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><MapPin size={13} /> {ann.campus || 'All'}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Calendar size={13} /> {new Date(ann.created_at).toLocaleDateString()}</span>
                   </div>
 
                   <p className="ann-content">{ann.content.substring(0, 150)}...</p>

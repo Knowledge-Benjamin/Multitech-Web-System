@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { CheckCircle, Users } from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminProgrammes.css'
@@ -132,7 +133,7 @@ export default function AdminLecturers() {
         </div>
 
         {error && <div className="alert-error" style={{ marginBottom: '1rem', padding: '12px 16px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '10px', color: '#991b1b' }}>{error}</div>}
-        {success && <div style={{ marginBottom: '1rem', padding: '12px 16px', background: '#d1fae5', border: '1px solid #6ee7b7', borderRadius: '10px', color: '#065f46' }}>✅ {success}</div>}
+        {success && <div style={{ marginBottom: '1rem', padding: '12px 16px', background: '#d1fae5', border: '1px solid #6ee7b7', borderRadius: '10px', color: '#065f46', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={16} /> {success}</div>}
 
         {/* ── CREATE FORM ──────────────────────────────────────────────────── */}
         {view === 'create' && (
@@ -242,7 +243,7 @@ export default function AdminLecturers() {
             <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>Loading...</div>
           ) : lecturers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px' }}>
-              <span style={{ fontSize: '3rem' }}>👩‍🏫</span>
+              <Users size={48} style={{ color: '#9ca3af' }} />
               <p style={{ color: '#9ca3af', marginTop: '12px' }}>No lecturers found. Add one above.</p>
             </div>
           ) : (

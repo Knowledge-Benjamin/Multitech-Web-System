@@ -52,7 +52,7 @@ export default function AdminAttendanceReports() {
     <div className="scope-adminattendancereports admin-layout">
       <AdminSidebar />
       <main className="admin-content" style={{ background: '#0f172a', padding: '2rem', color: '#f1f5f9' }}>
-        <h1 style={{ margin: '0 0 0.5rem 0' }}>📋 Attendance Reports</h1>
+        <h1 style={{ margin: '0 0 0.5rem 0' }}>Attendance Reports</h1>
         <p style={{ color: '#94a3b8', margin: '0 0 2rem 0' }}>Audit past class sessions and verify student attendance.</p>
         
         {error && <div className="alert alert-danger">{error}</div>}

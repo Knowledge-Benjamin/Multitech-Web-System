@@ -1,5 +1,7 @@
 import { useApiQuery } from '../hooks/useApiQuery'
 import StudentSidebar from '../components/StudentSidebar'
+import { ShieldCheck, AlertCircle, Printer, CreditCard } from 'lucide-react'
+import './AdminDashboard.css'
 
 export default function StudentFinances() {
   const token = localStorage.getItem('studentToken')
@@ -17,102 +19,166 @@ export default function StudentFinances() {
 
   const getStatusBadge = (status) => {
     switch(status) {
-      case 'paid': return <span className="badge badge-success">Paid</span>
-      case 'partial': return <span className="badge badge-warning">Partial</span>
-      case 'unpaid': return <span className="badge badge-danger">Unpaid</span>
-      case 'void': return <span className="badge badge-neutral">Void</span>
-      default: return <span className="badge">{status}</span>
+      case 'paid': return <span className="status-pill status-admitted">Paid</span>
+      case 'partial': return <span className="status-pill status-pending">Partial</span>
+      case 'unpaid': return <span className="status-pill status-rejected">Unpaid</span>
+      case 'void': return <span className="status-pill">Void</span>
+      default: return <span className="status-pill">{status}</span>
     }
   }
 
   return (
-    <div className="scope-studentfinances admin-layout">
+    <div className="scope-studentfinances scope-admindashboard admin-layout fade-in-section is-visible">
       <StudentSidebar />
       <main className="admin-content" style={{ background: 'var(--color-background)' }}>
-        <header className="content-header hide-on-print">
-          <h1>Financial Statements</h1>
-          <button className="button button-primary hide-on-print">Make a Payment</button>
+        <header className="content-header hide-on-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <div>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-secondary)', margin: 0 }}>Financial Statements</h1>
+            <p style={{ color: 'var(--color-text-secondary)', margin: '0.25rem 0 0 0' }}>Tuition, functional fees, and official invoice history</p>
+          </div>
         </header>
 
-        {isLoading ? <p>Loading financial records...</p> : (
+        {isLoading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading financial records...</p>
+          </div>
+        ) : (
           <>
-            {/* Financial Summary & Exam Pass */}
-            <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+            {/* Financial Summary & Exam Clearance */}
+            <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
               
-              {/* Balances */}
-              <div style={{ flex: '1', display: 'flex', gap: '1rem' }}>
-                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', flex: '1', border: '1px solid var(--color-border)' }}>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Total Billed</p>
-                  <h3 style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem' }}>UGX {summary.totalBilled.toLocaleString()}</h3>
+              {/* Balances Grid */}
+              <div style={{ flex: '2', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.25rem' }}>
+                <div className="stat-card" style={{ padding: '1.25rem' }}>
+                  <div className="stat-content">
+                    <h3>Total Invoiced</h3>
+                    <p className="stat-number" style={{ fontSize: '1.4rem' }}>UGX {summary.totalBilled.toLocaleString()}</p>
+                    <span className="trend neutral" style={{ marginTop: '0.35rem' }}>Full Assessment</span>
+                  </div>
                 </div>
-                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', flex: '1', border: '1px solid var(--color-border)' }}>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Total Paid</p>
-                  <h3 style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem', color: 'var(--color-success)' }}>UGX {summary.totalPaid.toLocaleString()}</h3>
+
+                <div className="stat-card" style={{ padding: '1.25rem' }}>
+                  <div className="stat-content">
+                    <h3>Total Paid</h3>
+                    <p className="stat-number" style={{ fontSize: '1.4rem', color: '#059669' }}>UGX {summary.totalPaid.toLocaleString()}</p>
+                    <span className="trend positive" style={{ marginTop: '0.35rem' }}>Verified Payments</span>
+                  </div>
                 </div>
-                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', flex: '1', border: '1px solid var(--color-border)' }}>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Outstanding Balance</p>
-                  <h3 style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem', color: summary.outstandingBalance > 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
-                    UGX {summary.outstandingBalance.toLocaleString()}
-                  </h3>
+
+                <div className="stat-card" style={{ padding: '1.25rem' }}>
+                  <div className="stat-content">
+                    <h3>Outstanding Balance</h3>
+                    <p className="stat-number" style={{ fontSize: '1.4rem', color: summary.outstandingBalance > 0 ? '#d97706' : '#059669' }}>
+                      UGX {summary.outstandingBalance.toLocaleString()}
+                    </p>
+                    <span className={`trend ${summary.outstandingBalance > 0 ? 'neutral' : 'positive'}`} style={{ marginTop: '0.35rem' }}>
+                      {summary.outstandingBalance > 0 ? 'Pay Prior to Exams' : 'Fully Settled'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Digital Exam Pass Card */}
+              {/* Digital Exam Pass Status Card */}
               <div style={{ 
-                background: summary.isClearedForExams ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #f43f5e, #e11d48)', 
-                color: 'white', padding: '1.5rem', borderRadius: '12px', minWidth: '250px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' 
+                flex: '1',
+                minWidth: '280px',
+                background: summary.isClearedForExams 
+                  ? 'linear-gradient(135deg, #065f46 0%, #047857 100%)' 
+                  : 'linear-gradient(135deg, #991b1b 0%, #b91c1c 100%)',
+                color: 'white',
+                padding: '1.75rem',
+                borderRadius: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
               }}>
-                <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.8rem' }}>
-                  {summary.isClearedForExams ? '🎓 EXAM PASS' : '❌ NOT CLEARED'}
-                </h2>
-                <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', opacity: 0.9 }}>
-                  {summary.isClearedForExams ? 'Financially Cleared for Exams' : 'Outstanding Balance Requires Payment'}
-                </p>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem' }}>
+                    {summary.isClearedForExams ? <ShieldCheck size={22} /> : <AlertCircle size={22} />}
+                    <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, opacity: 0.9 }}>
+                      Exam Clearance
+                    </span>
+                  </div>
+                  <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.35rem', color: '#ffffff' }}>
+                    {summary.isClearedForExams ? 'Eligible for Exams' : 'Payment Required'}
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9, lineHeight: 1.4 }}>
+                    {summary.isClearedForExams
+                      ? 'Fees cleared. You are officially authorized to sit for term examinations.'
+                      : 'Outstanding balance pending. Please clear your balance to generate your exam pass.'}
+                  </p>
+                </div>
+
                 {summary.isClearedForExams && (
-                  <button onClick={() => window.print()} className="button hide-on-print" style={{ background: 'white', color: '#059669', border: 'none', fontWeight: 'bold' }}>
-                    🖨️ Print Pass
+                  <button 
+                    onClick={() => window.print()} 
+                    className="button hide-on-print" 
+                    style={{ 
+                      marginTop: '1.25rem',
+                      background: 'rgba(255,255,255,0.95)', 
+                      color: '#065f46', 
+                      border: 'none', 
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Printer size={16} /> Print Examination Pass
                   </button>
                 )}
               </div>
 
             </div>
 
-            <div className="table-container">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Date Issued</th>
-                    <th>Term</th>
-                    <th>Description</th>
-                    <th>Amount</th>
-                    <th>Due Date</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoices.map(i => (
-                    <tr key={i.id}>
-                      <td>{new Date(i.created_at).toLocaleDateString()}</td>
-                      <td>{i.term_name}</td>
-                      <td>{i.description}</td>
-                      <td><strong>{i.currency} {Number(i.amount).toLocaleString()}</strong></td>
-                      <td>{i.due_date ? new Date(i.due_date).toLocaleDateString() : 'N/A'}</td>
-                      <td>{getStatusBadge(i.status)}</td>
+            {/* Invoices Table */}
+            <div className="recent-section">
+              <div className="section-header">
+                <h2>Invoice Ledger</h2>
+              </div>
+              <div className="table-container">
+                <table className="modern-table">
+                  <thead>
+                    <tr>
+                      <th>Date Issued</th>
+                      <th>Academic Term</th>
+                      <th>Description</th>
+                      <th>Amount</th>
+                      <th>Due Date</th>
+                      <th>Status</th>
                     </tr>
-                  ))}
-                  {invoices.length === 0 && <tr><td colSpan="6" className="text-center text-muted">No invoices found.</td></tr>}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {invoices.length > 0 ? (
+                      invoices.map(i => (
+                        <tr key={i.id}>
+                          <td>{new Date(i.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                          <td><strong>{i.term_name || 'General Term'}</strong></td>
+                          <td>{i.description}</td>
+                          <td><strong>{i.currency} {Number(i.amount).toLocaleString()}</strong></td>
+                          <td>{i.due_date ? new Date(i.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'End of Term'}</td>
+                          <td>{getStatusBadge(i.status)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="empty-state">
+                          <p>No invoices found on your account.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </>
         )}
-        <style>{`
-          @media print {
-            .admin-sidebar, .hide-on-print, .sidebar-toggle { display: none !important; }
-            .admin-layout { display: block; }
-            .admin-content { margin: 0 !important; width: 100% !important; max-width: 100% !important; }
-          }
-        `}</style>
       </main>
     </div>
   )

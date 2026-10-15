@@ -586,7 +586,7 @@ export default function Apply() {
               <p>Academic Docs: {files.academic_docs.length} file(s)</p>
 
               <div style={{ marginTop: '20px', padding: '16px', background: isUgandan || !hasIntlFee ? '#f0fdf4' : '#eff6ff', border: `1px solid ${isUgandan || !hasIntlFee ? '#bbf7d0' : '#bfdbfe'}`, borderRadius: '10px' }}>
-                <h3 style={{ margin: '0 0 8px', color: '#1e293b', fontSize: '1rem' }}>💳 Application Fee</h3>
+                <h3 style={{ margin: '0 0 8px', color: '#1e293b', fontSize: '1rem' }}>Application Fee</h3>
                 <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>{applicableFee.label} ({isUgandan ? 'Ugandan Resident' : 'International Applicant'})</p>
                 <div style={{ fontSize: '1.8rem', fontWeight: 700, color: isUgandan || !hasIntlFee ? '#15803d' : '#1d4ed8', marginTop: '6px' }}>
                   {applicableFee.currency === 'USD' ? '$' : 'UGX '}{applicableFee.amount.toLocaleString()}

@@ -349,9 +349,17 @@ export const generateExamSSOToken = async (req, res) => {
     const { courseId } = req.params
     const lecturerId = req.lecturer.id
 
-    // Verify lecturer teaches this course
+    // Verify lecturer teaches this course (via course_assignments OR class_schedules)
     const courseCheck = await pool.query(
-      'SELECT c.course_code FROM courses c JOIN class_schedules cs ON c.id = cs.course_id WHERE c.id = $1 AND (cs.lecturer_table_id = $2 OR cs.lecturer_id = $2) LIMIT 1',
+      `SELECT c.course_code 
+       FROM courses c 
+       WHERE c.id = $1 
+         AND (
+           EXISTS (SELECT 1 FROM course_assignments ca WHERE ca.course_id = c.id AND ca.lecturer_id = $2)
+           OR
+           EXISTS (SELECT 1 FROM class_schedules cs WHERE cs.course_id = c.id AND (cs.lecturer_table_id = $2 OR cs.lecturer_id = $2))
+         )
+       LIMIT 1`,
       [courseId, lecturerId]
     )
 
@@ -376,10 +384,10 @@ export const generateExamSSOToken = async (req, res) => {
     const token = jwt.sign(
       { email, fullName, role: 'teacher', courseCode },
       process.env.SSO_JWT_SECRET,
-      { expiresIn: '1m' }
+      { expiresIn: '5m' }
     )
 
-    const portalUrl = process.env.EXAM_PORTAL_URL || 'http://localhost:5000'
+    const portalUrl = (process.env.EXAM_PORTAL_BACKEND_URL || process.env.EXAM_PORTAL_URL || 'http://localhost:5000').replace(/\/+$/, '')
     const ssoUrl = `${portalUrl}/api/auth/sso?token=${token}`
     res.json({ success: true, ssoUrl })
   } catch (error) {

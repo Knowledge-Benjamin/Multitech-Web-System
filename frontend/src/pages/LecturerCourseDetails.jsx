@@ -23,7 +23,8 @@ import {
   Image as ImageIcon,
   File,
   Lock,
-  BookOpen
+  BookOpen,
+  ShieldCheck
 } from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import LecturerSidebar from '../components/LecturerSidebar'
@@ -84,6 +85,7 @@ export default function LecturerCourseDetails() {
   const data = courseRes?.data || null
   const materials = courseRes?.data?.materials || []
   const announcements = announcementsRes?.data || []
+  const onlineExams = courseRes?.data?.online_exams || []
 
   useEffect(() => {
     if (studentsRes?.data) {
@@ -399,6 +401,27 @@ export default function LecturerCourseDetails() {
             }}
           >
             <Megaphone size={17} /> Announcements ({announcements.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('exams')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'exams' ? '3px solid #4f46e5' : '3px solid transparent',
+              color: activeTab === 'exams' ? '#4f46e5' : '#64748b',
+              fontWeight: activeTab === 'exams' ? 700 : 500,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              marginBottom: '-2px',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <ShieldCheck size={17} /> Online Exams ({onlineExams.length})
           </button>
         </div>
 
@@ -973,6 +996,139 @@ export default function LecturerCourseDetails() {
                 ))
               )}
             </div>
+          </section>
+        )}
+
+        {/* Tab 4: Online Exams */}
+        {activeTab === 'exams' && (
+          <section>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b' }}>Online Safe Exam Browser Assessments</h2>
+                <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                  Manage and monitor secure Safe Exam Browser (SEB) exams created for this course.
+                </p>
+              </div>
+
+              <button
+                onClick={handleCreateOnlineExam}
+                disabled={ssoLoading}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: '#4f46e5',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '10px 18px',
+                  borderRadius: '8px',
+                  cursor: ssoLoading ? 'not-allowed' : 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.88rem'
+                }}
+              >
+                <ExternalLink size={16} />
+                {ssoLoading ? 'Opening Portal...' : 'Create New Online Exam (SEB)'}
+              </button>
+            </div>
+
+            {onlineExams.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3.5rem 2rem', background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <ShieldCheck size={48} style={{ color: '#818cf8', margin: '0 auto 1rem', display: 'block' }} />
+                <h3 style={{ margin: '0 0 6px 0', fontSize: '1.1rem', color: '#1e293b' }}>No Online Exams Created Yet</h3>
+                <p style={{ margin: '0 0 1.5rem 0', color: '#64748b', maxWidth: '480px', marginInline: 'auto', fontSize: '0.9rem' }}>
+                  Click below to open the Safe Exam Browser portal and set up a proctored assessment for {course?.name || 'this course'}.
+                </p>
+                <button
+                  onClick={handleCreateOnlineExam}
+                  disabled={ssoLoading}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: '#4f46e5',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '10px 22px',
+                    borderRadius: '8px',
+                    cursor: ssoLoading ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <ExternalLink size={16} />
+                  {ssoLoading ? 'Opening Portal...' : 'Create Exam in Portal'}
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gap: '14px' }}>
+                {onlineExams.map(ex => {
+                  const now = new Date()
+                  const start = new Date(ex.start_time)
+                  const end = new Date(ex.end_time)
+                  const isActive = now >= start && now <= end
+                  const isUpcoming = now < start
+
+                  return (
+                    <div
+                      key={ex.id}
+                      style={{
+                        background: '#ffffff',
+                        borderRadius: '12px',
+                        padding: '18px 22px',
+                        border: '1px solid #e2e8f0',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '16px'
+                      }}
+                    >
+                      <div style={{ display: 'grid', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#0f172a' }}>{ex.exam_title}</h3>
+                          <span style={{
+                            padding: '3px 9px',
+                            borderRadius: '9999px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            background: isActive ? '#dcfce7' : isUpcoming ? '#e0e7ff' : '#f1f5f9',
+                            color: isActive ? '#15803d' : isUpcoming ? '#4338ca' : '#64748b'
+                          }}>
+                            {isActive ? 'Active Now' : isUpcoming ? 'Upcoming' : 'Ended'}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '16px', color: '#64748b', fontSize: '0.85rem' }}>
+                          <span><strong>Schedule:</strong> {new Date(ex.start_time).toLocaleString('en-UG', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                          <span><strong>Duration:</strong> {ex.duration_minutes} mins</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                          onClick={handleCreateOnlineExam}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            background: '#f8fafc',
+                            color: '#4f46e5',
+                            border: '1px solid #c7d2fe',
+                            padding: '8px 14px',
+                            borderRadius: '8px',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <ExternalLink size={14} /> Open Exam Portal
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </section>
         )}
       </main>

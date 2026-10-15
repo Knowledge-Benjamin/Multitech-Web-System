@@ -69,7 +69,7 @@ export const createAdminUser = asyncHandler(async (req, res) => {
             role: assignedRole,
           })
           const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex')
-          const examPortalUrl = process.env.EXAM_PORTAL_URL || 'http://localhost:3001'
+          const examPortalUrl = (process.env.EXAM_PORTAL_BACKEND_URL || process.env.EXAM_PORTAL_URL || 'http://localhost:3001').replace(/\/+$/, '')
           fetch(`${examPortalUrl}/api/webhooks/provision-teacher`, {
             method: 'POST',
             headers: {

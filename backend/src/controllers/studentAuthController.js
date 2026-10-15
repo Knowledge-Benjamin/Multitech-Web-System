@@ -128,18 +128,32 @@ const executeAutoAdvancement = async (studentId) => {
 
 // Student Login
 export const loginStudent = asyncHandler(async (req, res) => {
-  const { email, password } = req.body
+  const { password } = req.body
+  const identifier = (req.body.email || req.body.student_number || req.body.identifier || '').trim()
 
-  const validationError = validateRequired(['email', 'password'], { email, password })
-  if (validationError) {
-    return res.status(400).json({ success: false, message: validationError })
+  if (!identifier || !password) {
+    return res.status(400).json({ success: false, message: 'Email or student number and password are required' })
   }
 
-  // Find account
-  const result = await pool.query(
-    'SELECT * FROM student_accounts WHERE email = $1',
-    [email]
+  // Find account by email first
+  let result = await pool.query(
+    'SELECT * FROM student_accounts WHERE LOWER(email) = LOWER($1)',
+    [identifier]
   )
+
+  // If not found by email, check if identifier is a student_number
+  if (result.rows.length === 0) {
+    const studentRes = await pool.query(
+      `SELECT sa.* 
+       FROM students s
+       JOIN student_accounts sa ON s.student_account_id = sa.id
+       WHERE LOWER(s.student_number) = LOWER($1)`,
+      [identifier]
+    )
+    if (studentRes.rows.length > 0) {
+      result = studentRes
+    }
+  }
 
   if (result.rows.length === 0) {
     return res.status(401).json({ success: false, message: 'Invalid credentials' })

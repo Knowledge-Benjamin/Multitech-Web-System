@@ -31,10 +31,16 @@ export const validateAdminLogin = [
 
 // ─── Student Login ────────────────────────────────────────────────────────────
 export const validateStudentLogin = [
-  body('student_number')
-    .trim()
-    .notEmpty().withMessage('Student number is required')
-    .isLength({ max: 50 }).withMessage('Student number too long'),
+  body().custom((value, { req }) => {
+    const id = req.body.email || req.body.student_number || req.body.identifier
+    if (!id || typeof id !== 'string' || !id.trim()) {
+      throw new Error('Email or student number is required')
+    }
+    if (id.length > 255) {
+      throw new Error('Identifier too long')
+    }
+    return true
+  }),
   body('password')
     .notEmpty().withMessage('Password is required')
     .isLength({ max: 200 }).withMessage('Password too long'),

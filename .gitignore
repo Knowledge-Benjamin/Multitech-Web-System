@@ -27,4 +27,6 @@ desktop.ini
 backend/src/scripts/seed.js
 backend/src/scripts/seedAdmin.js
 backend/src/scripts/seedCategories.js
+backend/src/scripts/seedTestStudent.js
+backend/src/scripts/seed*.js
 .DS_Store

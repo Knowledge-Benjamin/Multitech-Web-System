@@ -15,7 +15,11 @@ export default function StudentLogin() {
     setError('')
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/student-auth/login`, formData)
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/student-auth/login`, {
+        email: formData.email,
+        student_number: formData.email,
+        password: formData.password
+      })
       
       if (res.data.success) {
         localStorage.setItem('studentToken', res.data.token)
@@ -44,14 +48,14 @@ export default function StudentLogin() {
 
         <form onSubmit={handleSubmit} className="student-login-form">
           <div className="student-login-group">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email">Email Address or Student Number</label>
             <input
-              type="email"
+              type="text"
               id="email"
               className="student-login-input"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="e.g. student@example.com"
+              placeholder="e.g. cbrainic@gmail.com or MBS/2026/0001"
               required
             />
           </div>

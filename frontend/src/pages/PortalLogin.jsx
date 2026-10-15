@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom'
 import axios from 'axios'
-import { GraduationCap, BookOpen, Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { GraduationCap, BookOpen, Eye, EyeOff, ArrowLeft, Shield, AlertCircle, Loader2 } from 'lucide-react'
 import './StudentLogin.css'
 
 const API = import.meta.env.VITE_API_URL
@@ -11,7 +11,6 @@ export default function PortalLogin({ defaultTab }) {
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Determine initial active tab: query param (?tab= / ?role=), route path, or prop
   const getInitialTab = () => {
     const queryTab = searchParams.get('tab') || searchParams.get('role')
     if (queryTab === 'lecturer' || queryTab === 'faculty') return 'lecturer'
@@ -23,7 +22,6 @@ export default function PortalLogin({ defaultTab }) {
 
   const [activeTab, setActiveTab] = useState(getInitialTab)
 
-  // Sync tab if URL route or query param changes
   useEffect(() => {
     const desiredTab = getInitialTab()
     if (desiredTab !== activeTab) {
@@ -70,10 +68,10 @@ export default function PortalLogin({ defaultTab }) {
         localStorage.setItem('studentUser', JSON.stringify(res.data.student))
         navigate('/student/dashboard')
       } else {
-        setError(res.data.message || 'Login failed. Please check your credentials.')
+        setError(res.data.message || 'Authentication failed. Please verify your credentials.')
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please verify your student number/email and password.')
+      setError(err.response?.data?.message || 'Authentication failed. Please check your student number/email and password.')
     } finally {
       setLoading(false)
     }
@@ -96,10 +94,10 @@ export default function PortalLogin({ defaultTab }) {
         localStorage.setItem('lecturerInfo', JSON.stringify(res.data.lecturer))
         navigate('/lecturer/dashboard')
       } else {
-        setError(res.data.message || 'Login failed. Please check your credentials.')
+        setError(res.data.message || 'Authentication failed. Please verify your credentials.')
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please verify your faculty email and password.')
+      setError(err.response?.data?.message || 'Authentication failed. Please check your faculty email and password.')
     } finally {
       setLoading(false)
     }
@@ -109,17 +107,20 @@ export default function PortalLogin({ defaultTab }) {
     <div className="student-login-wrapper">
       <Link to="/" className="student-login-back">
         <ArrowLeft size={16} />
-        Back to Home
+        Back to Website
       </Link>
 
       <div className="student-login-card">
-        <div className="student-login-header">
-          <h2>Portal Login</h2>
-          <p>
-            {activeTab === 'student'
-              ? 'Access your academic records, finances & timetable'
-              : 'Access course allocations, live attendance & grading'}
-          </p>
+        <div className="portal-brand-header">
+          <img src="/logo_asset.png" alt="Multitech Business School" className="portal-brand-logo" />
+          <div className="portal-header-titles">
+            <h2>Academic Portal</h2>
+            <p>
+              {activeTab === 'student'
+                ? 'Sign in to access your student records, coursework, and timetable'
+                : 'Sign in to access faculty allocations, attendance, and grades'}
+            </p>
+          </div>
         </div>
 
         {/* Tab Switcher */}
@@ -142,13 +143,14 @@ export default function PortalLogin({ defaultTab }) {
             onClick={() => handleTabSwitch('lecturer')}
           >
             <BookOpen size={18} />
-            <span>Lecturer Portal</span>
+            <span>Faculty Portal</span>
           </button>
         </div>
 
         {error && (
           <div className="student-login-error" role="alert">
-            {error}
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
+            <span>{error}</span>
           </div>
         )}
 
@@ -156,21 +158,24 @@ export default function PortalLogin({ defaultTab }) {
         {activeTab === 'student' && (
           <form onSubmit={handleStudentSubmit} className="student-login-form">
             <div className="student-login-group">
-              <label htmlFor="student-id">Email Address or Student Number</label>
+              <label htmlFor="student-id">Student Number or Email</label>
               <input
                 type="text"
                 id="student-id"
                 className="student-login-input"
                 value={studentIdentifier}
                 onChange={(e) => setStudentIdentifier(e.target.value)}
-                placeholder="e.g. cbrainic@gmail.com or MBS/2026/0001"
+                placeholder="e.g. MBS/2026/0001 or email@domain.com"
                 required
                 autoComplete="username"
               />
             </div>
 
             <div className="student-login-group">
-              <label htmlFor="student-password">Password (Reference Number)</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label htmlFor="student-password">Password</label>
+                <span style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.6)' }}>Reference Number</span>
+              </div>
               <div className="portal-input-password-wrapper">
                 <input
                   type={showStudentPassword ? 'text' : 'password'}
@@ -178,7 +183,7 @@ export default function PortalLogin({ defaultTab }) {
                   className="student-login-input"
                   value={studentPassword}
                   onChange={(e) => setStudentPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   required
                   autoComplete="current-password"
                 />
@@ -194,11 +199,18 @@ export default function PortalLogin({ defaultTab }) {
             </div>
 
             <button type="submit" className="student-login-btn" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In to Student Portal'}
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="btn-spinner" />
+                  <span>Authenticating...</span>
+                </>
+              ) : (
+                <span>Sign In to Student Portal</span>
+              )}
             </button>
 
             <div className="student-login-footer">
-              <Link to="/apply">New student? Apply here.</Link>
+              <Link to="/apply">Prospective student? Submit an application</Link>
             </div>
           </form>
         )}
@@ -207,14 +219,14 @@ export default function PortalLogin({ defaultTab }) {
         {activeTab === 'lecturer' && (
           <form onSubmit={handleLecturerSubmit} className="student-login-form">
             <div className="student-login-group">
-              <label htmlFor="lecturer-email">Academic Email Address</label>
+              <label htmlFor="lecturer-email">Faculty Email Address</label>
               <input
                 type="email"
                 id="lecturer-email"
                 className="student-login-input"
                 value={lecturerEmail}
                 onChange={(e) => setLecturerEmail(e.target.value)}
-                placeholder="lecturer@multitech.ac.ug"
+                placeholder="e.g. lecturer@multitech.ac.ug"
                 required
                 autoComplete="email"
               />
@@ -229,7 +241,7 @@ export default function PortalLogin({ defaultTab }) {
                   className="student-login-input"
                   value={lecturerPassword}
                   onChange={(e) => setLecturerPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   required
                   autoComplete="current-password"
                 />
@@ -245,25 +257,21 @@ export default function PortalLogin({ defaultTab }) {
             </div>
 
             <button type="submit" className="student-login-btn" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In to Lecturer Portal'}
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="btn-spinner" />
+                  <span>Authenticating...</span>
+                </>
+              ) : (
+                <span>Sign In to Faculty Portal</span>
+              )}
             </button>
 
             <div className="student-login-footer">
-              <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                Faculty member needing access assistance?{' '}
-                <Link to="/contact" style={{ color: 'var(--color-accent-yellow, #f0c040)' }}>
-                  Contact ICT Support
-                </Link>
-              </span>
+              <Link to="/contact">Faculty member needing assistance? Contact ICT Support</Link>
             </div>
           </form>
         )}
-
-        {/* Administrative Portal Link */}
-        <div className="portal-admin-link">
-          Administrative staff?
-          <Link to="/admin/login">Access Admin Portal &rarr;</Link>
-        </div>
       </div>
     </div>
   )

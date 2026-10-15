@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { Mail } from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 
@@ -204,13 +205,13 @@ export default function AdminStudents() {
                   <p style={{ margin: '0 0 8px', opacity: 0.8 }}>{studentDetails.profile.student_number} · {studentDetails.profile.programme_name}</p>
                   <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
                     {getStatusBadge(studentDetails.profile.current_status)}
-                    <span style={{ opacity: 0.8, fontSize: '0.875rem' }}>📧 {studentDetails.profile.email}</span>
+                    <span style={{ opacity: 0.8, fontSize: '0.875rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Mail size={14} /> {studentDetails.profile.email}</span>
                   </div>
                 </div>
 
                 {/* Enroll in Term */}
                 <div style={{ background: 'white', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', marginBottom: '2rem' }}>
-                  <h3 style={{ margin: '0 0 1rem', color: '#1e1b4b' }}>➕ Enroll in Academic Term</h3>
+                  <h3 style={{ margin: '0 0 1rem', color: '#1e1b4b' }}>Enroll in Academic Term</h3>
                   {enrollMsg.text && (
                     <div style={{ background: enrollMsg.error ? '#fee2e2' : '#d1fae5', color: enrollMsg.error ? '#991b1b' : '#065f46', padding: '10px 14px', borderRadius: '8px', marginBottom: '1rem' }}>
                       {enrollMsg.text}
@@ -243,7 +244,7 @@ export default function AdminStudents() {
 
                 {/* Term Enrollments + Course Registrations */}
                 <div style={{ background: 'white', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', marginBottom: '2rem' }}>
-                  <h3 style={{ margin: '0 0 1rem', color: '#1e1b4b' }}>📋 Term Enrollments & Course Registrations</h3>
+                  <h3 style={{ margin: '0 0 1rem', color: '#1e1b4b' }}>Term Enrollments & Course Registrations</h3>
                   {studentDetails.enrollments.length === 0 ? (
                     <p style={{ color: '#9ca3af', textAlign: 'center', padding: '1.5rem 0' }}>No term enrollments yet. Use the form above to enroll this student.</p>
                   ) : (
@@ -304,7 +305,7 @@ export default function AdminStudents() {
                             )}
                             <p style={{ fontWeight: 700, color: '#374151', marginBottom: '8px', fontSize: '0.875rem' }}>Add Courses from Programme:</p>
                             {programmeCourses.length === 0 ? (
-                              <p style={{ color: '#9ca3af', fontSize: '0.8rem' }}>No courses found for this programme. Add them in Programmes → 📚 Course Units.</p>
+                              <p style={{ color: '#9ca3af', fontSize: '0.8rem' }}>No courses found for this programme. Add them in Programmes → Course Units.</p>
                             ) : (
                               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px', marginBottom: '12px' }}>
                                 {programmeCourses.map(c => {
@@ -330,7 +331,7 @@ export default function AdminStudents() {
                                       <span>
                                         <strong style={{ color: '#6366f1' }}>{c.course_code}</strong>
                                         <span style={{ color: '#374151', marginLeft: '4px' }}>{c.name}</span>
-                                        {alreadyRegistered && <span style={{ color: '#10b981', marginLeft: '4px' }}>✓</span>}
+                                        {alreadyRegistered && <span style={{ color: '#10b981', marginLeft: '6px', fontSize: '0.75rem', fontWeight: 600 }}>Enrolled</span>}
                                       </span>
                                     </label>
                                   )
@@ -353,7 +354,7 @@ export default function AdminStudents() {
 
                 {/* Financial Ledger */}
                 <div style={{ background: 'white', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
-                  <h3 style={{ margin: '0 0 1rem', color: '#1e1b4b' }}>💰 Financial Ledger (Invoices)</h3>
+                  <h3 style={{ margin: '0 0 1rem', color: '#1e1b4b' }}>Financial Ledger (Invoices)</h3>
                   <table className="admin-table">
                     <thead>
                       <tr>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { FileText, CheckCircle, AlertCircle } from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminApplications.css'
@@ -340,7 +341,7 @@ export default function AdminApplications() {
                       return docs.map((doc, idx) => (
                         <li key={idx}>
                           <a href={doc.web_view_link || doc.url} target="_blank" rel="noreferrer">
-                            <span className="doc-icon">📄</span>
+                            <span className="doc-icon"><FileText size={16} /></span>
                             <span className="doc-name">{doc.name}</span>
                             <span className="doc-type">{doc.type}</span>
                           </a>
@@ -372,11 +373,13 @@ export default function AdminApplications() {
                         className="button button-primary"
                         style={{width: '100%'}}
                       >
-                        ✓ Mark as Paid
+                        Mark as Paid
                       </button>
                     </div>
                   ) : (
-                    <p style={{color: '#2e7d32', fontWeight: 600, marginTop: '0.5rem'}}>✓ Payment verified</p>
+                    <p style={{color: '#2e7d32', fontWeight: 600, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '6px'}}>
+                      <CheckCircle size={15} /> Payment verified
+                    </p>
                   )}
                 </div>
 
@@ -384,8 +387,8 @@ export default function AdminApplications() {
                   <h3>Programme Choices</h3>
 
                   {selectedApp.payment_status !== 'paid' ? (
-                    <div style={{padding: '10px', background: '#fff3e0', borderRadius: '6px', color: '#e65100'}}>
-                      ⚠ Application fee must be paid before you can evaluate choices.
+                    <div style={{padding: '10px', background: '#fff3e0', borderRadius: '6px', color: '#e65100', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                      <AlertCircle size={16} /> Application fee must be paid before you can evaluate choices.
                     </div>
                   ) : (
                     <>

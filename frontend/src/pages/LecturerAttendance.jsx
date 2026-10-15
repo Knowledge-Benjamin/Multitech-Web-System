@@ -2,6 +2,23 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts'
 import axios from 'axios'
+import {
+  ArrowLeft,
+  Radio,
+  Clock,
+  MapPin,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  Play,
+  Square,
+  Navigation,
+  Bluetooth,
+  Activity,
+  QrCode,
+  Info,
+  Loader2
+} from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import QRCode from 'qrcode'
 import './LecturerAttendance.css'
@@ -92,7 +109,6 @@ export default function LecturerAttendance() {
         bleOk = true
       } catch (err) {
         if (err.name === 'NotFoundError') {
-          // User dismissed picker — permission is still accessible
           setBleStatus('granted')
           bleOk = true
         } else {
@@ -111,7 +127,6 @@ export default function LecturerAttendance() {
     }
     setError('')
 
-    // If permissions not yet granted, request them now
     let ready = permissionsReady
     if (!ready) {
       const { bleOk, gpsOk } = await getPermissions()
@@ -127,7 +142,6 @@ export default function LecturerAttendance() {
       ready = true
     }
 
-    // Start the session
     try {
       const res = await axios.post(
         `${API}/attendance/start`,
@@ -144,7 +158,6 @@ export default function LecturerAttendance() {
       setError(err.response?.data?.error || 'Failed to start session.')
     }
   }
-
 
   const connectSSE = useCallback((sessionId) => {
     if (eventSourceRef.current) eventSourceRef.current.close()
@@ -195,10 +208,9 @@ export default function LecturerAttendance() {
 
   const formatTime = (t) => t ? t.substring(0, 5) : ''
 
-  // Visual UI aid only (backend does actual strict enforcement)
   const getScheduleState = (s) => {
     const now = new Date()
-    const currentDay = DAYS[now.getDay() === 0 ? 6 : now.getDay() - 1] // map JS getDay() to Monday-start array
+    const currentDay = DAYS[now.getDay() === 0 ? 6 : now.getDay() - 1]
     if (s.day_of_week !== currentDay) return { text: 'Not Today', color: '#64748b', bg: 'transparent', border: '#334155' }
 
     const currentMins = now.getHours() * 60 + now.getMinutes()
@@ -218,25 +230,34 @@ export default function LecturerAttendance() {
       <div className="la-left">
         <div style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
           <Link to="/lecturer/dashboard" style={{ color: '#94a3b8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}>
-            <span>◀</span> Back to Dashboard
+            <ArrowLeft size={16} /> Back to Dashboard
           </Link>
         </div>
 
         <div className="la-card la-setup-card">
-          <h2 className="la-title">📡 Attendance Session</h2>
+          <h2 className="la-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Radio size={22} style={{ color: '#60a5fa' }} />
+            Attendance Session
+          </h2>
           <p className="la-subtitle">
             Select one of your scheduled classes to begin a live BLE + GPS + QR attendance session.
           </p>
 
-          {displayError && <div className="la-error">{displayError}</div>}
+          {displayError && (
+            <div className="la-error" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertCircle size={16} style={{ flexShrink: 0 }} />
+              <span>{displayError}</span>
+            </div>
+          )}
 
           {/* Schedule Selector */}
           <label className="la-label">Your Scheduled Classes</label>
           {loadingSchedules ? (
             <p className="la-muted">Loading your schedules...</p>
           ) : schedules.length === 0 ? (
-            <div className="la-no-schedules">
-              ℹ️ You have no class schedules assigned. Ask an administrator to set up the timetable.
+            <div className="la-no-schedules" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Info size={16} style={{ flexShrink: 0 }} />
+              <span>You have no class schedules assigned. Ask an administrator to set up the timetable.</span>
             </div>
           ) : (
             <div className="la-schedule-list">
@@ -253,13 +274,18 @@ export default function LecturerAttendance() {
                         onClick={() => !session && setSelectedScheduleId(String(s.id))}
                       >
                         <div className="la-sched-course">
-                          <strong>{s.course_code}</strong> — {s.course_name}
+                          <strong>{s.course_code}</strong> &mdash; {s.course_name}
                         </div>
                         <div className="la-sched-meta">
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span>
-                              🕒 {formatTime(s.start_time)}–{formatTime(s.end_time)} &nbsp;|&nbsp;
-                              📍 {s.room_name}{s.building ? `, ${s.building}` : ''}
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <Clock size={12} /> {formatTime(s.start_time)}&ndash;{formatTime(s.end_time)}
+                              </span>
+                              <span>&bull;</span>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <MapPin size={12} /> {s.room_name}{s.building ? `, ${s.building}` : ''}
+                              </span>
                             </span>
                             {(() => {
                               const st = getScheduleState(s)
@@ -289,15 +315,19 @@ export default function LecturerAttendance() {
                 {(gpsStatus !== 'idle' || bleStatus !== 'idle') && (
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                     <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '1rem' }}>📍</div>
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4px' }}>
+                        <Navigation size={18} style={{ color: gpsStatus === 'granted' ? '#4ade80' : gpsStatus === 'denied' ? '#f87171' : '#facc15' }} />
+                      </div>
                       <div style={{ fontSize: '0.7rem', fontWeight: 600, color: gpsStatus === 'granted' ? '#4ade80' : gpsStatus === 'denied' ? '#f87171' : '#facc15' }}>
-                        {gpsStatus === 'checking' ? 'Checking...' : gpsStatus === 'granted' ? '✓ GPS Ready' : '✗ GPS Denied'}
+                        {gpsStatus === 'checking' ? 'Checking...' : gpsStatus === 'granted' ? 'GPS Ready' : 'GPS Denied'}
                       </div>
                     </div>
                     <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '1rem' }}>🔵</div>
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4px' }}>
+                        <Bluetooth size={18} style={{ color: (bleStatus === 'granted' || bleStatus === 'unavailable') ? '#4ade80' : bleStatus === 'denied' ? '#f87171' : '#facc15' }} />
+                      </div>
                       <div style={{ fontSize: '0.7rem', fontWeight: 600, color: (bleStatus === 'granted' || bleStatus === 'unavailable') ? '#4ade80' : bleStatus === 'denied' ? '#f87171' : '#facc15' }}>
-                        {bleStatus === 'checking' ? 'Checking...' : bleStatus === 'granted' ? '✓ BT Ready' : bleStatus === 'unavailable' ? '~ BT N/A' : '✗ BT Denied'}
+                        {bleStatus === 'checking' ? 'Checking...' : bleStatus === 'granted' ? 'Bluetooth Ready' : bleStatus === 'unavailable' ? 'Bluetooth N/A' : 'Bluetooth Denied'}
                       </div>
                     </div>
                   </div>
@@ -310,37 +340,65 @@ export default function LecturerAttendance() {
                   style={{
                     opacity: (gpsStatus === 'checking' || bleStatus === 'checking') ? 0.7 : 1,
                     cursor: (gpsStatus === 'checking' || bleStatus === 'checking') ? 'wait' : 'pointer',
-                    animation: !selectedScheduleId ? 'none' : undefined
+                    animation: !selectedScheduleId ? 'none' : undefined,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
                   }}
                 >
-                  {(gpsStatus === 'checking' || bleStatus === 'checking')
-                    ? '⏳ Requesting Permissions...'
-                    : !selectedScheduleId
-                      ? '← Select a class above first'
-                      : '▶ Start Session'}
+                  {(gpsStatus === 'checking' || bleStatus === 'checking') ? (
+                    <>
+                      <Loader2 size={16} className="spinner" />
+                      <span>Requesting Permissions...</span>
+                    </>
+                  ) : !selectedScheduleId ? (
+                    <span>Select a class above first</span>
+                  ) : (
+                    <>
+                      <Play size={16} />
+                      <span>Start Session</span>
+                    </>
+                  )}
                 </button>
               </>
-
-
             ) : (
               <button
                 className="la-btn la-btn-end"
                 onClick={endSession}
                 disabled={meshRunning}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
-                {meshRunning ? '⚙ Running Mesh Analysis...' : '⏹ End Session & Finalise'}
+                {meshRunning ? (
+                  <>
+                    <Activity size={16} />
+                    <span>Running Mesh Analysis...</span>
+                  </>
+                ) : (
+                  <>
+                    <Square size={16} />
+                    <span>End Session &amp; Finalise</span>
+                  </>
+                )}
               </button>
             )}
           </div>
-
         </div>
 
         {/* Active Session Info */}
         {session && scheduleInfo && (
           <div className="la-card la-active-card">
-            <div className="la-badge la-badge-live">● SESSION ACTIVE</div>
-            <h4 className="la-active-course">{scheduleInfo.courseCode} — {scheduleInfo.courseName}</h4>
-            <p className="la-active-meta">📍 {scheduleInfo.roomName} &nbsp;|&nbsp; 📅 {scheduleInfo.dayOfWeek}</p>
+            <div className="la-badge la-badge-live">SESSION ACTIVE</div>
+            <h4 className="la-active-course">{scheduleInfo.courseCode} &mdash; {scheduleInfo.courseName}</h4>
+            <p className="la-active-meta" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <MapPin size={13} /> {scheduleInfo.roomName}
+              </span>
+              <span>&bull;</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <Calendar size={13} /> {scheduleInfo.dayOfWeek}
+              </span>
+            </p>
             <p className="la-active-hint">
               Keep this browser tab open. The QR code updates automatically every 5 seconds.
             </p>
@@ -350,7 +408,9 @@ export default function LecturerAttendance() {
         {/* Mesh Results */}
         {meshDone && (
           <div className="la-card la-result-card">
-            <div className="la-result-icon">✅</div>
+            <div className="la-result-icon" style={{ display: 'flex', justifyContent: 'center' }}>
+              <CheckCircle2 size={36} style={{ color: '#4ade80' }} />
+            </div>
             <h3>Analysis Complete</h3>
             <p className="la-verified-count">
               <span>{verifiedCount}</span>
@@ -368,8 +428,8 @@ export default function LecturerAttendance() {
           <ul className="la-legend">
             <li><span className="dot dot-blue"></span> Open the student mobile app</li>
             <li><span className="dot dot-green"></span> Enable Bluetooth + GPS</li>
-            <li><span className="dot dot-orange"></span> Scan this QR code + verify fingerprint</li>
-            <li><span className="dot dot-purple"></span> Mesh sync happens in background</li>
+            <li><span className="dot dot-orange"></span> Scan this QR code + verify biometric</li>
+            <li><span className="dot dot-purple"></span> Mesh sync executes in background</li>
           </ul>
         </div>
       </div>
@@ -379,14 +439,16 @@ export default function LecturerAttendance() {
         {meshDone ? (
           <div className="la-mesh-done-state" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '2rem 2rem 0 2rem' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>✅</div>
+              <div style={{ marginBottom: '0.5rem' }}>
+                <CheckCircle2 size={48} style={{ color: '#4ade80' }} />
+              </div>
               <h2>Session Finalized</h2>
               <p>{verifiedCount} students successfully verified via BLE Mesh.</p>
             </div>
             
             <div style={{ flex: 1, minHeight: 0, padding: '1rem', marginTop: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
-              <h3 style={{ margin: '0 0 1rem 0', color: '#94a3b8', fontSize: '0.9rem', textAlign: 'left', paddingLeft: '1rem' }}>
-                📡 Spatial Mesh Heatmap
+              <h3 style={{ margin: '0 0 1rem 0', color: '#94a3b8', fontSize: '0.9rem', textAlign: 'left', paddingLeft: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Activity size={16} /> Spatial Mesh Heatmap
               </h3>
               <ResponsiveContainer width="100%" height="90%">
                 <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
@@ -408,7 +470,9 @@ export default function LecturerAttendance() {
           </div>
         ) : !session ? (
           <div className="la-qr-placeholder">
-            <div className="la-qr-idle-icon">📡</div>
+            <div className="la-qr-idle-icon" style={{ display: 'flex', justifyContent: 'center' }}>
+              <QrCode size={48} style={{ color: '#64748b' }} />
+            </div>
             <p>Select a class and start a session to generate the live QR code</p>
           </div>
         ) : (
@@ -436,14 +500,14 @@ export default function LecturerAttendance() {
             </div>
 
             <div className="la-session-info">
-              <span className="la-badge la-badge-live">● LIVE</span>
+              <span className="la-badge la-badge-live">LIVE</span>
               <span className="la-window-info">
-                Window #{windowIndex} &nbsp;·&nbsp; Token: <code>{qrToken}</code>
+                Window #{windowIndex} &bull; Token: <code>{qrToken}</code>
               </span>
             </div>
 
             <div className="la-ble-notice">
-              📶 Remind students: Bluetooth AND GPS must be active before scanning
+              Remind students: Bluetooth and GPS must be active on devices before scanning
             </div>
           </div>
         )}

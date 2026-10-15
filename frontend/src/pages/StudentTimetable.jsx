@@ -1,17 +1,19 @@
-import { useApiQuery } from '../hooks/useApiQuery'
 import StudentSidebar from '../components/StudentSidebar'
+import { useApiQuery } from '../hooks/useApiQuery'
+import { Clock, MapPin, User, Calendar, Inbox } from 'lucide-react'
+import './AdminDashboard.css'
 
 const API = import.meta.env.VITE_API_URL
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 function formatTime(timeStr) {
   if (!timeStr) return ''
   const [h, m] = timeStr.split(':')
-  const date = new Date()
-  date.setHours(parseInt(h, 10))
-  date.setMinutes(parseInt(m, 10))
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const hour = parseInt(h, 10)
+  const ampm = hour >= 12 ? 'PM' : 'AM'
+  const hour12 = hour % 12 || 12
+  return `${hour12}:${m} ${ampm}`
 }
 
 export default function StudentTimetable() {
@@ -21,7 +23,7 @@ export default function StudentTimetable() {
   })
 
   const schedules = resData?.data || []
-  const error = apiError ? 'Failed to load your timetable.' : ''
+  const error = apiError ? 'Failed to load class schedule.' : ''
 
   // Group schedules by day of week
   const grouped = DAYS.reduce((acc, day) => {
@@ -30,64 +32,73 @@ export default function StudentTimetable() {
   }, {})
 
   return (
-    <div className="scope-studenttimetable admin-layout">
+    <div className="scope-studenttimetable scope-admindashboard admin-layout fade-in-section is-visible">
       <StudentSidebar />
-      <main className="admin-content student-dashboard-main">
-        <div className="timetable-container" style={{ padding: '24px' }}>
-          <header style={{ marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '1.8rem', color: '#1e1b4b', marginBottom: '8px' }}>My Class Timetable</h2>
-            <p style={{ color: '#6b7280' }}>Your weekly schedule based on your registered courses.</p>
-          </header>
+      <main className="admin-content" style={{ background: 'var(--color-background)' }}>
+        <header className="content-header" style={{ marginBottom: '2rem' }}>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-secondary)', margin: '0 0 0.25rem 0' }}>Class Timetable</h1>
+          <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>Weekly lecture schedule, rooms, and assigned faculty</p>
+        </header>
 
-          {error && <div className="message-error">{error}</div>}
+        {error && <div className="message-error" style={{ marginBottom: '1.5rem' }}>{error}</div>}
 
-          {isLoading ? (
-            <div className="loading-spinner"><div className="spinner"></div></div>
-          ) : schedules.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px', border: '1px solid #e5e7eb' }}>
-              <span style={{ fontSize: '3rem', display: 'block', marginBottom: '16px' }}>📅</span>
-              <h3 style={{ color: '#1e1b4b', marginBottom: '8px' }}>No Classes Scheduled</h3>
-              <p style={{ color: '#6b7280' }}>You do not have any classes scheduled for your registered courses this term.</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {DAYS.map(day => {
-                const dayClasses = grouped[day]
-                if (dayClasses.length === 0) return null
+        {isLoading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading your class schedule...</p>
+          </div>
+        ) : schedules.length === 0 ? (
+          <div className="empty-state" style={{ padding: '3.5rem', background: 'white', borderRadius: '16px', textAlign: 'center' }}>
+            <Inbox size={40} style={{ color: 'var(--color-text-secondary)', marginBottom: '1rem' }} />
+            <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-secondary)' }}>No Scheduled Classes</h3>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>There are no scheduled lectures found for your registered courses this semester.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {DAYS.map(day => {
+              const dayClasses = grouped[day]
+              if (dayClasses.length === 0) return null
 
-                return (
-                  <div key={day} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                    <div style={{ background: '#f8fafc', padding: '12px 20px', borderBottom: '1px solid #e5e7eb', fontWeight: 600, color: '#334155', fontSize: '1.1rem' }}>
-                      {day}
-                    </div>
-                    <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      {dayClasses.map(cls => (
-                        <div key={cls.id} style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                          <div style={{ width: '140px', flexShrink: 0, fontWeight: 600, color: '#6366f1' }}>
-                            {formatTime(cls.start_time)} - {formatTime(cls.end_time)}
+              return (
+                <div key={day} style={{ background: 'white', borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+                  <div style={{ background: '#f8fafc', padding: '12px 20px', borderBottom: '1px solid #e2e8f0', fontWeight: 700, color: 'var(--color-secondary)', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Calendar size={16} className="text-blue" />
+                    <span>{day}</span>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500, marginLeft: 'auto' }}>
+                      {dayClasses.length} {dayClasses.length === 1 ? 'Session' : 'Sessions'}
+                    </span>
+                  </div>
+                  <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {dayClasses.map(cls => (
+                      <div key={cls.id} style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
+                        <div style={{ width: '150px', flexShrink: 0, fontWeight: 700, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
+                          <Clock size={15} />
+                          {formatTime(cls.start_time)} – {formatTime(cls.end_time)}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 700, color: 'var(--color-text)', marginBottom: '4px', fontSize: '0.95rem' }}>
+                            <span style={{ fontFamily: 'monospace', color: 'var(--color-primary)', marginRight: '8px' }}>{cls.course_code}</span>
+                            {cls.course_name}
                           </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '4px' }}>
-                              {cls.course_code} — {cls.course_name}
-                            </div>
-                            <div style={{ display: 'flex', gap: '16px', fontSize: '0.85rem', color: '#64748b' }}>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                📍 {cls.room_name} {cls.building ? `(${cls.building})` : ''}
+                          <div style={{ display: 'flex', gap: '20px', fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <MapPin size={14} /> Room {cls.room_name} {cls.building ? `(${cls.building})` : ''}
+                            </span>
+                            {cls.lecturer_name && (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <User size={14} /> {cls.lecturer_name}
                               </span>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                👨‍🏫 {cls.lecturer_name}
-                              </span>
-                            </div>
+                            )}
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </main>
     </div>
   )

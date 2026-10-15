@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import {
+  BookOpen, GraduationCap, CreditCard, Clock, CheckSquare,
+  ArrowRight, ShieldCheck, AlertCircle, CheckCircle2, User, FileText
+} from 'lucide-react'
 import api from '../services/api'
 import StudentSidebar from '../components/StudentSidebar'
 import { useApiQuery } from '../hooks/useApiQuery'
+import './AdminDashboard.css'
 import './StudentDashboard.css'
 
 const API = import.meta.env.VITE_API_URL
@@ -47,40 +53,67 @@ export default function StudentDashboard() {
       if (res.data.success) {
         const updatedUser = { ...studentUser, must_change_password: false }
         localStorage.setItem('studentUser', JSON.stringify(updatedUser))
-        setPasswordMessage('Password changed successfully. You can continue using the portal.')
-        setTimeout(() => setShowPasswordModal(false), 2000)
+        setPasswordMessage('Password changed successfully.')
+        setTimeout(() => setShowPasswordModal(false), 1800)
       } else {
-        setPasswordError(res.data.message || 'Unable to change password')
+        setPasswordError(res.data.message || 'Unable to update password')
       }
     } catch (error) {
-      setPasswordError(error.response?.data?.message || 'Unable to change password')
+      setPasswordError(error.response?.data?.message || 'Unable to update password')
     } finally {
       setChangingPassword(false)
     }
   }
 
+  const studentName = data?.profile?.first_name
+    ? `${data.profile.first_name} ${data.profile.last_name}`
+    : (studentUser?.name || 'Student')
+  const firstName = studentName.split(' ')[0]
+  const studentNumber = data?.profile?.student_number || studentUser?.student_number || data?.profile?.reference_number || 'Enrolled'
+  const enrollment = data?.currentEnrollment
+  const financials = data?.financials
+
   return (
-    <div className="scope-studentdashboard admin-layout">
+    <div className="scope-studentdashboard scope-admindashboard admin-layout fade-in-section is-visible">
       <StudentSidebar />
+
       <main className="admin-content student-dashboard-main">
-        <header className="dashboard-header">
-          <h1>Welcome back, {studentUser?.name?.split(' ')[0] || 'Student'}</h1>
-          <p>Here's what's happening with your academics today.</p>
+        {/* Modern Hero Section matching Admin */}
+        <header className="dashboard-hero fade-in-item">
+          <div className="hero-content">
+            <h1>Welcome back, {firstName}</h1>
+            <p>
+              Student Number: <strong>{studentNumber}</strong>
+              {enrollment && (
+                <> &bull; {enrollment.term_name} &bull; Year {enrollment.study_year}, Sem {enrollment.study_semester}</>
+              )}
+            </p>
+          </div>
+          <div className="hero-decoration"></div>
         </header>
 
+        {/* First-Login Password Change Modal */}
         {showPasswordModal && (
           <div className="modal-overlay">
             <div className="modal-content">
               <h3>Update Your Password</h3>
-              <p>For your security, please change your password before continuing. Your current password is your reference number.</p>
+              <p>For your security, please update your initial password before accessing your student records.</p>
               
-              {passwordError && <div className="message-error" style={{ marginBottom: '1rem' }}>{passwordError}</div>}
-              {passwordMessage && <div className="message-success" style={{ marginBottom: '1rem' }}>{passwordMessage}</div>}
+              {passwordError && (
+                <div className="message-error" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <AlertCircle size={16} /> {passwordError}
+                </div>
+              )}
+              {passwordMessage && (
+                <div className="message-success" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <CheckCircle2 size={16} /> {passwordMessage}
+                </div>
+              )}
               
               <form onSubmit={handlePasswordChange} className="password-form">
                 <input 
                   type="password" 
-                  placeholder="Current password" 
+                  placeholder="Current password (Reference number)" 
                   className="password-input"
                   value={passwordForm.oldPassword} 
                   onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })} 
@@ -103,7 +136,7 @@ export default function StudentDashboard() {
                   required 
                 />
                 <button type="submit" className="btn-update" disabled={changingPassword}>
-                  {changingPassword ? 'Updating Securely...' : 'Update Password'}
+                  {changingPassword ? 'Updating Password...' : 'Save Password'}
                 </button>
               </form>
             </div>
@@ -111,141 +144,298 @@ export default function StudentDashboard() {
         )}
 
         {isLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
-            <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(0, 82, 204, 0.1)', borderLeftColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading student records...</p>
           </div>
         ) : data?.isApplicantOnly ? (
-          <div className="student-grid" style={{ gridTemplateColumns: '1fr' }}>
-            <div className="student-card">
-              <div className="card-header">
-                <div className="card-icon icon-blue">📄</div>
-                <h3>Application Status</h3>
-              </div>
-              <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <span style={{ fontSize: '0.9rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Application Reference</span>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#0f172a', marginTop: '0.25rem' }}>{data.applicationInfo?.reference_number}</div>
-                  </div>
-                  <div>
-                    <span className={`status-badge status-${data.applicationInfo?.status}`}>{data.applicationInfo?.status?.toUpperCase()}</span>
+          /* Applicant View */
+          <div className="recent-section">
+            <div className="section-header">
+              <h2>Application Overview</h2>
+              <span className={`status-pill status-${data.applicationInfo?.status || 'submitted'}`}>
+                {data.applicationInfo?.status?.toUpperCase()}
+              </span>
+            </div>
+
+            <div style={{ background: '#ffffff', borderRadius: '16px', padding: '1.75rem', border: '1px solid rgba(0,0,0,0.06)', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                <div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Reference Number</span>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)', marginTop: '0.25rem' }}>
+                    {data.applicationInfo?.reference_number}
                   </div>
                 </div>
-              </div>
-
-              <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>Your Programme Choices</h4>
-              <div style={{ display: 'grid', gap: '1rem' }}>
-                {data.applicationChoices?.map((choice) => (
-                  <div key={choice.id} style={{ padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: '600', color: '#0f172a' }}>{choice.preference_order}. {choice.programme_name}</div>
-                      <div style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '0.25rem' }}>
-                        Campus: <strong>{choice.campus_name || 'Main Campus'}</strong>
-                      </div>
-                      {choice.reviewer_notes && (
-                        <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#475569', background: '#f1f5f9', padding: '0.5rem', borderRadius: '4px' }}>
-                          <em>Note:</em> {choice.reviewer_notes}
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <span className={`status-badge status-${choice.status}`}>{choice.status.toUpperCase()}</span>
-                    </div>
+                <div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Intake</span>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-text)', marginTop: '0.25rem' }}>
+                    {data.applicationInfo?.intake_name || 'General Intake'}
                   </div>
-                ))}
-                {!data.applicationChoices?.length && <p>No choices found.</p>}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="student-grid">
-            
-            {/* Profile Widget */}
-            <div className="student-card">
-              <div className="card-header">
-                <div className="card-icon icon-blue">👤</div>
-                <h3>Student Profile</h3>
-              </div>
-              {data && data.profile ? (
-                <div className="detail-list">
-                  <div className="detail-item">
-                    <span className="detail-label">Full Name</span>
-                    <span className="detail-value">{data.profile.first_name} {data.profile.last_name}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Programme</span>
-                    <span className="detail-value">{data.profile.programme_name || 'N/A'}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Email</span>
-                    <span className="detail-value">{data.profile.email}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Student ID</span>
-                    <span className="detail-value" style={{ fontFamily: 'monospace', letterSpacing: '1px' }}>
-                      {data.profile.reference_number || studentUser.username}
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Payment Status</span>
+                  <div style={{ marginTop: '0.25rem' }}>
+                    <span className={`status-pill status-${data.applicationInfo?.payment_status === 'paid' ? 'admitted' : 'pending'}`}>
+                      {data.applicationInfo?.payment_status?.toUpperCase() || 'UNPAID'}
                     </span>
                   </div>
                 </div>
-              ) : (
-                <p className="text-muted">Profile data unavailable.</p>
-              )}
-            </div>
-
-            {/* Academic Status Widget */}
-            <div className="student-card">
-              <div className="card-header">
-                <div className="card-icon icon-purple">🎓</div>
-                <h3>Academic Status</h3>
               </div>
-              {data && data.currentEnrollment ? (
-                <div className="detail-list">
-                  <div className="detail-item">
-                    <span className="detail-label">Status</span>
-                    <div><span className="status-badge">{data.currentEnrollment.progression_status}</span></div>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Current Academic Year</span>
-                    <span className="detail-value">{data.currentEnrollment.year_name}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Current Semester</span>
-                    <span className="detail-value">{data.currentEnrollment.term_name}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Progression Level</span>
-                    <span className="detail-value">Year {data.currentEnrollment.study_year} • Semester {data.currentEnrollment.study_semester}</span>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted">No active enrollment for the current term.</p>
-              )}
             </div>
 
-            {/* Financial Summary Widget */}
-            <div className="student-card">
-              <div className="card-header">
-                <div className="card-icon icon-green">💳</div>
-                <h3>Financial Overview</h3>
-              </div>
-              {data && data.financials ? (
-                <div>
-                  <span className="detail-label">Total Outstanding Balance</span>
-                  <div className="financial-amount">
-                    <span className="financial-currency">{data.financials.currency}</span>
-                    {Number(data.financials.totalDue).toLocaleString()}
-                  </div>
-                  <p className="text-muted" style={{ fontSize: '0.9rem', marginTop: '1rem', lineHeight: 1.5 }}>
-                    Please ensure your fees are cleared before the examination period begins to avoid any inconveniences.
-                  </p>
-                </div>
-              ) : (
-                <p className="text-muted">Financial data unavailable.</p>
-              )}
+            <div className="section-header">
+              <h2>Programme Preferences</h2>
             </div>
-
+            <div className="table-container">
+              <table className="modern-table">
+                <thead>
+                  <tr>
+                    <th>Preference</th>
+                    <th>Programme</th>
+                    <th>Campus</th>
+                    <th>Decision</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.applicationChoices?.map((choice) => (
+                    <tr key={choice.id}>
+                      <td>
+                        <strong>Choice {choice.preference_order}</strong>
+                      </td>
+                      <td>
+                        <strong>{choice.programme_name}</strong>
+                      </td>
+                      <td>
+                        <span>{choice.campus_name || 'Main Campus'}</span>
+                      </td>
+                      <td>
+                        <span className={`status-pill status-${choice.status}`}>
+                          {choice.status?.toUpperCase()}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {!data.applicationChoices?.length && (
+                    <tr>
+                      <td colSpan="4" className="empty-state">
+                        <p>No programme choices recorded.</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
+        ) : (
+          /* Full Enrolled Student View */
+          <>
+            {/* Top Stat Cards matching Admin Dashboard */}
+            <div className="stats-grid fade-in-section is-visible">
+              <Link to="/student/courses" className="stat-card fade-in-item">
+                <div className="stat-icon-wrapper bg-blue">
+                  <BookOpen size={24} className="text-blue" />
+                </div>
+                <div className="stat-content">
+                  <h3>Enrolled Programme</h3>
+                  <div className="stat-value-row">
+                    <p className="stat-number" style={{ fontSize: '1.25rem', lineHeight: '1.3' }}>
+                      {data?.profile?.programme_name || 'Active Study'}
+                    </p>
+                  </div>
+                  <span className="trend positive" style={{ marginTop: '0.35rem' }}>
+                    <ShieldCheck size={14} /> Registered
+                  </span>
+                </div>
+              </Link>
+
+              <Link to="/student/courses" className="stat-card fade-in-item">
+                <div className="stat-icon-wrapper bg-indigo">
+                  <GraduationCap size={24} className="text-indigo" />
+                </div>
+                <div className="stat-content">
+                  <h3>Academic Standing</h3>
+                  <div className="stat-value-row">
+                    <p className="stat-number">
+                      {enrollment ? `Year ${enrollment.study_year}` : 'Year 1'}
+                    </p>
+                    <span className="trend positive">
+                      {enrollment ? `Sem ${enrollment.study_semester}` : 'Sem 1'}
+                    </span>
+                  </div>
+                  <span className="trend neutral" style={{ marginTop: '0.35rem' }}>
+                    {enrollment?.progression_status || 'Good Standing'}
+                  </span>
+                </div>
+              </Link>
+
+              <Link to="/student/finances" className="stat-card fade-in-item">
+                <div className="stat-icon-wrapper bg-emerald">
+                  <CreditCard size={24} className="text-emerald" />
+                </div>
+                <div className="stat-content">
+                  <h3>Tuition &amp; Fees</h3>
+                  <div className="stat-value-row">
+                    <p className="stat-number" style={{ fontSize: '1.35rem' }}>
+                      {financials ? `${financials.currency} ${Number(financials.totalDue).toLocaleString()}` : 'Cleared'}
+                    </p>
+                  </div>
+                  <span className={`trend ${financials?.totalDue > 0 ? 'neutral' : 'positive'}`} style={{ marginTop: '0.35rem' }}>
+                    {financials?.totalDue > 0 ? 'Balance Outstanding' : 'Fees Cleared'}
+                  </span>
+                </div>
+              </Link>
+
+              <Link to="/student/timetable" className="stat-card fade-in-item">
+                <div className="stat-icon-wrapper bg-amber">
+                  <Clock size={24} className="text-amber" />
+                </div>
+                <div className="stat-content">
+                  <h3>Schedules</h3>
+                  <div className="stat-value-row">
+                    <p className="stat-number" style={{ fontSize: '1.2rem' }}>Class Timetable</p>
+                  </div>
+                  <span className="trend neutral" style={{ marginTop: '0.35rem' }}>
+                    Active Term Schedules
+                  </span>
+                </div>
+              </Link>
+            </div>
+
+            {/* Main Content Grid: Student Record & Financial Summary */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+              
+              {/* Profile Card */}
+              <div style={{ background: '#ffffff', borderRadius: '16px', padding: '1.75rem', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--color-border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <div className="stat-icon-wrapper bg-blue" style={{ width: '40px', height: '40px', borderRadius: '10px' }}>
+                      <User size={20} className="text-blue" />
+                    </div>
+                    <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--color-secondary)' }}>Student Identification</h3>
+                  </div>
+                  <Link to="/student/profile" className="btn-text" style={{ fontSize: '0.85rem' }}>
+                    Full Profile <ArrowRight size={14} />
+                  </Link>
+                </div>
+
+                <div style={{ display: 'grid', gap: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Full Legal Name</span>
+                    <strong style={{ fontSize: '0.95rem', color: 'var(--color-text)' }}>{studentName}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Student Number</span>
+                    <strong style={{ fontFamily: 'monospace', letterSpacing: '0.5px', color: 'var(--color-primary)' }}>
+                      {studentNumber}
+                    </strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Institutional Email</span>
+                    <span style={{ fontSize: '0.9rem', color: 'var(--color-text)' }}>{data?.profile?.email || studentUser.email}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Academic Programme</span>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)', textAlign: 'right', maxWidth: '60%' }}>
+                      {data?.profile?.programme_name || 'Enrolled Programme'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Enrollment & Finance Status */}
+              <div style={{ background: '#ffffff', borderRadius: '16px', padding: '1.75rem', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--color-border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <div className="stat-icon-wrapper bg-emerald" style={{ width: '40px', height: '40px', borderRadius: '10px' }}>
+                      <FileText size={20} className="text-emerald" />
+                    </div>
+                    <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--color-secondary)' }}>Current Academic Session</h3>
+                  </div>
+                  <Link to="/student/finances" className="btn-text" style={{ fontSize: '0.85rem' }}>
+                    Invoices <ArrowRight size={14} />
+                  </Link>
+                </div>
+
+                {enrollment ? (
+                  <div style={{ display: 'grid', gap: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Academic Term</span>
+                      <strong style={{ fontSize: '0.95rem', color: 'var(--color-text)' }}>{enrollment.term_name}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Academic Year</span>
+                      <span style={{ fontSize: '0.9rem', color: 'var(--color-text)' }}>{enrollment.year_name}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Progression Level</span>
+                      <span className="status-pill status-admitted">
+                        Year {enrollment.study_year} &bull; Semester {enrollment.study_semester}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Fees Status</span>
+                      <span className={`status-pill status-${financials?.totalDue > 0 ? 'pending' : 'admitted'}`}>
+                        {financials?.totalDue > 0 ? 'Balance Pending' : 'Cleared for Examinations'}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
+                    No active term enrollment found for the current academic session.
+                  </p>
+                )}
+              </div>
+
+            </div>
+
+            {/* Quick Links Section */}
+            <section className="recent-section">
+              <div className="section-header">
+                <h2>Quick Portal Services</h2>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                <Link to="/student/finances" className="stat-card" style={{ padding: '1.25rem' }}>
+                  <div className="stat-icon-wrapper bg-emerald" style={{ width: '44px', height: '44px' }}>
+                    <CreditCard size={20} className="text-emerald" />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: 'var(--color-text)' }}>Financial Ledger</h4>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>View invoices &amp; payments</span>
+                  </div>
+                </Link>
+
+                <Link to="/student/courses" className="stat-card" style={{ padding: '1.25rem' }}>
+                  <div className="stat-icon-wrapper bg-blue" style={{ width: '44px', height: '44px' }}>
+                    <BookOpen size={20} className="text-blue" />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: 'var(--color-text)' }}>Course Materials</h4>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Syllabus &amp; lecture notes</span>
+                  </div>
+                </Link>
+
+                <Link to="/student/timetable" className="stat-card" style={{ padding: '1.25rem' }}>
+                  <div className="stat-icon-wrapper bg-amber" style={{ width: '44px', height: '44px' }}>
+                    <Clock size={20} className="text-amber" />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: 'var(--color-text)' }}>Timetable</h4>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Class &amp; room schedule</span>
+                  </div>
+                </Link>
+
+                <Link to="/student/exams" className="stat-card" style={{ padding: '1.25rem' }}>
+                  <div className="stat-icon-wrapper bg-indigo" style={{ width: '44px', height: '44px' }}>
+                    <ShieldCheck size={20} className="text-indigo" />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: 'var(--color-text)' }}>Exams &amp; PIN</h4>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Access exam clearance</span>
+                  </div>
+                </Link>
+              </div>
+            </section>
+          </>
         )}
       </main>
     </div>

@@ -106,7 +106,7 @@ export default function AdminTimetable() {
       <main className="admin-content" style={{ background: 'var(--color-background)', padding: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
-            <h1 style={{ margin: 0 }}>📅 Timetable Management</h1>
+            <h1 style={{ margin: 0 }}>Timetable Management</h1>
             <p style={{ margin: '0.3rem 0 0 0', color: '#64748b' }}>
               Configure rooms and assign class schedules for each academic term.
             </p>
@@ -124,7 +124,7 @@ export default function AdminTimetable() {
               onClick={() => setActiveTab(tab)}
               className={`button ${activeTab === tab ? 'button-primary' : 'button-secondary'}`}
             >
-              {tab === 'schedules' ? '📋 Class Schedules' : '🏫 Rooms'}
+              {tab === 'schedules' ? 'Class Schedules' : 'Rooms'}
             </button>
           ))}
         </div>
@@ -206,7 +206,7 @@ export default function AdminTimetable() {
 
                 {/* Create Schedule Form */}
                 <div className="card" style={{ padding: '1.5rem', background: 'white', borderRadius: '12px', border: '1px solid var(--color-border)', position: 'sticky', top: '1rem' }}>
-                  <h3 style={{ margin: '0 0 1.25rem 0', fontSize: '1rem' }}>➕ Add Class Schedule</h3>
+                  <h3 style={{ margin: '0 0 1.25rem 0', fontSize: '1rem' }}>Add Class Schedule</h3>
                   <form onSubmit={handleCreateSchedule} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                     <div>
                       <label className="form-label">Course</label>
@@ -303,7 +303,7 @@ export default function AdminTimetable() {
 
                 {/* Create Room Form */}
                 <div className="card" style={{ padding: '1.5rem', background: 'white', borderRadius: '12px', border: '1px solid var(--color-border)', position: 'sticky', top: '1rem' }}>
-                  <h3 style={{ margin: '0 0 1.25rem 0', fontSize: '1rem' }}>➕ Add Room</h3>
+                  <h3 style={{ margin: '0 0 1.25rem 0', fontSize: '1rem' }}>Add Room</h3>
                   <form onSubmit={handleCreateRoom} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                     <div>
                       <label className="form-label">Room Name</label>

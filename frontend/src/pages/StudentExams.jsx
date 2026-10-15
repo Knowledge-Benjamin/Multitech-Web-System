@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import StudentSidebar from '../components/StudentSidebar'
 import { useApiQuery } from '../hooks/useApiQuery'
+import { Key, Clock, Calendar, ShieldCheck, Download, Inbox, FileText, CheckCircle2 } from 'lucide-react'
+import './AdminDashboard.css'
 import './StudentExams.css'
 
 const API = import.meta.env.VITE_API_URL
@@ -101,148 +103,155 @@ export default function StudentExams() {
   }
 
   return (
-    <div className="scope-studentexams admin-layout">
+    <div className="scope-studentexams scope-admindashboard admin-layout fade-in-section is-visible">
       <StudentSidebar />
-      <main className="admin-content student-dashboard-main">
+      <main className="admin-content" style={{ background: 'var(--color-background)' }}>
+        <header className="content-header" style={{ marginBottom: '2rem' }}>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-secondary)', margin: '0 0 0.25rem 0' }}>Examination Portal</h1>
+          <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>Safe Exam Browser (SEB) configuration and single-use identity PINs</p>
+        </header>
+
         <div className="exams-container">
-
-          {/* Page Header */}
-          <header className="exams-header">
-            <div className="exams-header-left">
-              <h2>My Exams</h2>
-              <p className="text-muted">
-                Online exams scheduled for your registered courses. Download the SEB file and generate your Exam PIN before joining.
-              </p>
-            </div>
-            <div className="exams-header-right">
-              <div className="pin-card">
-                <div className="pin-card-header">
-                  <span className="pin-icon">🔐</span>
-                  <span className="pin-title">Exam PIN</span>
+          {/* Top PIN Generation Card */}
+          <div style={{ background: 'white', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '16px', padding: '1.75rem', marginBottom: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+              <div style={{ maxWidth: '500px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.4rem' }}>
+                  <div className="stat-icon-wrapper bg-indigo" style={{ width: '36px', height: '36px', borderRadius: '8px' }}>
+                    <Key size={18} className="text-indigo" />
+                  </div>
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--color-secondary)' }}>SEB Authentication PIN</h3>
                 </div>
+                <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.45 }}>
+                  Generate your temporary 6-digit identity PIN before launching Safe Exam Browser. Each PIN is valid for 1 hour.
+                </p>
+              </div>
 
+              <div>
                 {pin ? (
-                  <div className="pin-display">
-                    <div className="pin-digits">{pin}</div>
-                    <div className="pin-meta">
-                      <span className="pin-timer">⏱ Expires in {pinCountdown}</span>
-                      <span className="pin-hint">Enter this PIN inside SEB to identify yourself</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', background: '#f8fafc', padding: '0.75rem 1.25rem', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                    <div>
+                      <span style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Active PIN</span>
+                      <div style={{ fontSize: '1.75rem', fontWeight: 800, fontFamily: 'monospace', color: 'var(--color-primary)', letterSpacing: '3px' }}>
+                        {pin}
+                      </div>
+                    </div>
+                    <div style={{ borderLeft: '1px solid #cbd5e1', paddingLeft: '1rem', fontSize: '0.8rem', color: '#475569' }}>
+                      <span style={{ color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock size={13} /> {pinCountdown}
+                      </span>
+                      <span>Single-use pass</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="pin-actions">
-                    <p className="pin-hint">Generate a one-time PIN to authenticate inside Safe Exam Browser.</p>
-                    {pinError && <p className="pin-error">{pinError}</p>}
+                  <div>
+                    {pinError && <p style={{ color: '#dc2626', fontSize: '0.8rem', margin: '0 0 6px 0' }}>{pinError}</p>}
                     <button
                       id="btn-generate-pin"
-                      className="btn-primary btn-pin"
+                      className="button button-primary"
                       onClick={generatePin}
                       disabled={generatingPin}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
                     >
-                      {generatingPin ? 'Generating…' : '🔑 Generate Exam PIN'}
+                      <Key size={16} /> {generatingPin ? 'Generating...' : 'Generate Exam PIN'}
                     </button>
                   </div>
                 )}
               </div>
             </div>
-          </header>
+          </div>
 
-          {/* How It Works */}
-          <div className="how-it-works">
-            <h3>How to Take Your Online Exam</h3>
-            <ol className="steps-list">
-              <li>
-                <span className="step-num">1</span>
+          {/* Guidelines */}
+          <div style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid rgba(0,0,0,0.06)', padding: '1.5rem', marginBottom: '2rem' }}>
+            <h4 style={{ margin: '0 0 1rem 0', fontSize: '1rem', color: 'var(--color-secondary)' }}>Exam Readiness Checklist</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <span className="status-pill status-admitted" style={{ height: 'fit-content' }}>1</span>
                 <div>
-                  <strong>Download the SEB File</strong>
-                  <p>Click the download button on your exam below. This file configures Safe Exam Browser for your specific exam.</p>
+                  <strong style={{ fontSize: '0.9rem', color: 'var(--color-text)' }}>Download SEB File</strong>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Download the specific exam configuration file below.</p>
                 </div>
-              </li>
-              <li>
-                <span className="step-num">2</span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <span className="status-pill status-admitted" style={{ height: 'fit-content' }}>2</span>
                 <div>
-                  <strong>Generate Your PIN</strong>
-                  <p>Click "Generate Exam PIN" above. Your PIN is valid for 1 hour and is single-use — it links your identity securely.</p>
+                  <strong style={{ fontSize: '0.9rem', color: 'var(--color-text)' }}>Generate PIN</strong>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Generate your 6-digit access PIN before exam start.</p>
                 </div>
-              </li>
-              <li>
-                <span className="step-num">3</span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <span className="status-pill status-admitted" style={{ height: 'fit-content' }}>3</span>
                 <div>
-                  <strong>Launch SEB & Enter Your PIN</strong>
-                  <p>Double-click the downloaded <code>.seb</code> file. SEB will open and prompt for your 6-digit PIN. Enter it to join.</p>
+                  <strong style={{ fontSize: '0.9rem', color: 'var(--color-text)' }}>Launch &amp; Verify</strong>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Open SEB, enter your PIN, and start your examination.</p>
                 </div>
-              </li>
-            </ol>
+              </div>
+            </div>
           </div>
 
           {/* Exams List */}
           {isLoading ? (
-            <div className="loading-spinner">
+            <div className="loading-state">
               <div className="spinner"></div>
+              <p>Loading scheduled exams...</p>
             </div>
           ) : error ? (
-            <div className="message-error">Could not load your exams. Please try again later.</div>
+            <div className="message-error">{error}</div>
           ) : exams.length === 0 ? (
-            <div className="exams-empty">
-              <span className="empty-icon">📋</span>
-              <h3>No Exams Scheduled</h3>
-              <p>No online exams are currently scheduled for your registered courses. Check back closer to your exam dates.</p>
+            <div className="empty-state" style={{ padding: '3.5rem', background: 'white', borderRadius: '16px', textAlign: 'center' }}>
+              <Inbox size={40} style={{ color: 'var(--color-text-secondary)', marginBottom: '1rem' }} />
+              <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-secondary)' }}>No Scheduled Online Exams</h3>
+              <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>There are no active or upcoming digital exams scheduled for your enrolled courses.</p>
             </div>
           ) : (
-            <div className="exams-grid">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
               {exams.map((exam) => {
                 const badge = getStatusBadge(exam)
                 const canDownload = !!exam.seb_file_base64
                 return (
-                  <div key={exam.id} className={`exam-card ${badge.cls === 'badge-active' ? 'exam-card--active' : ''}`}>
-                    <div className="exam-card-header">
-                      <span className={`badge ${badge.cls}`}>{badge.label}</span>
-                      <span className="exam-course-code">{exam.erp_course_code}</span>
-                    </div>
-
-                    <h3 className="exam-title">{exam.exam_title}</h3>
-
-                    <div className="exam-meta-grid">
-                      <div className="exam-meta-item">
-                        <span className="meta-icon">📅</span>
-                        <div>
-                          <span className="meta-label">Starts</span>
-                          <span className="meta-val">{formatDate(exam.start_time)}</span>
-                        </div>
+                  <div key={exam.id} style={{ background: 'white', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span className={`status-pill status-${badge.cls === 'badge-active' ? 'admitted' : badge.cls === 'badge-upcoming' ? 'pending' : 'rejected'}`}>
+                          {badge.label}
+                        </span>
+                        <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--color-primary)' }}>
+                          {exam.erp_course_code}
+                        </span>
                       </div>
-                      <div className="exam-meta-item">
-                        <span className="meta-icon">🏁</span>
-                        <div>
-                          <span className="meta-label">Ends</span>
-                          <span className="meta-val">{formatDate(exam.end_time)}</span>
+
+                      <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.15rem', color: 'var(--color-secondary)' }}>
+                        {exam.exam_title}
+                      </h3>
+
+                      <div style={{ display: 'grid', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '1.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Calendar size={14} /> Starts: {formatDate(exam.start_time)}
                         </div>
-                      </div>
-                      <div className="exam-meta-item">
-                        <span className="meta-icon">⏳</span>
-                        <div>
-                          <span className="meta-label">Duration</span>
-                          <span className="meta-val">{exam.duration_minutes} minutes</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Clock size={14} /> Ends: {formatDate(exam.end_time)}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <FileText size={14} /> Duration: {exam.duration_minutes} minutes
                         </div>
                       </div>
                     </div>
 
-                    <div className="exam-card-actions">
+                    <div style={{ paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
                       {canDownload ? (
                         <button
                           id={`btn-download-seb-${exam.id}`}
-                          className="btn-primary btn-download"
+                          className="button button-primary"
                           onClick={() => downloadSEB(exam)}
                           disabled={downloadingId === exam.id}
+                          style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                         >
-                          {downloadingId === exam.id
-                            ? '⏳ Preparing…'
-                            : '⬇️ Download SEB File'}
+                          <Download size={16} />
+                          {downloadingId === exam.id ? 'Preparing SEB File...' : 'Download SEB File'}
                         </button>
                       ) : (
-                        <button className="btn-disabled" disabled>
-                          {badge.cls === 'badge-upcoming'
-                            ? '🔒 SEB file not yet available'
-                            : '📂 SEB file unavailable'}
+                        <button className="button" disabled style={{ width: '100%', opacity: 0.6, cursor: 'not-allowed' }}>
+                          SEB file unavailable
                         </button>
                       )}
                     </div>

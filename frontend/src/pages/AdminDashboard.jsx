@@ -51,7 +51,7 @@ export default function AdminDashboard() {
         {/* Animated Hero Section */}
         <header className="dashboard-hero fade-in-item">
           <div className="hero-content">
-            <h1>Welcome back, {admin.username}! 👋</h1>
+            <h1>Welcome back, {admin.username}!</h1>
             <p>Here's what's happening with the university today.</p>
           </div>
           <div className="hero-decoration"></div>

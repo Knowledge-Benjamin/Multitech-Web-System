@@ -1,34 +1,51 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import axios from 'axios'
+import {
+  GraduationCap,
+  Calendar,
+  Users,
+  FileText,
+  Layers,
+  Plus,
+  X,
+  UploadCloud,
+  CheckCircle,
+  AlertCircle,
+  Trash2,
+  ExternalLink,
+  Save,
+  Megaphone,
+  ArrowLeft,
+  FileSpreadsheet,
+  Presentation,
+  Video,
+  Image as ImageIcon,
+  File,
+  Lock,
+  BookOpen
+} from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import LecturerSidebar from '../components/LecturerSidebar'
+import './AdminDashboard.css'
+import './LecturerDashboard.css'
 import './LecturerCourseDetails.css'
 
 const API = import.meta.env.VITE_API_URL
 
-const FILE_ICONS = {
-  'application/pdf': '📄',
-  'application/msword': '📝',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '📝',
-  'application/vnd.ms-powerpoint': '📊',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': '📊',
-  'application/vnd.ms-excel': '📈',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '📈',
-  'video/mp4': '🎬',
-  'video/mpeg': '🎬',
-  'image/jpeg': '🖼️',
-  'image/png': '🖼️',
-  default: '📎'
-}
-
-function getFileIcon(mimeType) {
-  return FILE_ICONS[mimeType] || FILE_ICONS.default
+function renderFileIcon(mimeType) {
+  if (!mimeType) return <File size={20} />
+  if (mimeType.includes('pdf')) return <FileText size={20} style={{ color: '#ef4444' }} />
+  if (mimeType.includes('word') || mimeType.includes('officedocument.wordprocessingml')) return <FileText size={20} style={{ color: '#2563eb' }} />
+  if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return <Presentation size={20} style={{ color: '#f59e0b' }} />
+  if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return <FileSpreadsheet size={20} style={{ color: '#10b981' }} />
+  if (mimeType.includes('video')) return <Video size={20} style={{ color: '#8b5cf6' }} />
+  if (mimeType.includes('image')) return <ImageIcon size={20} style={{ color: '#06b6d4' }} />
+  return <File size={20} style={{ color: '#64748b' }} />
 }
 
 export default function LecturerCourseDetails() {
   const { courseId } = useParams()
-  const navigate = useNavigate()
   const [students, setStudents] = useState([])
   const [activeTab, setActiveTab] = useState('materials') // 'materials', 'gradebook', 'announcements'
   const [ssoLoading, setSsoLoading] = useState(false)
@@ -82,7 +99,7 @@ export default function LecturerCourseDetails() {
 
   const handleUpload = async (e) => {
     e.preventDefault()
-    if (!file) return setUploadError('Please select a file.')
+    if (!file) return setUploadError('Please select a file to upload.')
     setUploading(true)
     setUploadError('')
     setUploadSuccess('')
@@ -96,13 +113,13 @@ export default function LecturerCourseDetails() {
       await axios.post(`${API}/lecturer/courses/${courseId}/materials`, formData, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       })
-      setUploadSuccess('Material uploaded successfully!')
+      setUploadSuccess('Course material published successfully.')
       setForm({ title: '', description: '' })
       setFile(null)
       setShowUploadForm(false)
       fetchCourseData()
     } catch (err) {
-      setUploadError(err.response?.data?.message || 'Upload failed.')
+      setUploadError(err.response?.data?.message || 'File upload failed. Please try again.')
     } finally {
       setUploading(false)
     }
@@ -118,21 +135,21 @@ export default function LecturerCourseDetails() {
         window.open(res.data.ssoUrl, '_blank')
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to generate SSO token')
+      alert(err.response?.data?.message || 'Failed to generate online exam session token.')
     } finally {
       setSsoLoading(false)
     }
   }
 
   const handleDelete = async (materialId) => {
-    if (!window.confirm('Delete this material?')) return
+    if (!window.confirm('Are you sure you want to delete this course material?')) return
     try {
       await axios.delete(`${API}/lecturer/materials/${materialId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       fetchCourseData()
     } catch (err) {
-      alert('Failed to delete material.')
+      alert('Failed to delete course material.')
     }
   }
 
@@ -155,10 +172,10 @@ export default function LecturerCourseDetails() {
       await axios.post(`${API}/lecturer/courses/${courseId}/grades`, { grades: payload }, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setSuccessMsg('Grades saved successfully.')
+      setSuccessMsg('Student grades saved and published.')
       fetchCourseData()
     } catch (err) {
-      setError('Failed to save grades.')
+      setError('Failed to update student grades.')
     } finally {
       setSavingGrades(false)
     }
@@ -172,7 +189,7 @@ export default function LecturerCourseDetails() {
       await axios.post(`${API}/lecturer/courses/${courseId}/announcements`, announcementForm, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setUploadSuccess('Announcement posted!')
+      setUploadSuccess('Class announcement broadcasted.')
       setAnnouncementForm({ title: '', body: '' })
       setShowUploadForm(false)
       fetchCourseData()
@@ -182,7 +199,7 @@ export default function LecturerCourseDetails() {
   }
 
   const handleDeleteAnnouncement = async (id) => {
-    if (!window.confirm('Delete this announcement?')) return
+    if (!window.confirm('Delete this announcement notice?')) return
     try {
       await axios.delete(`${API}/lecturer/announcements/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -193,169 +210,509 @@ export default function LecturerCourseDetails() {
     }
   }
 
-  if (isLoading) return (
-    <div className="scope-lecturercoursedetails lecturer-layout">
-      <div className="lecturer-loading" style={{ margin: 'auto' }}>
-        <div className="spinner-ring"></div>
-        <p>Loading course...</p>
+  if (isLoading) {
+    return (
+      <div className="scope-lecturercoursedetails scope-admindashboard admin-layout fade-in-section is-visible">
+        <LecturerSidebar />
+        <main className="admin-content">
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading course information...</p>
+          </div>
+        </main>
       </div>
-    </div>
-  )
+    )
+  }
 
   const { course, term, enrolled_students } = data || {}
 
   return (
-    <div className="lecturer-layout">
+    <div className="scope-lecturercoursedetails scope-admindashboard admin-layout fade-in-section is-visible">
       <LecturerSidebar />
 
-      <main className="lecturer-main">
-        <div className="course-detail-header">
-          <div className="course-header-badge">{course?.course_code}</div>
-          <h1>{course?.name}</h1>
-          <p className="course-header-meta">{course?.programme_name} · Year {course?.target_year} · Semester {course?.target_semester}</p>
-          {term && <span className="term-badge">📅 {term.name}</span>}
+      <main className="admin-content">
+        <div style={{ marginBottom: '1.5rem' }}>
+          <Link
+            to="/lecturer/dashboard"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: 'var(--color-primary, #0052cc)',
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontSize: '0.85rem'
+            }}
+          >
+            <ArrowLeft size={16} /> Back to Courses
+          </Link>
         </div>
 
-        <div className="stats-row">
-          <div className="stat-card">
-            <div className="stat-value">{enrolled_students}</div>
-            <div className="stat-label">Enrolled Students</div>
+        {/* Hero Header */}
+        <header className="dashboard-hero fade-in-item" style={{ padding: '2.25rem 2.5rem' }}>
+          <div className="hero-content">
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+              <span style={{
+                background: 'rgba(255,255,255,0.2)',
+                color: '#ffffff',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontWeight: 700,
+                fontSize: '0.8rem',
+                letterSpacing: '0.04em'
+              }}>
+                {course?.course_code}
+              </span>
+              {term && (
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  background: 'rgba(255,255,255,0.12)',
+                  color: 'rgba(255,255,255,0.9)',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem'
+                }}>
+                  <Calendar size={13} /> {term.name}
+                </span>
+              )}
+            </div>
+
+            <h1 style={{ fontSize: '1.85rem', marginBottom: '0.5rem' }}>{course?.name}</h1>
+            <p style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255,255,255,0.85)', margin: 0, fontSize: '0.9rem' }}>
+              <GraduationCap size={16} />
+              <span>{course?.programme_name} &bull; Year {course?.target_year} &bull; Semester {course?.target_semester}</span>
+            </p>
           </div>
-          <div className="stat-card">
-            <div className="stat-value">{materials?.length}</div>
-            <div className="stat-label">Materials Uploaded</div>
+          <div className="hero-decoration"></div>
+        </header>
+
+        {/* Stats Grid */}
+        <div className="stats-grid fade-in-section is-visible" style={{ marginBottom: '2rem' }}>
+          <div className="stat-card fade-in-item">
+            <div className="stat-icon-wrapper bg-blue">
+              <Users size={24} className="text-blue" />
+            </div>
+            <div className="stat-content">
+              <h3>Enrolled Students</h3>
+              <div className="stat-value-row">
+                <p className="stat-number">{enrolled_students || 0}</p>
+                <span className="trend positive">Registered</span>
+              </div>
+            </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-value">{course?.credits}</div>
-            <div className="stat-label">Credit Units</div>
+
+          <div className="stat-card fade-in-item">
+            <div className="stat-icon-wrapper bg-indigo">
+              <FileText size={24} className="text-indigo" />
+            </div>
+            <div className="stat-content">
+              <h3>Materials</h3>
+              <div className="stat-value-row">
+                <p className="stat-number">{materials?.length || 0}</p>
+                <span className="trend neutral">Uploaded</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="stat-card fade-in-item">
+            <div className="stat-icon-wrapper bg-amber">
+              <Layers size={24} className="text-amber" />
+            </div>
+            <div className="stat-content">
+              <h3>Credit Units</h3>
+              <div className="stat-value-row">
+                <p className="stat-number">{course?.credits || 0}</p>
+                <span className="trend neutral">Academic Load</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="tabs" style={{ display: 'flex', gap: '20px', marginBottom: '24px', borderBottom: '2px solid #e5e7eb' }}>
-          <button 
-            className={`tab ${activeTab === 'materials' ? 'active' : ''}`}
+        {/* Navigation Tabs */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          borderBottom: '2px solid #e2e8f0',
+          marginBottom: '1.75rem',
+          paddingBottom: '2px'
+        }}>
+          <button
             onClick={() => setActiveTab('materials')}
-            style={{ padding: '10px 16px', background: 'none', border: 'none', borderBottom: activeTab === 'materials' ? '2px solid #6366f1' : 'none', color: activeTab === 'materials' ? '#6366f1' : '#64748b', fontWeight: activeTab === 'materials' ? '600' : '500', cursor: 'pointer', marginBottom: '-2px' }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'materials' ? '3px solid var(--color-primary, #0052cc)' : '3px solid transparent',
+              color: activeTab === 'materials' ? 'var(--color-primary, #0052cc)' : '#64748b',
+              fontWeight: activeTab === 'materials' ? 700 : 500,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              marginBottom: '-2px',
+              transition: 'all 0.15s ease'
+            }}
           >
-            Materials
+            <FileText size={17} /> Materials ({materials.length})
           </button>
-          <button 
-            className={`tab ${activeTab === 'gradebook' ? 'active' : ''}`}
+
+          <button
             onClick={() => setActiveTab('gradebook')}
-            style={{ padding: '10px 16px', background: 'none', border: 'none', borderBottom: activeTab === 'gradebook' ? '2px solid #6366f1' : 'none', color: activeTab === 'gradebook' ? '#6366f1' : '#64748b', fontWeight: activeTab === 'gradebook' ? '600' : '500', cursor: 'pointer', marginBottom: '-2px' }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'gradebook' ? '3px solid var(--color-primary, #0052cc)' : '3px solid transparent',
+              color: activeTab === 'gradebook' ? 'var(--color-primary, #0052cc)' : '#64748b',
+              fontWeight: activeTab === 'gradebook' ? 700 : 500,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              marginBottom: '-2px',
+              transition: 'all 0.15s ease'
+            }}
           >
-            Gradebook
+            <BookOpen size={17} /> Gradebook ({students.length})
           </button>
-          <button 
-            className={`tab ${activeTab === 'announcements' ? 'active' : ''}`}
+
+          <button
             onClick={() => setActiveTab('announcements')}
-            style={{ padding: '10px 16px', background: 'none', border: 'none', borderBottom: activeTab === 'announcements' ? '2px solid #6366f1' : 'none', color: activeTab === 'announcements' ? '#6366f1' : '#64748b', fontWeight: activeTab === 'announcements' ? '600' : '500', cursor: 'pointer', marginBottom: '-2px' }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'announcements' ? '3px solid var(--color-primary, #0052cc)' : '3px solid transparent',
+              color: activeTab === 'announcements' ? 'var(--color-primary, #0052cc)' : '#64748b',
+              fontWeight: activeTab === 'announcements' ? 700 : 500,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              marginBottom: '-2px',
+              transition: 'all 0.15s ease'
+            }}
           >
-            Announcements
+            <Megaphone size={17} /> Announcements ({announcements.length})
           </button>
         </div>
 
+        {/* Tab 1: Course Materials */}
         {activeTab === 'materials' && (
-          <div className="tab-content">
-            <div className="materials-header">
-              <h2>Course Materials</h2>
-              <button className="btn-upload-toggle" onClick={() => setShowUploadForm(!showUploadForm)}>
-                {showUploadForm ? '✕ Cancel' : '＋ Upload Material'}
+          <section>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b' }}>Course Study Materials</h2>
+                <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                  Distribute lecture notes, slide decks, readings, and reference papers to enrolled students.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowUploadForm(!showUploadForm)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: showUploadForm ? '#e2e8f0' : 'var(--color-primary, #0052cc)',
+                  color: showUploadForm ? '#1e293b' : '#ffffff',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer'
+                }}
+              >
+                {showUploadForm ? <X size={16} /> : <Plus size={16} />}
+                {showUploadForm ? 'Cancel' : 'Upload Material'}
               </button>
             </div>
 
+            {/* Official Syllabus topics if present */}
             {course?.modules && course.modules.length > 0 && (
-              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', marginBottom: '24px', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem', color: '#1e293b' }}>Official Syllabus (Topics)</h3>
-                <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: '#64748b' }}>These are the modules assigned to this course unit by the administrator.</p>
-                <ul style={{ margin: 0, paddingLeft: '20px', color: '#334155', fontSize: '0.9rem' }}>
+              <div style={{ background: '#f8fafc', padding: '16px 20px', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '0.95rem', color: '#1e293b', fontWeight: 600 }}>
+                  Curriculum Modules
+                </h3>
+                <ul style={{ margin: 0, paddingLeft: '20px', color: '#475569', fontSize: '0.88rem' }}>
                   {course.modules.map((mod, idx) => (
-                    <li key={idx} style={{ marginBottom: '6px' }}>{mod}</li>
+                    <li key={idx} style={{ marginBottom: '4px' }}>{mod}</li>
                   ))}
                 </ul>
               </div>
             )}
 
-            {uploadSuccess && <div className="alert-success">✅ {uploadSuccess}</div>}
+            {uploadSuccess && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ecfdf5', color: '#047857', padding: '12px 16px', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid #a7f3d0', fontSize: '0.9rem' }}>
+                <CheckCircle size={18} />
+                <span>{uploadSuccess}</span>
+              </div>
+            )}
 
             {showUploadForm && (
-              <form className="upload-form" onSubmit={handleUpload}>
-                <h3>📤 Upload New Material</h3>
-                {uploadError && <div className="alert-error">⚠️ {uploadError}</div>}
-                <div className="form-group">
-                  <label>Title *</label>
-                  <input type="text" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
+              <form
+                onSubmit={handleUpload}
+                style={{
+                  background: '#ffffff',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  border: '1px solid #cbd5e1',
+                  marginBottom: '1.75rem',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
+                }}
+              >
+                <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <UploadCloud size={20} style={{ color: 'var(--color-primary, #0052cc)' }} />
+                  Upload Course Material
+                </h3>
+
+                {uploadError && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fef2f2', color: '#b91c1c', padding: '10px 14px', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #fecaca', fontSize: '0.88rem' }}>
+                    <AlertCircle size={16} />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                    Material Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={e => setForm({ ...form, title: e.target.value })}
+                    placeholder="e.g. Lecture 3: Network Topology and Protocols"
+                    required
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
+                  />
                 </div>
-                <div className="file-drop-zone" onClick={() => fileInputRef.current?.click()}>
-                  <p>{file ? file.name : 'Click to select a file'}</p>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                    Description / Reading Guide
+                  </label>
+                  <input
+                    type="text"
+                    value={form.description}
+                    onChange={e => setForm({ ...form, description: e.target.value })}
+                    placeholder="Brief notes on required reading sections"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
+                  />
+                </div>
+
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    border: '2px dashed #cbd5e1',
+                    borderRadius: '10px',
+                    padding: '1.75rem',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    background: '#f8fafc',
+                    marginBottom: '1.25rem'
+                  }}
+                >
+                  <UploadCloud size={32} style={{ color: '#94a3b8', margin: '0 auto 8px' }} />
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: file ? 'var(--color-primary, #0052cc)' : '#64748b', fontWeight: file ? 600 : 400 }}>
+                    {file ? file.name : 'Click to select document, slide, or PDF file'}
+                  </p>
                   <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={e => setFile(e.target.files[0])} />
                 </div>
-                <button type="submit" className="btn-upload" disabled={uploading}>Upload</button>
+
+                <button
+                  type="submit"
+                  disabled={uploading}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'var(--color-primary, #0052cc)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    cursor: uploading ? 'wait' : 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  {uploading ? 'Uploading to Repository...' : 'Publish Material'}
+                </button>
               </form>
             )}
 
-            <div className="materials-list">
-              {materials.map(mat => (
-                <div key={mat.id} className="material-item">
-                  <div className="material-icon">{getFileIcon(mat.file_type)}</div>
-                  <div className="material-info">
-                    <div className="material-title">{mat.title}</div>
-                    <a href={mat.drive_file_url} target="_blank" rel="noopener noreferrer">View File</a>
-                  </div>
-                  <button className="btn-delete" onClick={() => handleDelete(mat.id)}>Delete</button>
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {materials.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem', background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <FileText size={40} style={{ color: '#94a3b8', marginBottom: '0.75rem' }} />
+                  <p style={{ margin: 0, color: '#64748b' }}>No course materials uploaded yet. Click "Upload Material" to share files with students.</p>
                 </div>
-              ))}
+              ) : (
+                materials.map(mat => (
+                  <div
+                    key={mat.id}
+                    style={{
+                      background: '#ffffff',
+                      borderRadius: '10px',
+                      padding: '14px 18px',
+                      border: '1px solid #e2e8f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '16px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        background: '#f1f5f9',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {renderFileIcon(mat.file_type)}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.95rem' }}>{mat.title}</div>
+                        {mat.description && <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{mat.description}</div>}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <a
+                        href={mat.drive_file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: '0.85rem',
+                          color: 'var(--color-primary, #0052cc)',
+                          textDecoration: 'none',
+                          fontWeight: 600,
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          background: 'rgba(0, 82, 204, 0.08)'
+                        }}
+                      >
+                        View File
+                      </a>
+                      <button
+                        onClick={() => handleDelete(mat.id)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                          padding: '6px',
+                          borderRadius: '6px',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                        aria-label="Delete material"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-          </div>
+          </section>
         )}
 
+        {/* Tab 2: Gradebook */}
         {activeTab === 'gradebook' && (
-          <div className="tab-content">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '1.2rem' }}>Student Gradebook</h3>
+          <section>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b' }}>Student Gradebook</h2>
+                <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                  Record coursework and exam marks for enrolled students. Final scores compute automatically.
+                </p>
+              </div>
+
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button 
+                <button
                   onClick={handleCreateOnlineExam}
                   disabled={ssoLoading}
                   style={{
-                    background: 'linear-gradient(135deg, #8b5cf6, #d946ef)',
-                    color: 'white',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: '#4f46e5',
+                    color: '#ffffff',
                     border: 'none',
                     padding: '8px 16px',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     cursor: ssoLoading ? 'not-allowed' : 'pointer',
-                    fontWeight: 600
+                    fontWeight: 600,
+                    fontSize: '0.85rem'
                   }}
                 >
-                  {ssoLoading ? 'Connecting...' : '✨ Create Online Exam (SEB)'}
+                  <ExternalLink size={15} />
+                  {ssoLoading ? 'Connecting...' : 'Create Online Exam (SEB)'}
                 </button>
-                <button 
-                  onClick={saveGrades} 
+
+                <button
+                  onClick={saveGrades}
                   disabled={savingGrades}
-                  style={{ background: '#22c55e', color: 'white', padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: savingGrades ? 'not-allowed' : 'pointer', fontWeight: 600 }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: '#16a34a',
+                    color: '#ffffff',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: savingGrades ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                    fontSize: '0.85rem'
+                  }}
                 >
+                  <Save size={15} />
                   {savingGrades ? 'Saving...' : 'Save Grades'}
                 </button>
               </div>
             </div>
-            
-            {successMsg && <div className="alert-success" style={{ marginBottom: '16px' }}>{successMsg}</div>}
-            {error && <div className="alert-error" style={{ marginBottom: '16px' }}>{error}</div>}
+
+            {successMsg && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ecfdf5', color: '#047857', padding: '12px 16px', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid #a7f3d0', fontSize: '0.9rem' }}>
+                <CheckCircle size={18} />
+                <span>{successMsg}</span>
+              </div>
+            )}
+
+            {error && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fef2f2', color: '#b91c1c', padding: '12px 16px', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid #fecaca', fontSize: '0.9rem' }}>
+                <AlertCircle size={18} />
+                <span>{error}</span>
+              </div>
+            )}
 
             {students.length === 0 ? (
-              <p style={{ color: '#64748b' }}>No active students enrolled in this course.</p>
+              <div style={{ textAlign: 'center', padding: '3.5rem', background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <Users size={40} style={{ color: '#94a3b8', marginBottom: '0.75rem' }} />
+                <p style={{ margin: 0, color: '#64748b' }}>No students enrolled in this course unit for the selected term.</p>
+              </div>
             ) : (
-              <div className="table-responsive">
-                <table className="admin-table">
+              <div className="table-container" style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                <table className="modern-table">
                   <thead>
                     <tr>
                       <th>Student No.</th>
-                      <th>Name</th>
+                      <th>Student Name</th>
                       <th>Coursework (40)</th>
                       <th>Exam (60)</th>
                       <th>Final Score</th>
                       <th>Grade</th>
-                      <th>Source</th>
+                      <th>Assessment Source</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -363,35 +720,85 @@ export default function LecturerCourseDetails() {
                       const isOnline = student.source === 'online_exam_portal'
                       return (
                         <tr key={student.course_registration_id}>
-                          <td>{student.student_number}</td>
-                          <td>{student.student_name}</td>
+                          <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{student.student_number}</td>
+                          <td style={{ fontWeight: 600 }}>{student.student_name}</td>
                           <td>
-                            <input 
-                              type="number" 
-                              max="40" min="0" 
+                            <input
+                              type="number"
+                              max="40"
+                              min="0"
                               value={student.coursework_mark ?? ''}
                               onChange={e => handleGradeChange(index, 'coursework_mark', e.target.value)}
                               disabled={isOnline}
-                              style={{ width: '80px', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', background: isOnline ? '#f1f5f9' : 'white' }}
+                              style={{
+                                width: '75px',
+                                padding: '6px 8px',
+                                borderRadius: '6px',
+                                border: '1px solid #cbd5e1',
+                                background: isOnline ? '#f1f5f9' : '#ffffff',
+                                textAlign: 'center',
+                                fontWeight: 600
+                              }}
                             />
                           </td>
                           <td>
-                            <input 
-                              type="number" 
-                              max="60" min="0" 
+                            <input
+                              type="number"
+                              max="60"
+                              min="0"
                               value={student.exam_mark ?? ''}
                               onChange={e => handleGradeChange(index, 'exam_mark', e.target.value)}
                               disabled={isOnline}
-                              style={{ width: '80px', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', background: isOnline ? '#f1f5f9' : 'white' }}
+                              style={{
+                                width: '75px',
+                                padding: '6px 8px',
+                                borderRadius: '6px',
+                                border: '1px solid #cbd5e1',
+                                background: isOnline ? '#f1f5f9' : '#ffffff',
+                                textAlign: 'center',
+                                fontWeight: 600
+                              }}
                             />
                           </td>
-                          <td><strong>{student.final_score ?? '-'}</strong></td>
-                          <td><strong>{student.grade_letter ?? '-'}</strong></td>
+                          <td style={{ fontWeight: 700, color: 'var(--color-primary, #0052cc)' }}>
+                            {student.final_score ?? '-'}
+                          </td>
+                          <td>
+                            <span style={{
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              background: '#f1f5f9',
+                              color: '#1e293b'
+                            }}>
+                              {student.grade_letter ?? '-'}
+                            </span>
+                          </td>
                           <td>
                             {isOnline ? (
-                              <span style={{ fontSize: '0.8rem', background: '#dbeafe', color: '#1e40af', padding: '2px 6px', borderRadius: '4px' }}>SEB Portal 🔒</span>
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '0.75rem',
+                                background: '#e0e7ff',
+                                color: '#4338ca',
+                                padding: '3px 8px',
+                                borderRadius: '4px',
+                                fontWeight: 600
+                              }}>
+                                <Lock size={12} /> SEB Portal
+                              </span>
                             ) : (
-                              <span style={{ fontSize: '0.8rem', background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Offline</span>
+                              <span style={{
+                                fontSize: '0.75rem',
+                                background: '#f1f5f9',
+                                color: '#475569',
+                                padding: '3px 8px',
+                                borderRadius: '4px'
+                              }}>
+                                Offline Entry
+                              </span>
                             )}
                           </td>
                         </tr>
@@ -401,53 +808,172 @@ export default function LecturerCourseDetails() {
                 </table>
               </div>
             )}
-          </div>
+          </section>
         )}
 
+        {/* Tab 3: Announcements */}
         {activeTab === 'announcements' && (
-          <div className="tab-content">
-            <div className="materials-header">
-              <h2>Course Announcements</h2>
-              <button className="btn-upload-toggle" onClick={() => { setShowUploadForm(!showUploadForm); setUploadError(''); setUploadSuccess('') }}>
-                {showUploadForm ? '✕ Cancel' : '＋ New Announcement'}
+          <section>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b' }}>Course Announcements</h2>
+                <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                  Post timely class notifications, assignment deadlines, and room changes directly to students.
+                </p>
+              </div>
+              <button
+                onClick={() => { setShowUploadForm(!showUploadForm); setUploadError(''); setUploadSuccess('') }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: showUploadForm ? '#e2e8f0' : 'var(--color-primary, #0052cc)',
+                  color: showUploadForm ? '#1e293b' : '#ffffff',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer'
+                }}
+              >
+                {showUploadForm ? <X size={16} /> : <Plus size={16} />}
+                {showUploadForm ? 'Cancel' : 'New Announcement'}
               </button>
             </div>
 
-            {uploadSuccess && <div className="alert-success">✅ {uploadSuccess}</div>}
+            {uploadSuccess && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ecfdf5', color: '#047857', padding: '12px 16px', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid #a7f3d0', fontSize: '0.9rem' }}>
+                <CheckCircle size={18} />
+                <span>{uploadSuccess}</span>
+              </div>
+            )}
 
             {showUploadForm && (
-              <form className="upload-form" onSubmit={handlePostAnnouncement}>
-                <h3>📢 Post an Announcement</h3>
-                {uploadError && <div className="alert-error">⚠️ {uploadError}</div>}
-                <div className="form-group">
-                  <label>Title *</label>
-                  <input type="text" value={announcementForm.title} onChange={e => setAnnouncementForm({ ...announcementForm, title: e.target.value })} required />
+              <form
+                onSubmit={handlePostAnnouncement}
+                style={{
+                  background: '#ffffff',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  border: '1px solid #cbd5e1',
+                  marginBottom: '1.75rem',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
+                }}
+              >
+                <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Megaphone size={20} style={{ color: 'var(--color-primary, #0052cc)' }} />
+                  Publish Class Notice
+                </h3>
+
+                {uploadError && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fef2f2', color: '#b91c1c', padding: '10px 14px', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #fecaca', fontSize: '0.88rem' }}>
+                    <AlertCircle size={16} />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                    Subject / Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={announcementForm.title}
+                    onChange={e => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
+                    placeholder="e.g. Midterm Assessment Date and Coverage"
+                    required
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
+                  />
                 </div>
-                <div className="form-group">
-                  <label>Message *</label>
-                  <textarea value={announcementForm.body} onChange={e => setAnnouncementForm({ ...announcementForm, body: e.target.value })} required style={{ width: '100%', minHeight: '100px', padding: '10px', borderRadius: '4px', border: '1px solid #cbd5e1' }}></textarea>
+
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                    Notice Content *
+                  </label>
+                  <textarea
+                    value={announcementForm.body}
+                    onChange={e => setAnnouncementForm({ ...announcementForm, body: e.target.value })}
+                    required
+                    rows={4}
+                    placeholder="Detailed message for students..."
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', resize: 'vertical' }}
+                  />
                 </div>
-                <button type="submit" className="btn-upload">Post Announcement</button>
+
+                <button
+                  type="submit"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'var(--color-primary, #0052cc)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Post Announcement
+                </button>
               </form>
             )}
 
-            <div className="materials-list">
+            <div style={{ display: 'grid', gap: '12px' }}>
               {announcements.length === 0 ? (
-                <p style={{ color: '#64748b' }}>No announcements posted yet.</p>
-              ) : announcements.map(ann => (
-                <div key={ann.id} className="material-item" style={{ display: 'block', padding: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>{ann.title}</h4>
-                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                      {new Date(ann.created_at).toLocaleString()}
-                    </span>
-                  </div>
-                  <p style={{ margin: '0 0 16px 0', color: '#334155', whiteSpace: 'pre-wrap' }}>{ann.body}</p>
-                  <button className="btn-delete" onClick={() => handleDeleteAnnouncement(ann.id)}>Delete</button>
+                <div style={{ textAlign: 'center', padding: '3.5rem', background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <Megaphone size={40} style={{ color: '#94a3b8', marginBottom: '0.75rem' }} />
+                  <p style={{ margin: 0, color: '#64748b' }}>No announcements published for this course yet.</p>
                 </div>
-              ))}
+              ) : (
+                announcements.map(ann => (
+                  <div
+                    key={ann.id}
+                    style={{
+                      background: '#ffffff',
+                      borderRadius: '12px',
+                      padding: '1.25rem',
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <h4 style={{ margin: 0, fontSize: '1.05rem', color: '#1e293b', fontWeight: 600 }}>{ann.title}</h4>
+                      <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                        {new Date(ann.created_at).toLocaleString()}
+                      </span>
+                    </div>
+
+                    <p style={{ margin: '0 0 1rem', color: '#475569', fontSize: '0.9rem', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                      {ann.body}
+                    </p>
+
+                    <button
+                      onClick={() => handleDeleteAnnouncement(ann.id)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#ef4444',
+                        cursor: 'pointer',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '0.8rem',
+                        fontWeight: 600
+                      }}
+                    >
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
-          </div>
+          </section>
         )}
       </main>
     </div>

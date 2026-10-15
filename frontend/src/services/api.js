@@ -43,10 +43,19 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('adminToken')
-      localStorage.removeItem('studentToken')
-      localStorage.removeItem('adminUser')
-      localStorage.removeItem('studentUser')
+      const url = error.config?.url || ''
+      // Only clear the tokens that belong to the portal that returned 401
+      if (url.includes('/student-auth') || url.includes('/student-profile') || url.includes('/students/')) {
+        localStorage.removeItem('studentToken')
+        localStorage.removeItem('studentUser')
+      } else if (url.includes('/lecturer') || url.includes('/lecturer-auth')) {
+        localStorage.removeItem('lecturerToken')
+        localStorage.removeItem('lecturerUser')
+      } else {
+        // Default: clear admin tokens (most admin routes return 401 when session expires)
+        localStorage.removeItem('adminToken')
+        localStorage.removeItem('adminUser')
+      }
     }
     return Promise.reject(error)
   }

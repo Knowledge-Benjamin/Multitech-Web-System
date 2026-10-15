@@ -15,7 +15,7 @@ export default function StudentDashboard() {
   const studentUser = JSON.parse(localStorage.getItem('studentUser') || '{}')
 
   const token = localStorage.getItem('studentToken')
-  const { data: resData, isLoading } = useApiQuery(`${API}/student-profile`, {
+  const { data: resData, isLoading } = useApiQuery(`${API}/student-profile`, 'studentDashboardProfile', {
     axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
   })
   const data = resData?.data

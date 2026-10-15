@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import ProtectedRoute from './components/ProtectedRoute'
+import ProtectedStudentRoute from './components/ProtectedStudentRoute'
 import './App.css'
 
 const Home = lazy(() => import('./pages/Home'))
@@ -248,15 +249,16 @@ function App() {
 
         {/* Student Routes */}
         <Route path="/student/login" element={<StudentLogin />} />
-        <Route path="/student/dashboard" element={<StudentDashboard />} />
-        <Route path="/student/finances" element={<StudentFinances />} />
-        <Route path="/student/courses" element={<StudentCourses />} />
-        <Route path="/student/profile" element={<StudentProfile />} />
-        <Route path="/student/exams" element={<StudentExams />} />
-        <Route path="/student/results" element={<StudentResults />} />
-        <Route path="/student/attendance" element={<StudentAttendance />} />
-        <Route path="/student/timetable" element={<StudentTimetable />} />
-        <Route path="/student/announcements" element={<StudentAnnouncements />} />
+        <Route path="/student/dashboard" element={<ProtectedStudentRoute><StudentDashboard /></ProtectedStudentRoute>} />
+        <Route path="/student/finances" element={<ProtectedStudentRoute><StudentFinances /></ProtectedStudentRoute>} />
+        <Route path="/student/courses" element={<ProtectedStudentRoute><StudentCourses /></ProtectedStudentRoute>} />
+        <Route path="/student/profile" element={<ProtectedStudentRoute><StudentProfile /></ProtectedStudentRoute>} />
+        <Route path="/student/exams" element={<ProtectedStudentRoute><StudentExams /></ProtectedStudentRoute>} />
+        <Route path="/student/results" element={<ProtectedStudentRoute><StudentResults /></ProtectedStudentRoute>} />
+        <Route path="/student/attendance" element={<ProtectedStudentRoute><StudentAttendance /></ProtectedStudentRoute>} />
+        <Route path="/student/timetable" element={<ProtectedStudentRoute><StudentTimetable /></ProtectedStudentRoute>} />
+        <Route path="/student/announcements" element={<ProtectedStudentRoute><StudentAnnouncements /></ProtectedStudentRoute>} />
+
 
         {/* Public Routes with Header/Footer */}
         <Route

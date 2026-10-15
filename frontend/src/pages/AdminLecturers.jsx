@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
-import { CheckCircle, Users } from 'lucide-react'
+import { CheckCircle, Users, AlertCircle } from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminProgrammes.css'
@@ -163,21 +164,35 @@ export default function AdminLecturers() {
             <form onSubmit={handleAssign} style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '24px' }}>
               <h3 style={{ marginTop: 0, color: '#1e1b4b' }}>Assign a Course to this Lecturer</h3>
               <p style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '16px' }}>
-                Enter the Course ID from the Programmes page, and select the Academic Term.
+                Select a course unit (subject) and the academic term to allocate teaching responsibilities.
               </p>
+
+              {courses.length === 0 && (
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '14px 18px', marginBottom: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1e40af', fontSize: '0.875rem' }}>
+                    <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                    <span>No course units found in the system. Course units must first be created under <strong>Programmes &rarr; Course Units</strong> before they can be assigned.</span>
+                  </div>
+                  <Link to="/admin/programmes" style={{ background: 'var(--color-primary, #0052cc)', color: '#ffffff', textDecoration: 'none', padding: '7px 14px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    Add Course Units
+                  </Link>
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '12px', alignItems: 'end' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Course *</label>
+                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Course Unit *</label>
                   <select
                     value={assignForm.course_id}
                     onChange={e => setAssignForm({ ...assignForm, course_id: e.target.value })}
                     required
-                    style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                    disabled={courses.length === 0}
+                    style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box', background: courses.length === 0 ? '#f8fafc' : '#ffffff' }}
                   >
-                    <option value="">-- Select Course --</option>
+                    <option value="">{courses.length === 0 ? '-- No course units available --' : '-- Select Course Unit --'}</option>
                     {courses.map(c => (
                       <option key={c.id} value={c.id}>
-                        {c.course_code} - {c.name}
+                        {c.course_code} - {c.name}{c.programme_name ? ` (${c.programme_name})` : ''}
                       </option>
                     ))}
                   </select>

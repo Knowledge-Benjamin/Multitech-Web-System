@@ -91,13 +91,13 @@ export const handleVerifyPin = asyncHandler(async (req, res) => {
   }
 
   const result = await pool.query(`
-    SELECT sep.*, 
-           s.registration_number AS student_reg_number,
-           a.first_name, a.last_name
+    SELECT sep.id, 
+           s.student_number AS student_reg_number,
+           COALESCE(a.first_name, '') AS first_name,
+           COALESCE(a.last_name, '') AS last_name
     FROM student_exam_pins sep
     JOIN students s ON sep.student_id = s.id
-    JOIN student_accounts sa ON s.student_account_id = sa.id
-    JOIN applications a ON sa.application_id = a.id
+    LEFT JOIN applications a ON s.application_id = a.id
     WHERE sep.pin = $1
       AND sep.expires_at > NOW()
       AND sep.used = false

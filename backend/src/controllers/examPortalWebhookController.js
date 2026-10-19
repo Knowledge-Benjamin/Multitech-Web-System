@@ -128,7 +128,6 @@ export const handleVerifyPin = asyncHandler(async (req, res) => {
     LEFT JOIN applications a ON s.application_id = a.id
     WHERE sep.pin = $1
       AND sep.expires_at > NOW()
-      AND sep.used = false
   `, [pin])
 
   if (result.rows.length === 0) {
@@ -137,7 +136,7 @@ export const handleVerifyPin = asyncHandler(async (req, res) => {
 
   const row = result.rows[0]
 
-  // Mark the PIN as used (one-time only)
+  // Record that this PIN has been activated for an exam session
   await pool.query(
     'UPDATE student_exam_pins SET used = true WHERE id = $1',
     [row.id]

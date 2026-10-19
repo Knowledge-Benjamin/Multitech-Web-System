@@ -124,7 +124,7 @@ export default function StudentExams() {
                   <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--color-secondary)' }}>SEB Authentication PIN</h3>
                 </div>
                 <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.45 }}>
-                  Generate your temporary 6-digit identity PIN before launching Safe Exam Browser. Each PIN is valid for 1 hour.
+                  Generate your temporary 6-digit identity PIN before launching Safe Exam Browser. Each PIN is valid for 1 hour and supports seamless re-entry if your connection drops or your computer restarts.
                 </p>
               </div>
 
@@ -141,7 +141,7 @@ export default function StudentExams() {
                       <span style={{ color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Clock size={13} /> {pinCountdown}
                       </span>
-                      <span>Single-use pass</span>
+                      <span>Re-entry supported</span>
                     </div>
                   </div>
                 ) : (

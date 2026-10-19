@@ -169,6 +169,8 @@ async function migrate() {
         allow_file_upload BOOLEAN DEFAULT false,
         permitted_apps JSONB DEFAULT '[]',
         seb_settings JSONB DEFAULT '{}',
+        assessment_type VARCHAR(50) DEFAULT 'final_exam',
+        weight_percentage NUMERIC(5,2) DEFAULT 60.00,
         status VARCHAR(20) DEFAULT 'active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -178,7 +180,9 @@ async function migrate() {
       ALTER TABLE erp_exams 
         ADD COLUMN IF NOT EXISTS allow_file_upload BOOLEAN NOT NULL DEFAULT false,
         ADD COLUMN IF NOT EXISTS permitted_apps JSONB NOT NULL DEFAULT '[]',
-        ADD COLUMN IF NOT EXISTS seb_settings JSONB NOT NULL DEFAULT '{}';
+        ADD COLUMN IF NOT EXISTS seb_settings JSONB NOT NULL DEFAULT '{}',
+        ADD COLUMN IF NOT EXISTS assessment_type VARCHAR(50) NOT NULL DEFAULT 'final_exam',
+        ADD COLUMN IF NOT EXISTS weight_percentage NUMERIC(5,2) NOT NULL DEFAULT 60.00;
     `)
     console.log('Created erp_exams table.')
 

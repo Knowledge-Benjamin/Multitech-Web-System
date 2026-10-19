@@ -23,6 +23,7 @@ import {
   Image as ImageIcon,
   File,
   Lock,
+  Unlock,
   BookOpen,
   ShieldCheck,
   Laptop,
@@ -59,6 +60,7 @@ export default function LecturerCourseDetails() {
   const [uploadError, setUploadError] = useState('')
   const [uploadSuccess, setUploadSuccess] = useState('')
   const [showUploadForm, setShowUploadForm] = useState(false)
+  const [unlockedGrades, setUnlockedGrades] = useState({})
   
   // Forms
   const [form, setForm] = useState({ title: '', description: '' })
@@ -157,9 +159,31 @@ export default function LecturerCourseDetails() {
     }
   }
 
+  const toggleUnlock = (regId) => {
+    setUnlockedGrades(prev => ({
+      ...prev,
+      [regId]: !prev[regId]
+    }))
+  }
+
   const handleGradeChange = (studentIndex, field, value) => {
     const updated = [...students]
     updated[studentIndex][field] = value
+
+    // Auto-calculate real-time preview of final score & letter grade
+    const cw = Number(field === 'coursework_mark' ? value : updated[studentIndex].coursework_mark) || 0
+    const ex = Number(field === 'exam_mark' ? value : updated[studentIndex].exam_mark) || 0
+    const finalScore = Math.round((cw + ex) * 100) / 100
+    updated[studentIndex].final_score = finalScore
+
+    let letter = 'F'
+    if (finalScore >= 80) letter = 'A'
+    else if (finalScore >= 70) letter = 'B+'
+    else if (finalScore >= 60) letter = 'B'
+    else if (finalScore >= 50) letter = 'C'
+    else if (finalScore >= 40) letter = 'D'
+    updated[studentIndex].grade_letter = letter
+
     setStudents(updated)
   }
 
@@ -743,6 +767,7 @@ export default function LecturerCourseDetails() {
                   <tbody>
                     {students.map((student, index) => {
                       const isOnline = student.source === 'online_exam_portal'
+                      const isExamLocked = isOnline && !unlockedGrades[student.course_registration_id]
                       return (
                         <tr key={student.course_registration_id}>
                           <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{student.student_number}</td>
@@ -754,36 +779,58 @@ export default function LecturerCourseDetails() {
                               min="0"
                               value={student.coursework_mark ?? ''}
                               onChange={e => handleGradeChange(index, 'coursework_mark', e.target.value)}
-                              disabled={isOnline}
+                              placeholder="0"
                               style={{
                                 width: '75px',
                                 padding: '6px 8px',
                                 borderRadius: '6px',
                                 border: '1px solid #cbd5e1',
-                                background: isOnline ? '#f1f5f9' : '#ffffff',
+                                background: '#ffffff',
                                 textAlign: 'center',
                                 fontWeight: 600
                               }}
                             />
                           </td>
                           <td>
-                            <input
-                              type="number"
-                              max="60"
-                              min="0"
-                              value={student.exam_mark ?? ''}
-                              onChange={e => handleGradeChange(index, 'exam_mark', e.target.value)}
-                              disabled={isOnline}
-                              style={{
-                                width: '75px',
-                                padding: '6px 8px',
-                                borderRadius: '6px',
-                                border: '1px solid #cbd5e1',
-                                background: isOnline ? '#f1f5f9' : '#ffffff',
-                                textAlign: 'center',
-                                fontWeight: 600
-                              }}
-                            />
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <input
+                                type="number"
+                                max="60"
+                                min="0"
+                                value={student.exam_mark ?? ''}
+                                onChange={e => handleGradeChange(index, 'exam_mark', e.target.value)}
+                                disabled={isExamLocked}
+                                placeholder="0"
+                                style={{
+                                  width: '75px',
+                                  padding: '6px 8px',
+                                  borderRadius: '6px',
+                                  border: isExamLocked ? '1px solid #c7d2fe' : '1px solid #cbd5e1',
+                                  background: isExamLocked ? '#f8fafc' : '#ffffff',
+                                  textAlign: 'center',
+                                  fontWeight: 600,
+                                  color: isExamLocked ? '#4338ca' : 'inherit'
+                                }}
+                              />
+                              {isOnline && (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleUnlock(student.course_registration_id)}
+                                  title={isExamLocked ? "Score pushed from Safe Exam Browser. Click to unlock for manual moderation." : "Score unlocked. Click to re-lock."}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    padding: '4px',
+                                    color: isExamLocked ? '#4f46e5' : '#16a34a',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                  }}
+                                >
+                                  {isExamLocked ? <Lock size={14} /> : <Unlock size={14} />}
+                                </button>
+                              )}
+                            </div>
                           </td>
                           <td style={{ fontWeight: 700, color: 'var(--color-primary, #0052cc)' }}>
                             {student.final_score ?? '-'}
@@ -812,7 +859,7 @@ export default function LecturerCourseDetails() {
                                 borderRadius: '4px',
                                 fontWeight: 600
                               }}>
-                                <Lock size={12} /> SEB Portal
+                                <ShieldCheck size={12} /> SEB Synced
                               </span>
                             ) : (
                               <span style={{
@@ -1034,6 +1081,24 @@ export default function LecturerCourseDetails() {
               </button>
             </div>
 
+            <div style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '10px',
+              padding: '12px 16px',
+              marginBottom: '1.25rem',
+              fontSize: '0.85rem',
+              color: '#475569',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <ShieldCheck size={20} style={{ color: '#4f46e5', flexShrink: 0 }} />
+              <div>
+                <strong>Integrated Grading Workflow:</strong> After students complete exams via Safe Exam Browser, click <em>Review &amp; Grade in Portal</em> below. Once marked, grades automatically calculate and sync directly into your <strong>Gradebook</strong> tab.
+              </div>
+            </div>
+
             {onlineExams.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3.5rem 2rem', background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 <ShieldCheck size={48} style={{ color: '#818cf8', margin: '0 auto 1rem', display: 'block' }} />
@@ -1070,6 +1135,7 @@ export default function LecturerCourseDetails() {
                   const end = new Date(ex.end_time)
                   const isActive = now >= start && now <= end
                   const isUpcoming = now < start
+                  const isCw = ex.assessment_type === 'coursework'
 
                   return (
                     <div
@@ -1087,7 +1153,7 @@ export default function LecturerCourseDetails() {
                       }}
                     >
                       <div style={{ display: 'grid', gap: '6px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                           <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#0f172a' }}>{ex.exam_title}</h3>
                           <span style={{
                             padding: '3px 9px',
@@ -1098,6 +1164,17 @@ export default function LecturerCourseDetails() {
                             color: isActive ? '#15803d' : isUpcoming ? '#4338ca' : '#64748b'
                           }}>
                             {isActive ? 'Active Now' : isUpcoming ? 'Upcoming' : 'Ended'}
+                          </span>
+                          <span style={{
+                            padding: '3px 9px',
+                            borderRadius: '9999px',
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            background: isCw ? '#fdf4ff' : '#eef2ff',
+                            color: isCw ? '#9333ea' : '#4338ca',
+                            border: isCw ? '1px solid #f0abfc' : '1px solid #c7d2fe'
+                          }}>
+                            {isCw ? '📝 Coursework / CAT' : '🎓 Final Examination'} ({Number(ex.weight_percentage) || (isCw ? 40 : 60)}%)
                           </span>
                         </div>
                         <div style={{ display: 'flex', gap: '16px', color: '#64748b', fontSize: '0.85rem', flexWrap: 'wrap' }}>
@@ -1154,21 +1231,22 @@ export default function LecturerCourseDetails() {
                       <div style={{ display: 'flex', gap: '10px' }}>
                         <button
                           onClick={handleCreateOnlineExam}
+                          disabled={ssoLoading}
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '6px',
-                            background: '#f8fafc',
-                            color: '#4f46e5',
-                            border: '1px solid #c7d2fe',
-                            padding: '8px 14px',
+                            background: '#4f46e5',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '9px 16px',
                             borderRadius: '8px',
                             fontSize: '0.85rem',
                             fontWeight: 600,
-                            cursor: 'pointer'
+                            cursor: ssoLoading ? 'not-allowed' : 'pointer'
                           }}
                         >
-                          <ExternalLink size={14} /> Open Exam Portal
+                          <ExternalLink size={14} /> Review &amp; Grade in Portal
                         </button>
                       </div>
                     </div>

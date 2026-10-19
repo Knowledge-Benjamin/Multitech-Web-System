@@ -28,34 +28,45 @@ export const getMyExams = asyncHandler(async (req, res) => {
   }
 
   // Fetch all active exams that match the student's registered courses
-  const placeholders = courseCodes.map((_, i) => `$${i + 1}`).join(', ')
+  const placeholders = courseCodes.map((_, i) => `$${i + 2}`).join(', ')
   const examsRes = await pool.query(`
-    SELECT 
-      id,
-      exam_portal_id,
-      erp_course_code,
-      exam_title,
-      start_time,
-      end_time,
-      duration_minutes,
-      status,
-      gate_url,
-      seb_config_key,
-      allow_file_upload,
-      permitted_apps,
-      seb_settings,
+    SELECT DISTINCT ON (e.id)
+      e.id,
+      e.exam_portal_id,
+      e.erp_course_code,
+      e.exam_title,
+      e.start_time,
+      e.end_time,
+      e.duration_minutes,
+      e.status,
+      e.gate_url,
+      e.seb_config_key,
+      e.allow_file_upload,
+      e.permitted_apps,
+      e.seb_settings,
+      e.assessment_type,
+      e.weight_percentage,
       -- Only include the SEB file if the exam is active and within or approaching the window
       CASE 
-        WHEN status = 'active' AND end_time > NOW() THEN seb_file_base64 
+        WHEN e.status = 'active' AND e.end_time > NOW() THEN e.seb_file_base64 
         ELSE NULL 
       END AS seb_file_base64,
-      created_at,
-      updated_at
-    FROM erp_exams
-    WHERE erp_course_code = ANY(ARRAY[${placeholders}]::text[])
-      AND status != 'archived'
-    ORDER BY start_time ASC
-  `, courseCodes)
+      e.created_at,
+      e.updated_at,
+      g.coursework_mark,
+      g.exam_mark,
+      g.final_score,
+      g.grade_letter,
+      g.source AS grade_source
+    FROM erp_exams e
+    LEFT JOIN courses c ON c.course_code = e.erp_course_code
+    LEFT JOIN course_registrations cr ON cr.course_id = c.id AND cr.status = 'registered'
+    LEFT JOIN student_term_enrollments ste ON cr.student_term_enrollment_id = ste.id AND ste.student_id = $1
+    LEFT JOIN grades g ON g.course_registration_id = cr.id
+    WHERE e.erp_course_code = ANY(ARRAY[${placeholders}]::text[])
+      AND e.status != 'archived'
+    ORDER BY e.id, e.start_time ASC
+  `, [studentId, ...courseCodes])
 
   res.json({ success: true, data: examsRes.rows })
 })

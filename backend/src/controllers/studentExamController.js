@@ -41,6 +41,9 @@ export const getMyExams = asyncHandler(async (req, res) => {
       status,
       gate_url,
       seb_config_key,
+      allow_file_upload,
+      permitted_apps,
+      seb_settings,
       -- Only include the SEB file if the exam is active and within or approaching the window
       CASE 
         WHEN status = 'active' AND end_time > NOW() THEN seb_file_base64 

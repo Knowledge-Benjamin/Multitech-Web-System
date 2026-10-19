@@ -49,17 +49,23 @@ export const handleExamPublished = asyncHandler(async (req, res) => {
     sebFileBase64,
     sebConfigKey,
     gateUrl,
+    allowFileUpload = false,
+    sebSettings = {},
   } = req.body
 
   if (!examId || !erpCourseCode || !sebFileBase64) {
     return res.status(400).json({ success: false, message: 'Missing required fields: examId, erpCourseCode, sebFileBase64' })
   }
 
+  const permittedApps = Array.isArray(sebSettings?.permittedProcesses)
+    ? sebSettings.permittedProcesses
+    : []
+
   // Upsert: if we already have this exam, update it (teacher may regenerate SEB file)
   await pool.query(`
     INSERT INTO erp_exams 
-      (exam_portal_id, erp_course_code, exam_title, start_time, end_time, duration_minutes, seb_file_base64, seb_config_key, gate_url, status)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'active')
+      (exam_portal_id, erp_course_code, exam_title, start_time, end_time, duration_minutes, seb_file_base64, seb_config_key, gate_url, allow_file_upload, permitted_apps, seb_settings, status)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'active')
     ON CONFLICT (exam_portal_id) DO UPDATE SET
       erp_course_code   = EXCLUDED.erp_course_code,
       exam_title        = EXCLUDED.exam_title,
@@ -69,11 +75,27 @@ export const handleExamPublished = asyncHandler(async (req, res) => {
       seb_file_base64   = EXCLUDED.seb_file_base64,
       seb_config_key    = EXCLUDED.seb_config_key,
       gate_url          = EXCLUDED.gate_url,
+      allow_file_upload = EXCLUDED.allow_file_upload,
+      permitted_apps    = EXCLUDED.permitted_apps,
+      seb_settings      = EXCLUDED.seb_settings,
       status            = 'active',
       updated_at        = NOW()
-  `, [examId, erpCourseCode, examTitle, startTime, endTime, durationMinutes, sebFileBase64, sebConfigKey, gateUrl])
+  `, [
+    examId,
+    erpCourseCode,
+    examTitle,
+    startTime,
+    endTime,
+    durationMinutes,
+    sebFileBase64,
+    sebConfigKey,
+    gateUrl,
+    !!allowFileUpload,
+    JSON.stringify(permittedApps),
+    JSON.stringify(sebSettings),
+  ])
 
-  console.log(`[examPortalWebhook] Exam published: ${examTitle} (${erpCourseCode})`)
+  console.log(`[examPortalWebhook] Exam published: ${examTitle} (${erpCourseCode}) with ${permittedApps.length} permitted app(s), file upload: ${!!allowFileUpload}`)
   res.json({ success: true, message: 'Exam record stored in ERP' })
 })
 

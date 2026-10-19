@@ -24,7 +24,9 @@ import {
   File,
   Lock,
   BookOpen,
-  ShieldCheck
+  ShieldCheck,
+  Laptop,
+  Paperclip
 } from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import LecturerSidebar from '../components/LecturerSidebar'
@@ -1098,10 +1100,55 @@ export default function LecturerCourseDetails() {
                             {isActive ? 'Active Now' : isUpcoming ? 'Upcoming' : 'Ended'}
                           </span>
                         </div>
-                        <div style={{ display: 'flex', gap: '16px', color: '#64748b', fontSize: '0.85rem' }}>
+                        <div style={{ display: 'flex', gap: '16px', color: '#64748b', fontSize: '0.85rem', flexWrap: 'wrap' }}>
                           <span><strong>Schedule:</strong> {new Date(ex.start_time).toLocaleString('en-UG', { dateStyle: 'medium', timeStyle: 'short' })}</span>
                           <span><strong>Duration:</strong> {ex.duration_minutes} mins</span>
                         </div>
+
+                        {/* Badges for SEB settings */}
+                        {(() => {
+                          const apps = Array.isArray(ex.permitted_apps)
+                            ? ex.permitted_apps
+                            : typeof ex.permitted_apps === 'string'
+                              ? (() => { try { return JSON.parse(ex.permitted_apps) } catch { return [] } })()
+                              : []
+                          return (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
+                              {apps.length > 0 && (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  background: '#f0fdf4',
+                                  border: '1px solid #bbf7d0',
+                                  color: '#166534',
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600
+                                }}>
+                                  <Laptop size={12} /> {apps.map(a => a.title || a.executable).join(', ')}
+                                </span>
+                              )}
+                              {ex.allow_file_upload && (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  background: '#eff6ff',
+                                  border: '1px solid #bfdbfe',
+                                  color: '#1e40af',
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600
+                                }}>
+                                  <Paperclip size={12} /> File Uploads Enabled
+                                </span>
+                              )}
+                            </div>
+                          )
+                        })()}
                       </div>
 
                       <div style={{ display: 'flex', gap: '10px' }}>

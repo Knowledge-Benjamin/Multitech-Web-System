@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import StudentSidebar from '../components/StudentSidebar'
 import { useApiQuery } from '../hooks/useApiQuery'
-import { Key, Clock, Calendar, ShieldCheck, Download, Inbox, FileText, CheckCircle2 } from 'lucide-react'
+import { Key, Clock, Calendar, ShieldCheck, Download, Inbox, FileText, CheckCircle2, Laptop, Paperclip, Monitor } from 'lucide-react'
 import './AdminDashboard.css'
 import './StudentExams.css'
 
@@ -186,6 +186,13 @@ export default function StudentExams() {
                   <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Open SEB, enter your PIN, and start your examination.</p>
                 </div>
               </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <span className="status-pill status-admitted" style={{ height: 'fit-content' }}>4</span>
+                <div>
+                  <strong style={{ fontSize: '0.9rem', color: 'var(--color-text)' }}>Permitted Apps</strong>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>If IDEs or tools are permitted, install and open them as needed.</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -235,6 +242,70 @@ export default function StudentExams() {
                           <FileText size={14} /> Duration: {exam.duration_minutes} minutes
                         </div>
                       </div>
+
+                      {/* External Applications Badge & Tag List */}
+                      {(() => {
+                        const apps = Array.isArray(exam.permitted_apps)
+                          ? exam.permitted_apps
+                          : typeof exam.permitted_apps === 'string'
+                            ? (() => { try { return JSON.parse(exam.permitted_apps) } catch { return [] } })()
+                            : []
+                        if (apps.length === 0) return null
+                        return (
+                          <div style={{
+                            background: '#f0fdf4',
+                            border: '1px solid #bbf7d0',
+                            borderRadius: '10px',
+                            padding: '0.75rem',
+                            marginBottom: '1rem',
+                            fontSize: '0.82rem'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#166534', fontWeight: 600, marginBottom: '6px' }}>
+                              <Laptop size={14} /> Allowed Applications ({apps.length})
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                              {apps.map((app, idx) => (
+                                <span
+                                  key={idx}
+                                  style={{
+                                    background: '#ffffff',
+                                    border: '1px solid #86efac',
+                                    color: '#15803d',
+                                    padding: '2px 8px',
+                                    borderRadius: '6px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600
+                                  }}
+                                >
+                                  {app.title || app.executable}
+                                </span>
+                              ))}
+                            </div>
+                            <p style={{ margin: '6px 0 0', fontSize: '0.72rem', color: '#166534', opacity: 0.9 }}>
+                              These tools are permitted and switchable inside Safe Exam Browser.
+                            </p>
+                          </div>
+                        )
+                      })()}
+
+                      {/* File Submissions Required / Allowed Badge */}
+                      {exam.allow_file_upload && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: '#eff6ff',
+                          border: '1px solid #bfdbfe',
+                          color: '#1e40af',
+                          padding: '6px 10px',
+                          borderRadius: '8px',
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          marginBottom: '1rem'
+                        }}>
+                          <Paperclip size={13} /> File attachment submissions enabled
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>

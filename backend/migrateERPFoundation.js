@@ -166,10 +166,19 @@ async function migrate() {
         seb_file_base64 TEXT,
         seb_config_key TEXT,
         gate_url TEXT,
+        allow_file_upload BOOLEAN DEFAULT false,
+        permitted_apps JSONB DEFAULT '[]',
+        seb_settings JSONB DEFAULT '{}',
         status VARCHAR(20) DEFAULT 'active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `)
+    await client.query(`
+      ALTER TABLE erp_exams 
+        ADD COLUMN IF NOT EXISTS allow_file_upload BOOLEAN NOT NULL DEFAULT false,
+        ADD COLUMN IF NOT EXISTS permitted_apps JSONB NOT NULL DEFAULT '[]',
+        ADD COLUMN IF NOT EXISTS seb_settings JSONB NOT NULL DEFAULT '{}';
     `)
     console.log('Created erp_exams table.')
 

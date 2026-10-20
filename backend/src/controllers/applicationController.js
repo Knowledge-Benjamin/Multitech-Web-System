@@ -67,6 +67,10 @@ export const getApplications = asyncHandler(async (req, res) => {
 // Get single application by ID or reference_number
 export const getApplicationById = asyncHandler(async (req, res) => {
   const { id } = req.params
+  const isNumeric = /^\d+$/.test(String(id || '').trim())
+  const whereClause = isNumeric ? 'WHERE a.id = $1' : 'WHERE a.reference_number = $1'
+  const param = isNumeric ? parseInt(id, 10) : String(id).trim()
+
   const result = await pool.query(
     `SELECT a.*, i.name AS intake_name, s.student_number, s.id AS student_id,
       (SELECT json_agg(json_build_object(
@@ -87,9 +91,9 @@ export const getApplicationById = asyncHandler(async (req, res) => {
       ) AS choices
      FROM applications a
      LEFT JOIN intakes i ON a.intake_id = i.id
-    LEFT JOIN students s ON s.application_id = a.id
-     WHERE a.id = $1 OR a.reference_number = $1`,
-    [id]
+     LEFT JOIN students s ON s.application_id = a.id
+     ${whereClause}`,
+    [param]
   )
   if (result.rows.length === 0) {
     return res.status(404).json({ success: false, message: 'Application not found' })
@@ -467,12 +471,15 @@ export const evaluateApplicationChoice = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'Invalid status. Must be offered or rejected.' })
   }
 
+  const appId = parseInt(id, 10)
+  const choiceId = parseInt(choice_id, 10)
+
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
 
     // Block review if unpaid
-    const appRes = await client.query('SELECT payment_status FROM applications WHERE id = $1', [id])
+    const appRes = await client.query('SELECT payment_status FROM applications WHERE id = $1', [appId])
     if (appRes.rows.length === 0) {
       await client.query('ROLLBACK')
       return res.status(404).json({ success: false, message: 'Application not found' })
@@ -486,7 +493,7 @@ export const evaluateApplicationChoice = asyncHandler(async (req, res) => {
       `UPDATE application_choices
        SET status = $1, reviewer_notes = $2, updated_at = NOW()
        WHERE id = $3 AND application_id = $4 RETURNING *`,
-      [status, reviewer_notes || null, choice_id, id]
+      [status, reviewer_notes || null, choiceId, appId]
     )
     if (choiceRes.rows.length === 0) {
       await client.query('ROLLBACK')
@@ -500,7 +507,7 @@ export const evaluateApplicationChoice = asyncHandler(async (req, res) => {
         `UPDATE application_choices
          SET status = 'bypassed', updated_at = NOW()
          WHERE application_id = $1 AND preference_order > $2 AND status = 'pending'`,
-        [id, currentChoice.preference_order]
+        [appId, currentChoice.preference_order]
       )
       // Update application overall status to offered
       await client.query(
@@ -522,7 +529,7 @@ export const evaluateApplicationChoice = asyncHandler(async (req, res) => {
           JOIN programmes p ON pi.programme_id = p.id
           LEFT JOIN campuses c ON ac.campus_id = c.id
           WHERE a.id = $2
-        `, [choice_id, id])
+        `, [choiceId, appId])
 
         if (offerDetailsRes.rows.length > 0) {
           const d = offerDetailsRes.rows[0]
@@ -573,10 +580,10 @@ export const evaluateApplicationChoice = asyncHandler(async (req, res) => {
       // If all choices are now terminal, mark application as rejected
       const remaining = await client.query(
         `SELECT id FROM application_choices WHERE application_id = $1 AND status IN ('pending', 'offered')`,
-        [id]
+        [appId]
       )
       if (remaining.rows.length === 0) {
-        await client.query(`UPDATE applications SET status = 'rejected', updated_at = NOW() WHERE id = $1`, [id])
+        await client.query(`UPDATE applications SET status = 'rejected', updated_at = NOW() WHERE id = $1`, [appId])
       }
     }
 
@@ -818,6 +825,9 @@ export const admitApplication = asyncHandler(async (req, res) => {
 // Stream / Download Admission Letter PDF
 export const getAdmissionLetter = asyncHandler(async (req, res) => {
   const { id } = req.params
+  const isNumeric = /^\d+$/.test(String(id || '').trim())
+  const whereClause = isNumeric ? 'WHERE a.id = $1' : 'WHERE a.reference_number = $1'
+  const param = isNumeric ? parseInt(id, 10) : String(id).trim()
 
   const appRes = await pool.query(`
     SELECT a.*, i.name as intake_name, i.academic_year,
@@ -840,8 +850,8 @@ export const getAdmissionLetter = asyncHandler(async (req, res) => {
     FROM applications a
     LEFT JOIN intakes i ON a.intake_id = i.id
     LEFT JOIN students s ON s.application_id = a.id
-    WHERE a.id = $1 OR a.reference_number = $1
-  `, [id])
+    ${whereClause}
+  `, [param])
 
   if (appRes.rows.length === 0) {
     return res.status(404).json({ success: false, message: 'Application not found' })
@@ -885,6 +895,9 @@ export const getAdmissionLetter = asyncHandler(async (req, res) => {
 // ---------------------------------------------------------
 export const getApplicationAcknowledgement = asyncHandler(async (req, res) => {
   const { id } = req.params
+  const isNumeric = /^\d+$/.test(String(id || '').trim())
+  const whereClause = isNumeric ? 'WHERE a.id = $1' : 'WHERE a.reference_number = $1'
+  const param = isNumeric ? parseInt(id, 10) : String(id).trim()
 
   const appRes = await pool.query(`
     SELECT a.*, i.name as intake_name,
@@ -901,8 +914,8 @@ export const getApplicationAcknowledgement = asyncHandler(async (req, res) => {
            ) AS choices
     FROM applications a
     LEFT JOIN intakes i ON a.intake_id = i.id
-    WHERE a.id = $1 OR a.reference_number = $1
-  `, [id])
+    ${whereClause}
+  `, [param])
 
   if (appRes.rows.length === 0) {
     return res.status(404).json({ success: false, message: 'Application not found' })

@@ -250,6 +250,12 @@ const initializeDatabase = async () => {
     ])
 
     await pool.query(`
+      ALTER TABLE applications DROP CONSTRAINT IF EXISTS applications_status_check;
+      ALTER TABLE applications ADD CONSTRAINT applications_status_check 
+        CHECK (status IN ('pending', 'submitted', 'under_review', 'reviewing', 'accepted', 'offered', 'admitted', 'enrolled', 'rejected'));
+    `)
+
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS application_choices (
         id SERIAL PRIMARY KEY,
         application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,

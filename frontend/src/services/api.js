@@ -34,11 +34,20 @@ api.interceptors.request.use(
     let token = null
 
     if (url.includes('/student-profile') || url.includes('/student-auth') || url.includes('/students/') || currentPath.startsWith('/student')) {
-      token = localStorage.getItem('studentToken') || localStorage.getItem('adminToken')
+      token = localStorage.getItem('studentToken')
     } else if (url.includes('/lecturer') || currentPath.startsWith('/lecturer')) {
-      token = localStorage.getItem('lecturerToken') || localStorage.getItem('adminToken')
+      token = localStorage.getItem('lecturerToken')
+    } else if (url.includes('/admin') || currentPath.startsWith('/admin')) {
+      token = localStorage.getItem('adminToken')
     } else {
-      token = localStorage.getItem('adminToken') || localStorage.getItem('studentToken') || localStorage.getItem('lecturerToken')
+      // For general or common routes, infer scope from current browser path
+      if (currentPath.startsWith('/student')) {
+        token = localStorage.getItem('studentToken')
+      } else if (currentPath.startsWith('/lecturer')) {
+        token = localStorage.getItem('lecturerToken')
+      } else {
+        token = localStorage.getItem('adminToken')
+      }
     }
 
     if (token) {

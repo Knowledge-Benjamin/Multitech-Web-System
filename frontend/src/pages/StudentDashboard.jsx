@@ -51,10 +51,17 @@ export default function StudentDashboard() {
     }
 
     try {
-      const res = await api.post('/student-auth/change-password', {
-        oldPassword: passwordForm.oldPassword,
-        newPassword: passwordForm.newPassword
-      })
+      const currentStudentToken = localStorage.getItem('studentToken')
+      const res = await api.post(
+        '/student-auth/change-password',
+        {
+          oldPassword: passwordForm.oldPassword,
+          newPassword: passwordForm.newPassword
+        },
+        {
+          headers: currentStudentToken ? { Authorization: `Bearer ${currentStudentToken}` } : {}
+        }
+      )
 
       if (res.data.success) {
         const updatedUser = { ...studentUser, must_change_password: false }

@@ -512,7 +512,7 @@ export const evaluateApplicationChoice = asyncHandler(async (req, res) => {
       // Update application overall status to offered
       await client.query(
         `UPDATE applications SET status = 'offered', updated_at = NOW() WHERE id = $1`,
-        [id]
+        [appId]
       )
 
       // Fetch offer metadata to dispatch Admission Letter PDF and notification

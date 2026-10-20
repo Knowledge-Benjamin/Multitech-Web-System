@@ -11,7 +11,9 @@ import {
   getMyCoursesMaterials, 
   getMyTimetable,
   getMyEnrollments,
-  getMyAnnouncements
+  getMyAnnouncements,
+  acceptAdmissionOffer,
+  getMyAdmissionLetter
 } from '../controllers/studentProfileController.js'
 
 const router = express.Router()
@@ -29,5 +31,7 @@ router.get('/materials', getMyCoursesMaterials)
 router.get('/timetable', getMyTimetable)
 router.get('/enrollments', getMyEnrollments)
 router.get('/announcements', getMyAnnouncements)
+router.post('/accept-offer', acceptAdmissionOffer)
+router.get('/admission-letter', getMyAdmissionLetter)
 
 export default router

@@ -29,7 +29,18 @@ const applyNoCacheHeaders = (config) => {
 // Add token to requests if available
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('adminToken') || localStorage.getItem('studentToken') || localStorage.getItem('lecturerToken')
+    const url = config.url || ''
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
+    let token = null
+
+    if (url.includes('/student-profile') || url.includes('/student-auth') || url.includes('/students/') || currentPath.startsWith('/student')) {
+      token = localStorage.getItem('studentToken') || localStorage.getItem('adminToken')
+    } else if (url.includes('/lecturer') || currentPath.startsWith('/lecturer')) {
+      token = localStorage.getItem('lecturerToken') || localStorage.getItem('adminToken')
+    } else {
+      token = localStorage.getItem('adminToken') || localStorage.getItem('studentToken') || localStorage.getItem('lecturerToken')
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }

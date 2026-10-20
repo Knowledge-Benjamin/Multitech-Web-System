@@ -11,6 +11,8 @@ export default function AdminApplications() {
   const [appliedSearch, setAppliedSearch] = useState('')
   const [selectedApp, setSelectedApp] = useState(null)
   const [adminNotes, setAdminNotes] = useState('')
+  const [admitting, setAdmitting] = useState(false)
+  const [downloadingLetter, setDownloadingLetter] = useState(false)
 
   const token = localStorage.getItem('adminToken')
   const queryParams = {}
@@ -83,6 +85,60 @@ export default function AdminApplications() {
     }
   }
 
+  const handleAdmitStudent = async (appId) => {
+    if (!confirm('Admit and enroll this student into the university ERP? This will generate their official student number, create their academic ledger, and initialize Year 1 Semester 1 enrollment.')) {
+      return
+    }
+    const token = localStorage.getItem('adminToken')
+    try {
+      setAdmitting(true)
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/applications/${appId}/admit`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      alert(res.data.message || 'Student admitted successfully!')
+      // Refresh application details
+      const refreshed = await axios.get(
+        `${import.meta.env.VITE_API_URL}/applications/${appId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setSelectedApp(refreshed.data.data)
+      fetchApplications()
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error admitting student')
+    } finally {
+      setAdmitting(false)
+    }
+  }
+
+  const handleDownloadAdmissionLetter = async (appId, refNum) => {
+    const token = localStorage.getItem('adminToken')
+    try {
+      setDownloadingLetter(true)
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/applications/${appId}/admission-letter`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      )
+      const blob = new Blob([res.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `Admission-Letter-${refNum || appId}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error downloading admission letter')
+    } finally {
+      setDownloadingLetter(false)
+    }
+  }
+
   const handleDelete = async (appId) => {
     if (!confirm('Are you sure you want to delete this application? This cannot be undone.')) return
 
@@ -102,9 +158,19 @@ export default function AdminApplications() {
   }
 
   const viewDetails = async (app) => {
-    // Optionally fetch full details if not returned in list, but our list query returns a.* so it's all there.
     setSelectedApp(app)
     setAdminNotes(app.admin_notes || '')
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/applications/${app.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      if (res.data?.success && res.data.data) {
+        setSelectedApp(res.data.data)
+      }
+    } catch (err) {
+      console.error('Error refreshing application details:', err)
+    }
   }
 
   return (
@@ -119,7 +185,7 @@ export default function AdminApplications() {
           <div className="applications-container">
             <div className="inbox-controls">
               <div className="filter-buttons">
-                {['all', 'pending', 'offered', 'enrolled', 'rejected'].map(status => (
+                {['all', 'pending', 'offered', 'admitted', 'rejected'].map(status => (
                   <button
                     key={status}
                     onClick={() => setStatusFilter(status)}
@@ -163,6 +229,11 @@ export default function AdminApplications() {
                         <td>
                           <strong>{app.first_name} {app.last_name}</strong>
                           <div className="text-muted">{app.email}</div>
+                          {app.student_number && (
+                            <div style={{ fontSize: '0.78rem', color: '#166534', fontWeight: 600, marginTop: '2px' }}>
+                              No: {app.student_number}
+                            </div>
+                          )}
                         </td>
                         <td>{app.intake_name || '—'}</td>
                         <td>
@@ -228,6 +299,9 @@ export default function AdminApplications() {
                     <div className="profile-info">
                       <h3>{selectedApp.first_name} {selectedApp.middle_name} {selectedApp.last_name}</h3>
                       <p><strong>Ref Number:</strong> {selectedApp.reference_number}</p>
+                      {selectedApp.student_number && (
+                        <p><strong>Student Number:</strong> <code style={{ background: '#e8f5e9', color: '#166534', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>{selectedApp.student_number}</code></p>
+                      )}
                       <p><strong>Intake:</strong> {selectedApp.intake_name || '—'}</p>
                       <p><strong>Date of Birth:</strong> {new Date(selectedApp.date_of_birth).toLocaleDateString()}</p>
                       <p><strong>Gender:</strong> {selectedApp.gender}</p>
@@ -386,60 +460,190 @@ export default function AdminApplications() {
                 <div className="detail-card status-card">
                   <h3>Programme Choices</h3>
 
-                  {selectedApp.payment_status !== 'paid' ? (
-                    <div style={{padding: '10px', background: '#fff3e0', borderRadius: '6px', color: '#e65100', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                      <AlertCircle size={16} /> Application fee must be paid before you can evaluate choices.
-                    </div>
-                  ) : (
-                    <>
-                      <div className="form-group" style={{marginBottom: '1rem'}}>
-                        <label>Reviewer Notes (Optional)</label>
-                        <textarea
-                          rows="3"
-                          className="form-control"
-                          value={adminNotes}
-                          onChange={(e) => setAdminNotes(e.target.value)}
-                          placeholder="Notes applied to the evaluated choice..."
-                        />
+                  {/* If student is already admitted */}
+                  {(selectedApp.status === 'admitted' || selectedApp.student_number) ? (
+                    <div style={{
+                      padding: '12px 14px',
+                      background: '#e8f5e9',
+                      border: '1px solid #81c784',
+                      borderRadius: '8px',
+                      marginBottom: '1rem',
+                      color: '#1b5e20'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px' }}>
+                        <CheckCircle size={18} color="#2e7d32" /> Student Admitted &amp; Enrolled
                       </div>
-                      {(selectedApp.choices || []).map(choice => (
-                        <div key={choice.id} style={{border: '1px solid #e0e0e0', borderRadius: '8px', padding: '12px', marginBottom: '10px'}}>
-                          <p style={{fontWeight: 600, marginBottom: '4px'}}>
-                            Choice {choice.preference_order}: {choice.programme_name}
-                            {choice.campus_name && (
-                              <span style={{fontWeight: 400, fontSize: '0.85rem', color: '#555', marginLeft: '8px'}}>
-                                @ {choice.campus_name}
-                              </span>
-                            )}
-                          </p>
-                          <p style={{marginBottom: '8px'}}>
-                            <span className={`status-badge status-${choice.status}`}>{choice.status.toUpperCase()}</span>
-                          </p>
-                          {choice.status === 'pending' && (
-                            <div style={{display: 'flex', gap: '8px'}}>
+                      <div style={{ fontSize: '0.85rem', marginBottom: '8px' }}>
+                        <strong>Student Number:</strong>{' '}
+                        <code style={{ background: '#fff', padding: '2px 8px', borderRadius: '4px', border: '1px solid #a5d6a7', fontWeight: 700, color: '#166534' }}>
+                          {selectedApp.student_number}
+                        </code>
+                      </div>
+                      <button
+                        onClick={() => handleDownloadAdmissionLetter(selectedApp.id, selectedApp.reference_number)}
+                        disabled={downloadingLetter}
+                        className="button button-outline button-sm"
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      >
+                        <FileText size={15} /> {downloadingLetter ? 'Downloading...' : 'Download Admission Letter'}
+                      </button>
+                    </div>
+                  ) : (selectedApp.choices || []).some(c => c.status === 'offered') ? (
+                    /* An offer has been made but not yet finalized as admitted */
+                    <div style={{
+                      padding: '12px 14px',
+                      background: '#e3f2fd',
+                      border: '1px solid #90caf9',
+                      borderRadius: '8px',
+                      marginBottom: '1rem',
+                      color: '#0d47a1'
+                    }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px' }}>
+                        Offer Extended
+                      </div>
+                      <div style={{ fontSize: '0.82rem', color: '#1565c0', marginBottom: '8px' }}>
+                        Applicant can accept from their student portal, or you can finalize enrollment directly:
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => handleAdmitStudent(selectedApp.id)}
+                          disabled={admitting}
+                          className="button button-primary button-sm"
+                          style={{ flex: 1 }}
+                        >
+                          {admitting ? 'Admitting...' : 'Admit & Enroll'}
+                        </button>
+                        <button
+                          onClick={() => handleDownloadAdmissionLetter(selectedApp.id, selectedApp.reference_number)}
+                          disabled={downloadingLetter}
+                          className="button button-outline button-sm"
+                          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                        >
+                          <FileText size={14} /> Letter PDF
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* Fee notice if unpaid — DOES NOT HIDE CHOICES */}
+                  {selectedApp.payment_status !== 'paid' && (
+                    <div style={{
+                      padding: '10px 12px',
+                      background: '#fff3e0',
+                      border: '1px solid #ffe0b2',
+                      borderRadius: '6px',
+                      color: '#e65100',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '8px',
+                      marginBottom: '1rem',
+                      fontSize: '0.85rem'
+                    }}>
+                      <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <div>
+                        <strong>Application Fee Unpaid:</strong> Choices are visible below for academic review. Mark the fee as paid before issuing an admission offer.
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="form-group" style={{ marginBottom: '1rem' }}>
+                    <label>Reviewer Notes (Optional)</label>
+                    <textarea
+                      rows="3"
+                      className="form-control"
+                      value={adminNotes}
+                      onChange={(e) => setAdminNotes(e.target.value)}
+                      placeholder="Notes applied to evaluated choices..."
+                    />
+                  </div>
+
+                  {(selectedApp.choices || []).map(choice => (
+                    <div key={choice.id} style={{
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      marginBottom: '10px',
+                      background: choice.status === 'offered' ? '#f0fdf4' : choice.status === 'enrolled' ? '#f0fdf4' : '#fafafa'
+                    }}>
+                      <p style={{ fontWeight: 600, marginBottom: '4px', fontSize: '0.95rem' }}>
+                        Choice {choice.preference_order}: {choice.programme_name}
+                        {choice.campus_name && (
+                          <span style={{ fontWeight: 400, fontSize: '0.85rem', color: '#555', marginLeft: '8px' }}>
+                            @ {choice.campus_name}
+                          </span>
+                        )}
+                      </p>
+                      <p style={{ marginBottom: '8px' }}>
+                        <span className={`status-badge status-${choice.status}`}>
+                          {choice.status.toUpperCase()}
+                        </span>
+                      </p>
+
+                      {choice.reviewer_notes && (
+                        <p style={{ fontSize: '0.8rem', color: '#666', fontStyle: 'italic', marginBottom: '8px' }}>
+                          Notes: {choice.reviewer_notes}
+                        </p>
+                      )}
+
+                      {choice.status === 'pending' && (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          {selectedApp.payment_status === 'paid' ? (
+                            <>
                               <button
                                 onClick={() => handleChoiceEvaluation(choice.id, 'offered')}
                                 className="button button-primary"
-                                style={{flex: 1, fontSize: '0.8rem', padding: '6px'}}
+                                style={{ flex: 1, fontSize: '0.8rem', padding: '6px' }}
                               >
-                                Offer
+                                Offer Admission
                               </button>
                               <button
                                 onClick={() => handleChoiceEvaluation(choice.id, 'rejected')}
                                 className="button"
-                                style={{flex: 1, fontSize: '0.8rem', padding: '6px', background: '#e74c3c', color: '#fff', border: 'none'}}
+                                style={{ flex: 1, fontSize: '0.8rem', padding: '6px', background: '#e74c3c', color: '#fff', border: 'none' }}
                               >
                                 Reject
                               </button>
-                            </div>
-                          )}
-                          {choice.status === 'bypassed' && (
-                            <p style={{fontSize: '0.8rem', color: '#888'}}>Bypassed — offer made on higher preference.</p>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                disabled
+                                className="button button-primary"
+                                style={{ flex: 1, fontSize: '0.8rem', padding: '6px', opacity: 0.5, cursor: 'not-allowed' }}
+                                title="Mark application fee as paid to offer admission"
+                              >
+                                Offer Admission
+                              </button>
+                              <button
+                                disabled
+                                className="button"
+                                style={{ flex: 1, fontSize: '0.8rem', padding: '6px', background: '#e74c3c', color: '#fff', border: 'none', opacity: 0.5, cursor: 'not-allowed' }}
+                                title="Mark application fee as paid to reject"
+                              >
+                                Reject
+                              </button>
+                            </>
                           )}
                         </div>
-                      ))}
-                    </>
-                  )}
+                      )}
+
+                      {choice.status === 'bypassed' && (
+                        <p style={{ fontSize: '0.8rem', color: '#888', margin: 0 }}>
+                          Bypassed — offer made on higher preference.
+                        </p>
+                      )}
+                      {choice.status === 'offered' && (
+                        <p style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 600, margin: 0 }}>
+                          ✓ Offer extended to applicant.
+                        </p>
+                      )}
+                      {choice.status === 'enrolled' && (
+                        <p style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 600, margin: 0 }}>
+                          ✓ Enrolled in this programme.
+                        </p>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

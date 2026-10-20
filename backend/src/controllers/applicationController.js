@@ -3,8 +3,8 @@ import { asyncHandler } from '../utils/helpers.js'
 import { createApplicationFolders, uploadToFolder, deleteFromDrive } from '../utils/googleDriveService.js'
 import { getSetting } from '../utils/settingsService.js'
 import { queueEmailDispatch } from '../services/emailDispatcher.js'
-import { renderApplicationAcknowledgementEmail } from '../utils/emailTemplates.js'
-import { generateApplicationAcknowledgementPdf } from '../utils/pdfService.js'
+import { renderApplicationAcknowledgementEmail, renderAdmissionOfferEmail } from '../utils/emailTemplates.js'
+import { generateApplicationAcknowledgementPdf, generateAdmissionLetterPdf } from '../utils/pdfService.js'
 import bcrypt from 'bcryptjs'
 
 /**
@@ -25,7 +25,7 @@ export const getApplications = asyncHandler(async (req, res) => {
   const { status, intake_id, search } = req.query
 
   let query = `
-    SELECT a.*, i.name AS intake_name,
+    SELECT a.*, i.name AS intake_name, s.student_number, s.id AS student_id,
       (SELECT json_agg(json_build_object(
          'id', ac.id,
          'programme_intake_id', ac.programme_intake_id,
@@ -44,6 +44,7 @@ export const getApplications = asyncHandler(async (req, res) => {
       ) AS choices
     FROM applications a
     LEFT JOIN intakes i ON a.intake_id = i.id
+    LEFT JOIN students s ON s.application_id = a.id
     WHERE 1=1
   `
   const params = []
@@ -66,7 +67,7 @@ export const getApplications = asyncHandler(async (req, res) => {
 export const getApplicationById = asyncHandler(async (req, res) => {
   const { id } = req.params
   const result = await pool.query(
-    `SELECT a.*, i.name AS intake_name,
+    `SELECT a.*, i.name AS intake_name, s.student_number, s.id AS student_id,
       (SELECT json_agg(json_build_object(
          'id', ac.id,
          'programme_intake_id', ac.programme_intake_id,
@@ -85,6 +86,7 @@ export const getApplicationById = asyncHandler(async (req, res) => {
       ) AS choices
      FROM applications a
      LEFT JOIN intakes i ON a.intake_id = i.id
+    LEFT JOIN students s ON s.application_id = a.id
      WHERE a.id = $1 OR a.reference_number = $1`,
     [id]
   )
@@ -478,6 +480,68 @@ export const evaluateApplicationChoice = asyncHandler(async (req, res) => {
         `UPDATE applications SET status = 'offered', updated_at = NOW() WHERE id = $1`,
         [id]
       )
+
+      // Fetch offer metadata to dispatch Admission Letter PDF and notification
+      try {
+        const offerDetailsRes = await client.query(`
+          SELECT a.first_name, a.last_name, a.email, a.reference_number, a.country_of_residence,
+                 i.name as intake_name, i.academic_year,
+                 p.name as programme_name, p.national_tuition_fee, p.international_tuition_fee, p.tuition_fee,
+                 c.name as campus_name
+          FROM applications a
+          JOIN intakes i ON a.intake_id = i.id
+          JOIN application_choices ac ON ac.id = $1
+          JOIN programme_intakes pi ON ac.programme_intake_id = pi.id
+          JOIN programmes p ON pi.programme_id = p.id
+          LEFT JOIN campuses c ON ac.campus_id = c.id
+          WHERE a.id = $2
+        `, [choice_id, id])
+
+        if (offerDetailsRes.rows.length > 0) {
+          const d = offerDetailsRes.rows[0]
+          const fullName = `${d.first_name} ${d.last_name}`
+          const isInternational = d.country_of_residence && d.country_of_residence.toLowerCase() !== 'uganda'
+          const tuitionFee = isInternational ? (d.international_tuition_fee || d.tuition_fee) : (d.national_tuition_fee || d.tuition_fee)
+          const currency = isInternational ? 'USD' : 'UGX'
+
+          const letterBuffer = await generateAdmissionLetterPdf({
+            studentNumber: null,
+            referenceNumber: d.reference_number,
+            fullName,
+            programmeName: d.programme_name,
+            campusName: d.campus_name,
+            intakeName: d.intake_name,
+            academicYear: d.academic_year,
+            admissionDate: new Date().toLocaleDateString('en-UG', { dateStyle: 'long' }),
+            tuitionFee,
+            currency
+          })
+
+          const emailContent = renderAdmissionOfferEmail({
+            name: fullName,
+            applicationReference: d.reference_number,
+            programmeName: d.programme_name,
+            campusName: d.campus_name,
+            intakeName: d.intake_name,
+            portalUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`
+          })
+
+          queueEmailDispatch({
+            to: d.email,
+            subject: emailContent.subject,
+            text: emailContent.text,
+            html: emailContent.html,
+            attachments: [{
+              filename: `Admission-Offer-${d.reference_number}.pdf`,
+              type: 'application/pdf',
+              disposition: 'attachment',
+              content: letterBuffer.toString('base64')
+            }]
+          })
+        }
+      } catch (mailErr) {
+        console.error('[admissions] Failed to dispatch admission offer email:', mailErr.message)
+      }
     } else if (status === 'rejected') {
       // If all choices are now terminal, mark application as rejected
       const remaining = await client.query(
@@ -521,4 +585,269 @@ export const deleteApplication = asyncHandler(async (req, res) => {
 
   await pool.query('DELETE FROM applications WHERE id = $1', [id])
   res.json({ success: true, message: 'Application deleted' })
+})
+
+
+/**
+ * Shared engine: Finalizes admission for an application with an offered choice.
+ * Atomically generates student_number, creates students master record,
+ * enrolls in term 1, creates initial tuition & functional fee invoices,
+ * and sets status to 'admitted'.
+ */
+export const finalizeAdmission = async (applicationId, client = null) => {
+  const localClient = client ? null : await pool.connect()
+  const dbClient = client || localClient
+  let committed = false
+
+  try {
+    if (!client) await dbClient.query('BEGIN')
+
+    // 1. Get Application details
+    const appRes = await dbClient.query(`
+      SELECT a.*, i.name as intake_name, i.academic_year
+      FROM applications a
+      LEFT JOIN intakes i ON a.intake_id = i.id
+      WHERE a.id = $1
+    `, [applicationId])
+
+    if (appRes.rows.length === 0) {
+      throw new Error('Application not found')
+    }
+    const app = appRes.rows[0]
+
+    // 2. Find offered or already enrolled choice
+    const choiceRes = await dbClient.query(`
+      SELECT ac.*, pi.programme_id, p.name as programme_name,
+             p.national_tuition_fee, p.international_tuition_fee, p.tuition_fee,
+             c.name as campus_name
+      FROM application_choices ac
+      JOIN programme_intakes pi ON ac.programme_intake_id = pi.id
+      JOIN programmes p ON pi.programme_id = p.id
+      LEFT JOIN campuses c ON ac.campus_id = c.id
+      WHERE ac.application_id = $1 AND ac.status IN ('offered', 'enrolled')
+      ORDER BY ac.preference_order ASC
+      LIMIT 1
+    `, [applicationId])
+
+    if (choiceRes.rows.length === 0) {
+      throw new Error('Cannot finalize admission: No programme choice has an offer on this application.')
+    }
+    const choice = choiceRes.rows[0]
+
+    // 3. Ensure student_account exists
+    let studentAccountId = null
+    const accRes = await dbClient.query(
+      `SELECT id FROM student_accounts WHERE application_id = $1 OR LOWER(email) = LOWER($2)`,
+      [applicationId, app.email]
+    )
+    if (accRes.rows.length > 0) {
+      studentAccountId = accRes.rows[0].id
+    } else {
+      const passwordHash = await bcrypt.hash(app.reference_number, 12)
+      const newAcc = await dbClient.query(`
+        INSERT INTO student_accounts (email, password_hash, application_id, must_change_password, created_at)
+        VALUES ($1, $2, $3, true, NOW())
+        RETURNING id
+      `, [app.email, passwordHash, applicationId])
+      studentAccountId = newAcc.rows[0].id
+    }
+
+    // 4. Resolve intake active term
+    const termRes = await dbClient.query(`
+      SELECT * FROM academic_terms 
+      WHERE CURRENT_DATE BETWEEN start_date AND end_date 
+      LIMIT 1
+    `)
+    let currentTerm = termRes.rows[0]
+    if (!currentTerm) {
+      const fallbackTerm = await dbClient.query(`SELECT * FROM academic_terms ORDER BY start_date DESC LIMIT 1`)
+      currentTerm = fallbackTerm.rows[0]
+    }
+    const intakeTermId = currentTerm?.id || 1
+
+    // 5. Generate collision-proof student number or reuse existing
+    const existingStudentRes = await dbClient.query(`
+      SELECT * FROM students WHERE application_id = $1 OR student_account_id = $2
+    `, [applicationId, studentAccountId])
+
+    let studentRecord = null
+    let studentNumber = null
+
+    if (existingStudentRes.rows.length > 0) {
+      studentRecord = existingStudentRes.rows[0]
+      studentNumber = studentRecord.student_number
+      await dbClient.query(`
+        UPDATE students
+        SET programme_id = $1, intake_term_id = $2, current_status = 'active', updated_at = NOW()
+        WHERE id = $3
+      `, [choice.programme_id, intakeTermId, studentRecord.id])
+    } else {
+      const currentYear = new Date().getFullYear()
+      const countRes = await dbClient.query(
+        `SELECT COUNT(*) FROM students WHERE student_number LIKE $1`,
+        [`MBS/${currentYear}/%`]
+      )
+      let seq = parseInt(countRes.rows[0].count) + 1
+      studentNumber = `MBS/${currentYear}/${String(seq).padStart(4, '0')}`
+
+      while ((await dbClient.query('SELECT 1 FROM students WHERE student_number = $1', [studentNumber])).rows.length > 0) {
+        seq++
+        studentNumber = `MBS/${currentYear}/${String(seq).padStart(4, '0')}`
+      }
+
+      const newStudentRes = await dbClient.query(`
+        INSERT INTO students (
+          student_account_id, application_id, student_number, programme_id, intake_term_id, current_status, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, 'active', NOW(), NOW())
+        RETURNING *
+      `, [studentAccountId, applicationId, studentNumber, choice.programme_id, intakeTermId])
+      studentRecord = newStudentRes.rows[0]
+    }
+
+    // 6. Update application and choice status
+    await dbClient.query(`UPDATE applications SET status = 'admitted', updated_at = NOW() WHERE id = $1`, [applicationId])
+    await dbClient.query(`UPDATE application_choices SET status = 'enrolled', updated_at = NOW() WHERE id = $1`, [choice.id])
+
+    // 7. Initialize first-term enrollment (Year 1 Semester 1)
+    if (currentTerm) {
+      const enrollCheck = await dbClient.query(`
+        SELECT * FROM student_term_enrollments WHERE student_id = $1 AND academic_term_id = $2
+      `, [studentRecord.id, currentTerm.id])
+
+      if (enrollCheck.rows.length === 0) {
+        await dbClient.query(`
+          INSERT INTO student_term_enrollments (student_id, academic_term_id, study_year, study_semester, progression_status)
+          VALUES ($1, $2, 1, 1, 'normal')
+        `, [studentRecord.id, currentTerm.id])
+      }
+
+      // 8. Generate Invoices if not already generated
+      const invoiceCheck = await dbClient.query(`
+        SELECT 1 FROM invoices WHERE student_id = $1 AND academic_term_id = $2 LIMIT 1
+      `, [studentRecord.id, currentTerm.id])
+
+      if (invoiceCheck.rows.length === 0) {
+        const isInternational = app.country_of_residence && app.country_of_residence.toLowerCase() !== 'uganda'
+        const tuitionFee = isInternational 
+          ? (choice.international_tuition_fee || choice.tuition_fee) 
+          : (choice.national_tuition_fee || choice.tuition_fee)
+        const currency = isInternational ? 'USD' : 'UGX'
+
+        if (tuitionFee && Number(tuitionFee) > 0) {
+          await dbClient.query(`
+            INSERT INTO invoices (student_id, academic_term_id, amount, currency, fee_type, description, due_date)
+            VALUES ($1, $2, $3, $4, 'tuition', $5, $6)
+          `, [studentRecord.id, currentTerm.id, tuitionFee, currency, `Tuition Fee - Year 1 Sem 1`, currentTerm.end_date])
+        }
+
+        const funcFeesRes = await dbClient.query(`SELECT * FROM functional_fees WHERE active = true`)
+        for (const f of funcFeesRes.rows) {
+          const funcAmount = isInternational ? (f.international_amount || f.amount) : (f.national_amount || f.amount)
+          if (funcAmount && Number(funcAmount) > 0) {
+            await dbClient.query(`
+              INSERT INTO invoices (student_id, academic_term_id, amount, currency, fee_type, description, due_date)
+              VALUES ($1, $2, $3, $4, 'functional', $5, $6)
+            `, [studentRecord.id, currentTerm.id, funcAmount, currency, f.fee_name || f.name, currentTerm.end_date])
+          }
+        }
+      }
+    }
+
+    if (!client) {
+      await dbClient.query('COMMIT')
+      committed = true
+    }
+
+    return {
+      studentId: studentRecord.id,
+      studentAccountId,
+      studentNumber,
+      programmeId: choice.programme_id,
+      programmeName: choice.programme_name,
+      campusName: choice.campus_name,
+      status: 'admitted'
+    }
+  } catch (err) {
+    if (!client && !committed) {
+      await dbClient.query('ROLLBACK')
+    }
+    throw err
+  } finally {
+    if (localClient) localClient.release()
+  }
+}
+
+// Admin: Direct Admission Endpoint
+export const admitApplication = asyncHandler(async (req, res) => {
+  const { id } = req.params
+  const result = await finalizeAdmission(id)
+  res.json({
+    success: true,
+    message: 'Applicant successfully admitted and enrolled into the student body.',
+    data: result
+  })
+})
+
+// Stream / Download Admission Letter PDF
+export const getAdmissionLetter = asyncHandler(async (req, res) => {
+  const { id } = req.params
+
+  const appRes = await pool.query(`
+    SELECT a.*, i.name as intake_name, i.academic_year,
+           s.student_number,
+           (SELECT json_agg(json_build_object(
+              'id', ac.id,
+              'status', ac.status,
+              'programme_name', p.name,
+              'campus_name', ca.name,
+              'national_tuition_fee', p.national_tuition_fee,
+              'international_tuition_fee', p.international_tuition_fee,
+              'tuition_fee', p.tuition_fee
+            ) ORDER BY ac.preference_order)
+            FROM application_choices ac
+            JOIN programme_intakes pi ON ac.programme_intake_id = pi.id
+            JOIN programmes p ON pi.programme_id = p.id
+            LEFT JOIN campuses ca ON ac.campus_id = ca.id
+            WHERE ac.application_id = a.id
+           ) AS choices
+    FROM applications a
+    LEFT JOIN intakes i ON a.intake_id = i.id
+    LEFT JOIN students s ON s.application_id = a.id
+    WHERE a.id = $1 OR a.reference_number = $1
+  `, [id])
+
+  if (appRes.rows.length === 0) {
+    return res.status(404).json({ success: false, message: 'Application not found' })
+  }
+
+  const app = appRes.rows[0]
+  const offeredChoice = (app.choices || []).find(c => ['offered', 'enrolled'].includes(c.status))
+    || (app.choices || [])[0]
+
+  if (!offeredChoice) {
+    return res.status(400).json({ success: false, message: 'No offered programme choice found for this application.' })
+  }
+
+  const isInternational = app.country_of_residence && app.country_of_residence.toLowerCase() !== 'uganda'
+  const tuitionFee = isInternational
+    ? (offeredChoice.international_tuition_fee || offeredChoice.tuition_fee)
+    : (offeredChoice.national_tuition_fee || offeredChoice.tuition_fee)
+  const currency = isInternational ? 'USD' : 'UGX'
+
+  const pdfBuffer = await generateAdmissionLetterPdf({
+    studentNumber: app.student_number,
+    referenceNumber: app.reference_number,
+    fullName: `${app.first_name} ${app.last_name}`,
+    programmeName: offeredChoice.programme_name,
+    campusName: offeredChoice.campus_name,
+    intakeName: app.intake_name,
+    academicYear: app.academic_year,
+    admissionDate: new Date().toLocaleDateString('en-UG', { dateStyle: 'long' }),
+    tuitionFee,
+    currency
+  })
+
+  res.setHeader('Content-Type', 'application/pdf')
+  res.setHeader('Content-Disposition', `inline; filename="Admission-Letter-${app.reference_number}.pdf"`)
+  res.send(pdfBuffer)
 })

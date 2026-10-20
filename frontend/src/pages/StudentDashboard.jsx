@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BookOpen, GraduationCap, CreditCard, Clock, CheckSquare,
-  ArrowRight, ShieldCheck, AlertCircle, CheckCircle2, User, FileText
+  ArrowRight, ShieldCheck, AlertCircle, CheckCircle2, User, FileText,
+  Sparkles, Award
 } from 'lucide-react'
 import api from '../services/api'
 import StudentSidebar from '../components/StudentSidebar'
@@ -18,10 +19,15 @@ export default function StudentDashboard() {
   const [passwordMessage, setPasswordMessage] = useState('')
   const [passwordError, setPasswordError] = useState('')
   const [changingPassword, setChangingPassword] = useState(false)
-  const studentUser = JSON.parse(localStorage.getItem('studentUser') || '{}')
+  const [acceptingOffer, setAcceptingOffer] = useState(false)
+  const [downloadingLetter, setDownloadingLetter] = useState(false)
+  const [offerSuccessMessage, setOfferSuccessMessage] = useState('')
+  const [offerErrorMessage, setOfferErrorMessage] = useState('')
 
+  const studentUser = JSON.parse(localStorage.getItem('studentUser') || '{}')
   const token = localStorage.getItem('studentToken')
-  const { data: resData, isLoading } = useApiQuery(`${API}/student-profile`, 'studentDashboardProfile', {
+
+  const { data: resData, isLoading, refetch } = useApiQuery(`${API}/student-profile`, 'studentDashboardProfile', {
     axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
   })
   const data = resData?.data
@@ -62,6 +68,58 @@ export default function StudentDashboard() {
       setPasswordError(error.response?.data?.message || 'Unable to update password')
     } finally {
       setChangingPassword(false)
+    }
+  }
+
+  const handleAcceptAdmissionOffer = async () => {
+    if (!window.confirm('Do you confirm acceptance of this admission offer? Your student account will be officially enrolled at Multitech Business School.')) {
+      return
+    }
+
+    setAcceptingOffer(true)
+    setOfferErrorMessage('')
+    try {
+      const res = await api.post('/student-profile/accept-offer')
+      if (res.data.success) {
+        setOfferSuccessMessage(res.data.message || 'Congratulations! You have accepted your offer. Initializing your student portal...')
+        if (res.data.token) {
+          localStorage.setItem('studentToken', res.data.token)
+        }
+        if (res.data.student) {
+          localStorage.setItem('studentUser', JSON.stringify(res.data.student))
+        }
+        setTimeout(() => {
+          window.location.reload()
+        }, 1500)
+      } else {
+        setOfferErrorMessage(res.data.message || 'Unable to accept admission offer')
+        setAcceptingOffer(false)
+      }
+    } catch (err) {
+      setOfferErrorMessage(err.response?.data?.message || 'Error accepting admission offer')
+      setAcceptingOffer(false)
+    }
+  }
+
+  const handleDownloadAdmissionLetter = async () => {
+    setDownloadingLetter(true)
+    try {
+      const res = await api.get('/student-profile/admission-letter', {
+        responseType: 'blob'
+      })
+      const blob = new Blob([res.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `Admission-Letter-${data?.applicationInfo?.reference_number || 'Multitech'}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error downloading admission letter')
+    } finally {
+      setDownloadingLetter(false)
     }
   }
 
@@ -151,6 +209,156 @@ export default function StudentDashboard() {
         ) : data?.isApplicantOnly ? (
           /* Applicant View */
           <div className="recent-section">
+            {offerSuccessMessage && (
+              <div style={{
+                background: '#e8f5e9',
+                border: '1px solid #81c784',
+                color: '#1b5e20',
+                padding: '1rem 1.25rem',
+                borderRadius: '12px',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                fontWeight: 600
+              }}>
+                <CheckCircle2 size={20} color="#2e7d32" />
+                <span>{offerSuccessMessage}</span>
+              </div>
+            )}
+
+            {offerErrorMessage && (
+              <div style={{
+                background: '#ffebee',
+                border: '1px solid #ef9a9a',
+                color: '#c62828',
+                padding: '1rem 1.25rem',
+                borderRadius: '12px',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                fontWeight: 500
+              }}>
+                <AlertCircle size={20} color="#c62828" />
+                <span>{offerErrorMessage}</span>
+              </div>
+            )}
+
+            {/* If an offer has been extended by Admissions */}
+            {(() => {
+              const offeredChoice = (data.applicationChoices || []).find(c => ['offered', 'enrolled'].includes(c.status))
+              if (!offeredChoice) return null
+
+              return (
+                <div style={{
+                  background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%)',
+                  borderRadius: '16px',
+                  padding: '2rem',
+                  color: '#ffffff',
+                  marginBottom: '2rem',
+                  boxShadow: '0 10px 25px -5px rgba(37, 99, 235, 0.3)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      padding: '4px 12px',
+                      borderRadius: '20px',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      marginBottom: '1rem'
+                    }}>
+                      <Sparkles size={14} /> Official Admission Offer
+                    </div>
+                    <h2 style={{ fontSize: '1.65rem', fontWeight: 800, margin: '0 0 0.5rem 0', color: '#ffffff' }}>
+                      Congratulations, {firstName}!
+                    </h2>
+                    <p style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.9)', maxWidth: '640px', lineHeight: 1.5, margin: '0 0 1.5rem 0' }}>
+                      The Admissions Board has accepted your application and is pleased to offer you admission to study at Multitech Business School.
+                    </p>
+
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '12px',
+                      padding: '1.25rem 1.5rem',
+                      marginBottom: '1.75rem',
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                      gap: '1.25rem'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600 }}>Programme</div>
+                        <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#ffffff', marginTop: '4px' }}>{offeredChoice.programme_name}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600 }}>Campus</div>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 600, color: '#ffffff', marginTop: '4px' }}>{offeredChoice.campus_name || 'Main Campus'}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600 }}>Intake Term</div>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 600, color: '#ffffff', marginTop: '4px' }}>{data.applicationInfo?.intake_name || 'Upcoming Session'}</div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+                      <button
+                        onClick={handleAcceptAdmissionOffer}
+                        disabled={acceptingOffer}
+                        className="button"
+                        style={{
+                          background: '#16a34a',
+                          color: '#ffffff',
+                          border: 'none',
+                          padding: '0.85rem 1.75rem',
+                          borderRadius: '10px',
+                          fontWeight: 700,
+                          fontSize: '0.95rem',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          cursor: acceptingOffer ? 'not-allowed' : 'pointer',
+                          boxShadow: '0 4px 14px 0 rgba(22, 163, 74, 0.4)'
+                        }}
+                      >
+                        <CheckCircle2 size={18} />
+                        {acceptingOffer ? 'Enrolling into ERP...' : 'Accept Offer & Complete Enrollment'}
+                      </button>
+
+                      <button
+                        onClick={handleDownloadAdmissionLetter}
+                        disabled={downloadingLetter}
+                        className="button"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.15)',
+                          color: '#ffffff',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          padding: '0.85rem 1.5rem',
+                          borderRadius: '10px',
+                          fontWeight: 600,
+                          fontSize: '0.95rem',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          cursor: downloadingLetter ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        <FileText size={18} />
+                        {downloadingLetter ? 'Downloading...' : 'Download Official Letter (PDF)'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+
             <div className="section-header">
               <h2>Application Overview</h2>
               <span className={`status-pill status-${data.applicationInfo?.status || 'submitted'}`}>
@@ -181,6 +389,18 @@ export default function StudentDashboard() {
                   </div>
                 </div>
               </div>
+
+              {data.applicationInfo?.payment_status !== 'paid' ? (
+                <div style={{ marginTop: '1.25rem', padding: '10px 14px', background: '#fff7ed', border: '1px solid #ffedd5', borderRadius: '8px', color: '#c2410c', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AlertCircle size={16} />
+                  <span>Your application fee is currently pending. Please complete your fee payment so the Admissions Board can proceed with reviewing your choices.</span>
+                </div>
+              ) : (
+                <div style={{ marginTop: '1.25rem', padding: '10px 14px', background: '#f0fdf4', border: '1px solid #dcfce7', borderRadius: '8px', color: '#15803d', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <CheckCircle2 size={16} />
+                  <span>Application fee confirmed. Your chosen programmes are being evaluated by the Admissions Board.</span>
+                </div>
+              )}
             </div>
 
             <div className="section-header">

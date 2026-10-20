@@ -89,7 +89,7 @@ export const getCourseDetails = async (req, res) => {
     let onlineExams = []
     try {
       const examsRes = await pool.query(`
-        SELECT id, exam_portal_id, erp_course_code, exam_title, start_time, end_time, duration_minutes, status, gate_url, created_at, updated_at
+        SELECT id, exam_portal_id, erp_course_code, exam_title, start_time, end_time, duration_minutes, status, gate_url, allow_file_upload, permitted_apps, seb_settings, assessment_type, weight_percentage, created_at, updated_at
         FROM erp_exams
         WHERE erp_course_code = $1 AND status != 'archived'
         ORDER BY start_time DESC

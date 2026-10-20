@@ -16,6 +16,7 @@ export default function StudentResults() {
   const getGradeBadge = (letter) => {
     switch(letter) {
       case 'A': return <span className="status-pill status-admitted">Grade A</span>
+      case 'B+': return <span className="status-pill status-admitted">Grade B+</span>
       case 'B': return <span className="status-pill status-admitted">Grade B</span>
       case 'C': return <span className="status-pill status-pending">Grade C</span>
       case 'D': return <span className="status-pill status-pending">Grade D</span>
@@ -128,8 +129,8 @@ export default function StudentResults() {
                         </tr>
                       </thead>
                       <tbody>
-                        {term.courses.map((course) => (
-                          <tr key={course.id}>
+                        {(term.courses || term.grades || []).map((course) => (
+                          <tr key={course.id || course.grade_id}>
                             <td>
                               <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--color-primary)' }}>
                                 {course.code}

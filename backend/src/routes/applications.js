@@ -19,11 +19,14 @@ const applicationUpload = upload.fields([
 
 // Public routes
 router.get('/check-status/:reference', applicationController.getApplicationById)
+router.get('/:id/acknowledgement', applicationController.getApplicationAcknowledgement)
 router.post('/', applicationUpload, applicationController.createApplication)
 
-// Admin routes (protected)
+// Admin & Authorized routes
 router.get('/', authMiddleware, adminOnly, applicationController.getApplications)
 router.get('/:id', authMiddleware, adminOnly, applicationController.getApplicationById)
+router.get('/:id/admission-letter', authMiddleware, applicationController.getAdmissionLetter)
+router.post('/:id/admit', authMiddleware, adminOnly, applicationController.admitApplication)
 router.put('/:id/payment', authMiddleware, adminOnly, applicationController.updatePaymentStatus)
 router.post('/:id/remind-payment', authMiddleware, adminOnly, applicationController.sendPaymentReminder)
 router.put('/:id/choices/:choice_id', authMiddleware, adminOnly, applicationController.evaluateApplicationChoice)

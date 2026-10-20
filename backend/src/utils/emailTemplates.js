@@ -170,3 +170,94 @@ export const renderAutoReplyEmail = ({ name }) => {
 
   return { subject, text, html }
 }
+
+
+export const renderAdmissionOfferEmail = ({
+  name,
+  applicationReference,
+  programmeName,
+  campusName,
+  intakeName,
+  studentNumber,
+  portalUrl
+}) => {
+  const safeName = escapeHtml(name)
+  const safeRef = escapeHtml(applicationReference)
+  const safeProg = escapeHtml(programmeName)
+  const safeCampus = escapeHtml(campusName || 'Main Campus')
+  const safeIntake = escapeHtml(intakeName || 'Upcoming Intake')
+  const url = portalUrl || 'https://multitech.ac.ug/login'
+
+  const subject = `Congratulations! Offer of Admission - Multitech Business School (${safeProg})`
+  const text = `Dear ${name},
+
+Congratulations! We are delighted to inform you that you have been offered admission to Multitech Business School for:
+
+Programme: ${programmeName}
+Campus: ${campusName || 'Main Campus'}
+Intake: ${intakeName || 'Upcoming Intake'}
+Application Reference: ${applicationReference}
+
+Your official Provisional Admission Offer Letter is attached to this email.
+
+Next Steps:
+Please sign into your Multitech Student Portal (${url}) to accept your offer, confirm your enrollment, and view your academic schedule.
+
+Best regards,
+Office of the Academic Registrar
+Multitech Business School`
+
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+      <div style="text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #2563eb;">
+        <h1 style="color: #1e3a8a; font-size: 22px; margin: 0 0 6px 0;">MULTITECH BUSINESS SCHOOL</h1>
+        <p style="color: #64748b; font-size: 13px; margin: 0;">Office of the Academic Registrar • Directorate of Admissions</p>
+      </div>
+
+      <h2 style="color: #16a34a; font-size: 20px; margin: 0 0 16px 0;">🎉 Congratulations, ${safeName}!</h2>
+      <p style="font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;">
+        We are thrilled to inform you that your application has been evaluated and approved. You have been granted a 
+        <strong>Provisional Offer of Admission</strong> to study at Multitech Business School.
+      </p>
+
+      <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin: 0 0 20px 0;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600; width: 140px;">Programme:</td>
+            <td style="padding: 6px 0; color: #0f172a; font-weight: 700;">${safeProg}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Campus:</td>
+            <td style="padding: 6px 0; color: #0f172a;">${safeCampus}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Intake:</td>
+            <td style="padding: 6px 0; color: #0f172a;">${safeIntake}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Application Ref:</td>
+            <td style="padding: 6px 0; font-family: monospace; font-weight: 700; color: #2563eb;">${safeRef}</td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="font-size: 14px; line-height: 1.6; color: #334155; margin: 0 0 20px 0;">
+        Your formal <strong>Admission Offer Letter (PDF)</strong> is attached to this email. Please log into your Student Portal to review the details and formally accept your offer.
+      </p>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${url}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 700; font-size: 15px;">
+          Access Student Portal & Accept Offer &rarr;
+        </a>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+      <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: 0;">
+        Multitech Business School • Plot 93 Sir Apollo Kaggwa Rd, Kampala, Uganda<br/>
+        admissions@multitech.ac.ug • +256 414 532 755
+      </p>
+    </div>
+  `
+
+  return { subject, text, html }
+}

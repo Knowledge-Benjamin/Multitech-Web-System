@@ -1,3 +1,6 @@
+import jwt from 'jsonwebtoken'
+import { finalizeAdmission } from './applicationController.js'
+import { generateAdmissionLetterPdf } from '../utils/pdfService.js'
 import pool from '../config/database.js'
 import { asyncHandler } from '../utils/helpers.js'
 import crypto from 'crypto'
@@ -430,4 +433,115 @@ export const getMyAnnouncements = asyncHandler(async (req, res) => {
   `, [studentId])
 
   res.json({ success: true, data: rows })
+})
+
+
+// ---------------------------------------------------------
+// Accept Admission Offer & Complete Enrollment
+// ---------------------------------------------------------
+export const acceptAdmissionOffer = asyncHandler(async (req, res) => {
+  const { applicationId, id: accountId } = req.student
+  if (!applicationId) {
+    return res.status(400).json({ success: false, message: 'No linked application found for this account.' })
+  }
+
+  const result = await finalizeAdmission(applicationId)
+
+  // Issue refreshed token with the newly created studentId
+  const token = jwt.sign(
+    {
+      id: accountId,
+      email: req.student.email,
+      studentId: result.studentId,
+      applicationId: applicationId,
+      role: 'student'
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  )
+
+  res.json({
+    success: true,
+    message: 'Congratulations! You have accepted your offer and your enrollment is complete.',
+    token,
+    student: {
+      id: accountId,
+      email: req.student.email,
+      name: `${result.programmeName} Student`,
+      must_change_password: false,
+      application_status: 'admitted',
+      student_id_db: result.studentId,
+      student_number: result.studentNumber
+    },
+    data: result
+  })
+})
+
+// ---------------------------------------------------------
+// Download My Official Admission Letter PDF
+// ---------------------------------------------------------
+export const getMyAdmissionLetter = asyncHandler(async (req, res) => {
+  const { applicationId } = req.student
+  if (!applicationId) {
+    return res.status(400).json({ success: false, message: 'No application record found.' })
+  }
+
+  const appRes = await pool.query(`
+    SELECT a.*, i.name as intake_name, i.academic_year,
+           s.student_number,
+           (SELECT json_agg(json_build_object(
+              'id', ac.id,
+              'status', ac.status,
+              'programme_name', p.name,
+              'campus_name', ca.name,
+              'national_tuition_fee', p.national_tuition_fee,
+              'international_tuition_fee', p.international_tuition_fee,
+              'tuition_fee', p.tuition_fee
+            ) ORDER BY ac.preference_order)
+            FROM application_choices ac
+            JOIN programme_intakes pi ON ac.programme_intake_id = pi.id
+            JOIN programmes p ON pi.programme_id = p.id
+            LEFT JOIN campuses ca ON ac.campus_id = ca.id
+            WHERE ac.application_id = a.id
+           ) AS choices
+    FROM applications a
+    LEFT JOIN intakes i ON a.intake_id = i.id
+    LEFT JOIN students s ON s.application_id = a.id
+    WHERE a.id = $1
+  `, [applicationId])
+
+  if (appRes.rows.length === 0) {
+    return res.status(404).json({ success: false, message: 'Application not found' })
+  }
+
+  const app = appRes.rows[0]
+  const offeredChoice = (app.choices || []).find(c => ['offered', 'enrolled'].includes(c.status))
+    || (app.choices || [])[0]
+
+  if (!offeredChoice) {
+    return res.status(400).json({ success: false, message: 'No offered programme choice found for this application.' })
+  }
+
+  const isInternational = app.country_of_residence && app.country_of_residence.toLowerCase() !== 'uganda'
+  const tuitionFee = isInternational
+    ? (offeredChoice.international_tuition_fee || offeredChoice.tuition_fee)
+    : (offeredChoice.national_tuition_fee || offeredChoice.tuition_fee)
+  const currency = isInternational ? 'USD' : 'UGX'
+
+  const pdfBuffer = await generateAdmissionLetterPdf({
+    studentNumber: app.student_number,
+    referenceNumber: app.reference_number,
+    fullName: `${app.first_name} ${app.last_name}`,
+    programmeName: offeredChoice.programme_name,
+    campusName: offeredChoice.campus_name,
+    intakeName: app.intake_name,
+    academicYear: app.academic_year,
+    admissionDate: new Date().toLocaleDateString('en-UG', { dateStyle: 'long' }),
+    tuitionFee,
+    currency
+  })
+
+  res.setHeader('Content-Type', 'application/pdf')
+  res.setHeader('Content-Disposition', `inline; filename="Admission-Letter-${app.reference_number}.pdf"`)
+  res.send(pdfBuffer)
 })

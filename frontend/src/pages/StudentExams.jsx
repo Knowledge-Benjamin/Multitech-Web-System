@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 import StudentSidebar from '../components/StudentSidebar'
 import { useApiQuery } from '../hooks/useApiQuery'
-import { Key, Clock, Calendar, ShieldCheck, Download, Inbox, FileText, CheckCircle2 } from 'lucide-react'
+import { Key, Clock, Calendar, ShieldCheck, Download, Inbox, FileText, CheckCircle2, Laptop, Paperclip, Monitor } from 'lucide-react'
 import './AdminDashboard.css'
 import './StudentExams.css'
 
@@ -123,7 +124,7 @@ export default function StudentExams() {
                   <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--color-secondary)' }}>SEB Authentication PIN</h3>
                 </div>
                 <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.45 }}>
-                  Generate your temporary 6-digit identity PIN before launching Safe Exam Browser. Each PIN is valid for 1 hour.
+                  Generate your temporary 6-digit identity PIN before launching Safe Exam Browser. Each PIN is valid for 1 hour and supports seamless re-entry if your connection drops or your computer restarts.
                 </p>
               </div>
 
@@ -140,7 +141,7 @@ export default function StudentExams() {
                       <span style={{ color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Clock size={13} /> {pinCountdown}
                       </span>
-                      <span>Single-use pass</span>
+                      <span>Re-entry supported</span>
                     </div>
                   </div>
                 ) : (
@@ -186,6 +187,13 @@ export default function StudentExams() {
                   <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Open SEB, enter your PIN, and start your examination.</p>
                 </div>
               </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <span className="status-pill status-admitted" style={{ height: 'fit-content' }}>4</span>
+                <div>
+                  <strong style={{ fontSize: '0.9rem', color: 'var(--color-text)' }}>Permitted Apps</strong>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>If IDEs or tools are permitted, install and open them as needed.</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -211,10 +219,23 @@ export default function StudentExams() {
                 return (
                   <div key={exam.id} style={{ background: 'white', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                        <span className={`status-pill status-${badge.cls === 'badge-active' ? 'admitted' : badge.cls === 'badge-upcoming' ? 'pending' : 'rejected'}`}>
-                          {badge.label}
-                        </span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span className={`status-pill status-${badge.cls === 'badge-active' ? 'admitted' : badge.cls === 'badge-upcoming' ? 'pending' : 'rejected'}`}>
+                            {badge.label}
+                          </span>
+                          <span style={{
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            background: exam.assessment_type === 'coursework' ? '#fdf4ff' : '#eef2ff',
+                            color: exam.assessment_type === 'coursework' ? '#9333ea' : '#4338ca',
+                            border: exam.assessment_type === 'coursework' ? '1px solid #f0abfc' : '1px solid #c7d2fe'
+                          }}>
+                            {exam.assessment_type === 'coursework' ? '📝 Coursework / CAT' : '🎓 Final Examination'} ({Number(exam.weight_percentage) || (exam.assessment_type === 'coursework' ? 40 : 60)}%)
+                          </span>
+                        </div>
                         <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--color-primary)' }}>
                           {exam.erp_course_code}
                         </span>
@@ -235,6 +256,111 @@ export default function StudentExams() {
                           <FileText size={14} /> Duration: {exam.duration_minutes} minutes
                         </div>
                       </div>
+
+                      {/* Post-Exam Graded Banner */}
+                      {(() => {
+                        const isCw = exam.assessment_type === 'coursework'
+                        const mark = isCw ? exam.coursework_mark : exam.exam_mark
+                        if (mark === null || mark === undefined) return null
+
+                        return (
+                          <div style={{
+                            background: '#f0fdf4',
+                            border: '1px solid #86efac',
+                            borderRadius: '10px',
+                            padding: '0.75rem 1rem',
+                            marginBottom: '1rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '10px'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <CheckCircle2 size={18} style={{ color: '#16a34a' }} />
+                              <div>
+                                <div style={{ fontWeight: 700, fontSize: '0.84rem', color: '#15803d' }}>
+                                  Graded &amp; Synchronized
+                                </div>
+                                <div style={{ fontSize: '0.74rem', color: '#166534' }}>
+                                  Official score posted to Academic Gradebook
+                                </div>
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#15803d' }}>
+                                {mark}%
+                              </div>
+                              <div style={{ fontSize: '0.7rem', color: '#166534' }}>
+                                Grade: {exam.grade_letter || 'Recorded'}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })()}
+
+                      {/* External Applications Badge & Tag List */}
+                      {(() => {
+                        const apps = Array.isArray(exam.permitted_apps)
+                          ? exam.permitted_apps
+                          : typeof exam.permitted_apps === 'string'
+                            ? (() => { try { return JSON.parse(exam.permitted_apps) } catch { return [] } })()
+                            : []
+                        if (apps.length === 0) return null
+                        return (
+                          <div style={{
+                            background: '#f0fdf4',
+                            border: '1px solid #bbf7d0',
+                            borderRadius: '10px',
+                            padding: '0.75rem',
+                            marginBottom: '1rem',
+                            fontSize: '0.82rem'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#166534', fontWeight: 600, marginBottom: '6px' }}>
+                              <Laptop size={14} /> Allowed Applications ({apps.length})
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                              {apps.map((app, idx) => (
+                                <span
+                                  key={idx}
+                                  style={{
+                                    background: '#ffffff',
+                                    border: '1px solid #86efac',
+                                    color: '#15803d',
+                                    padding: '2px 8px',
+                                    borderRadius: '6px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600
+                                  }}
+                                >
+                                  {app.title || app.executable}
+                                </span>
+                              ))}
+                            </div>
+                            <p style={{ margin: '6px 0 0', fontSize: '0.72rem', color: '#166534', opacity: 0.9 }}>
+                              These tools are permitted and switchable inside Safe Exam Browser.
+                            </p>
+                          </div>
+                        )
+                      })()}
+
+                      {/* File Submissions Required / Allowed Badge */}
+                      {exam.allow_file_upload && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: '#eff6ff',
+                          border: '1px solid #bfdbfe',
+                          color: '#1e40af',
+                          padding: '6px 10px',
+                          borderRadius: '8px',
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          marginBottom: '1rem'
+                        }}>
+                          <Paperclip size={13} /> File attachment submissions enabled
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
@@ -249,6 +375,27 @@ export default function StudentExams() {
                           <Download size={16} />
                           {downloadingId === exam.id ? 'Preparing SEB File...' : 'Download SEB File'}
                         </button>
+                      ) : (exam.coursework_mark != null || exam.exam_mark != null) ? (
+                        <Link
+                          to="/student/results"
+                          className="button button-primary"
+                          style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textDecoration: 'none' }}
+                        >
+                          View in Academic Results
+                        </Link>
+                      ) : badge.cls === 'badge-ended' ? (
+                        <div style={{
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          textAlign: 'center',
+                          fontSize: '0.84rem',
+                          color: '#64748b',
+                          fontWeight: 500
+                        }}>
+                          Exam Concluded • Marking in Progress
+                        </div>
                       ) : (
                         <button className="button" disabled style={{ width: '100%', opacity: 0.6, cursor: 'not-allowed' }}>
                           SEB file unavailable

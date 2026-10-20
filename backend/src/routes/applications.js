@@ -19,6 +19,7 @@ const applicationUpload = upload.fields([
 
 // Public routes
 router.get('/check-status/:reference', applicationController.getApplicationById)
+router.get('/:id/acknowledgement', applicationController.getApplicationAcknowledgement)
 router.post('/', applicationUpload, applicationController.createApplication)
 
 // Admin & Authorized routes

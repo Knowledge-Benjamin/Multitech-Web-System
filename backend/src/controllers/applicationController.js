@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken'
 import pool from '../config/database.js'
 import { asyncHandler } from '../utils/helpers.js'
 import { createApplicationFolders, uploadToFolder, deleteFromDrive } from '../utils/googleDriveService.js'
@@ -299,13 +300,29 @@ export const createApplication = asyncHandler(async (req, res) => {
 
     // --- Auto-create student account ---
     const passwordHash = await bcrypt.hash(referenceNumber, 12)
-    await client.query(
+    const saRes = await client.query(
       `INSERT INTO student_accounts (email, password_hash, application_id, must_change_password, created_at)
-       VALUES ($1, $2, $3, true, NOW()) ON CONFLICT (email) DO NOTHING`,
+       VALUES ($1, $2, $3, true, NOW())
+       ON CONFLICT (email) DO UPDATE SET application_id = $3
+       RETURNING id, email`,
       [email, passwordHash, application.id]
     )
+    const studentAccount = saRes.rows[0]
 
     await client.query('COMMIT')
+
+    // Generate JWT token for immediate seamless portal access
+    const token = jwt.sign(
+      {
+        id: studentAccount.id,
+        email: email,
+        studentId: null, // applicant only
+        applicationId: application.id,
+        role: 'student'
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    )
 
     // --- Send acknowledgement email ---
     const choicesList = choiceRows.map((c, i) => `${i + 1}. ${c.programme_name}`).join('\n')
@@ -356,11 +373,21 @@ export const createApplication = asyncHandler(async (req, res) => {
       success: true,
       message: 'Application submitted successfully',
       data: {
+        id: application.id,
         reference_number: referenceNumber,
         applicant_name: `${first_name} ${last_name}`,
         intake: intake.name,
         payment_status: 'pending',
         status: 'pending',
+        token,
+        student: {
+          id: studentAccount.id,
+          email,
+          name: `${first_name} ${last_name}`,
+          application_id: application.id,
+          must_change_password: true,
+          application_status: 'pending'
+        },
         credentials: {
           email,
           password: referenceNumber,
@@ -849,5 +876,56 @@ export const getAdmissionLetter = asyncHandler(async (req, res) => {
 
   res.setHeader('Content-Type', 'application/pdf')
   res.setHeader('Content-Disposition', `inline; filename="Admission-Letter-${app.reference_number}.pdf"`)
+  res.send(pdfBuffer)
+})
+
+
+// ---------------------------------------------------------
+// Get Application Acknowledgement PDF
+// ---------------------------------------------------------
+export const getApplicationAcknowledgement = asyncHandler(async (req, res) => {
+  const { id } = req.params
+
+  const appRes = await pool.query(`
+    SELECT a.*, i.name as intake_name,
+           (SELECT json_agg(json_build_object(
+              'programme_name', p.name,
+              'campus_name', ca.name,
+              'preference_order', ac.preference_order
+            ) ORDER BY ac.preference_order)
+            FROM application_choices ac
+            JOIN programme_intakes pi ON ac.programme_intake_id = pi.id
+            JOIN programmes p ON pi.programme_id = p.id
+            LEFT JOIN campuses ca ON ac.campus_id = ca.id
+            WHERE ac.application_id = a.id
+           ) AS choices
+    FROM applications a
+    LEFT JOIN intakes i ON a.intake_id = i.id
+    WHERE a.id = $1 OR a.reference_number = $1
+  `, [id])
+
+  if (appRes.rows.length === 0) {
+    return res.status(404).json({ success: false, message: 'Application not found' })
+  }
+
+  const app = appRes.rows[0]
+  const programmeSummary = (app.choices || [])
+    .map(c => `Choice ${c.preference_order}: ${c.programme_name}${c.campus_name ? ` (${c.campus_name})` : ''}`)
+    .join(', ') || 'General Admission'
+
+  const pdfBuffer = await generateApplicationAcknowledgementPdf({
+    referenceNumber: app.reference_number,
+    fullName: `${app.first_name} ${app.last_name}`,
+    programmeName: programmeSummary,
+    applicationDate: new Date(app.applied_at).toLocaleDateString('en-UG', { dateStyle: 'long' }),
+    email: app.email,
+    phone: app.phone,
+    loginEmail: app.email,
+    loginPassword: app.reference_number,
+    status: app.status
+  })
+
+  res.setHeader('Content-Type', 'application/pdf')
+  res.setHeader('Content-Disposition', `inline; filename="Application-Slip-${app.reference_number}.pdf"`)
   res.send(pdfBuffer)
 })

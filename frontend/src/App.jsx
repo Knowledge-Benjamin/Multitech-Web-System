@@ -178,6 +178,14 @@ function App() {
         />
 
         <Route
+          path="/admin/attendance"
+          element={
+            <ProtectedRoute>
+              <AdminAttendanceReports />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/attendance/reports"
           element={
             <ProtectedRoute>

@@ -353,3 +353,169 @@ export const getSessionRecords = async (req, res) => {
     res.status(500).json({ success: false, error: 'Server error fetching session records' })
   }
 }
+
+// === Get Timetable Occurrence & Attendance Tracking (Admin/Lecturer) ===
+export const getTimetableOccurrenceTracking = asyncHandler(async (req, res) => {
+  const { date, termId, courseId, lecturerId } = req.query
+  const targetDate = date || new Date().toISOString().split('T')[0]
+
+  let query = `
+    WITH date_info AS (
+      SELECT 
+        $1::DATE as target_date,
+        TRIM(TO_CHAR($1::DATE, 'FMDay')) as day_name,
+        CURRENT_DATE as today,
+        CURRENT_TIME as now_time
+    )
+    SELECT 
+      sch.id as schedule_id,
+      sch.day_of_week,
+      sch.start_time as scheduled_start,
+      sch.end_time as scheduled_end,
+      c.id as course_id,
+      c.course_code,
+      c.name as course_name,
+      r.id as room_id,
+      r.name as room_name,
+      r.building,
+      l.id as lecturer_id,
+      COALESCE(l.first_name || ' ' || l.last_name, 'Unassigned') as lecturer_name,
+      l.email as lecturer_email,
+      t.id as term_id,
+      t.name as term_name,
+      cs.id as session_id,
+      cs.date as session_date,
+      cs.start_time as actual_start,
+      cs.end_time as actual_end,
+      cs.status as session_status,
+      di.today,
+      di.now_time,
+      (
+        SELECT COUNT(DISTINCT ste.student_id)
+        FROM course_registrations cr
+        JOIN student_term_enrollments ste ON cr.student_term_enrollment_id = ste.id
+        WHERE cr.course_id = c.id
+      ) as registered_students,
+      (
+        SELECT COUNT(DISTINCT ar.student_id)
+        FROM attendance_records ar
+        WHERE ar.session_id = cs.id AND ar.status = 'Present'
+      ) as attended_students
+    FROM class_schedules sch
+    CROSS JOIN date_info di
+    JOIN courses c ON sch.course_id = c.id
+    JOIN rooms r ON sch.room_id = r.id
+    LEFT JOIN lecturers l ON sch.lecturer_table_id = l.id
+    JOIN academic_terms t ON sch.academic_term_id = t.id
+    LEFT JOIN class_sessions cs ON sch.id = cs.schedule_id AND cs.date = di.target_date
+    WHERE sch.day_of_week ILIKE di.day_name
+  `
+  const params = [targetDate]
+  let pIdx = 2
+
+  if (termId) {
+    query += ` AND sch.academic_term_id = $${pIdx}`
+    params.push(termId)
+    pIdx++
+  }
+  if (courseId) {
+    query += ` AND sch.course_id = $${pIdx}`
+    params.push(courseId)
+    pIdx++
+  }
+  if (lecturerId) {
+    query += ` AND sch.lecturer_table_id = $${pIdx}`
+    params.push(lecturerId)
+    pIdx++
+  }
+
+  query += ` ORDER BY sch.start_time ASC`
+
+  const { rows } = await pool.query(query, params)
+
+  const lessons = rows.map(row => {
+    let occurrenceStatus = 'Upcoming'
+    const todayStr = new Date().toISOString().split('T')[0]
+    const isToday = targetDate === todayStr
+    const isPastDate = new Date(targetDate) < new Date(todayStr)
+
+    if (row.session_status === 'ended' || (row.session_id && row.actual_end)) {
+      occurrenceStatus = 'Conducted'
+    } else if (row.session_status === 'active') {
+      occurrenceStatus = 'In Progress'
+    } else if (isPastDate) {
+      occurrenceStatus = 'Missed'
+    } else if (isToday) {
+      const now = new Date()
+      const nowMins = now.getHours() * 60 + now.getMinutes()
+      const [startH, startM] = String(row.scheduled_start).split(':').map(Number)
+      const [endH, endM] = String(row.scheduled_end).split(':').map(Number)
+      const startMins = (startH || 0) * 60 + (startM || 0)
+      const endMins = (endH || 0) * 60 + (endM || 0)
+
+      if (nowMins > endMins + 30) {
+        occurrenceStatus = 'Missed'
+      } else if (nowMins >= startMins - 15) {
+        occurrenceStatus = 'Due Now'
+      } else {
+        occurrenceStatus = 'Upcoming'
+      }
+    } else {
+      occurrenceStatus = 'Upcoming'
+    }
+
+    const reg = parseInt(row.registered_students) || 0
+    const att = parseInt(row.attended_students) || 0
+    const turnoutRate = reg > 0 ? Math.round((att / reg) * 100) : (att > 0 ? 100 : 0)
+
+    return {
+      scheduleId: row.schedule_id,
+      sessionId: row.session_id,
+      courseCode: row.course_code,
+      courseName: row.course_name,
+      roomName: row.room_name,
+      building: row.building,
+      lecturerName: row.lecturer_name,
+      lecturerEmail: row.lecturer_email,
+      dayOfWeek: row.day_of_week,
+      scheduledStart: row.scheduled_start,
+      scheduledEnd: row.scheduled_end,
+      actualStart: row.actual_start,
+      actualEnd: row.actual_end,
+      termName: row.term_name,
+      occurrenceStatus,
+      registeredCount: reg,
+      attendedCount: att,
+      turnoutRate
+    }
+  })
+
+  const totalScheduled = lessons.length
+  const conducted = lessons.filter(l => l.occurrenceStatus === 'Conducted').length
+  const inProgress = lessons.filter(l => l.occurrenceStatus === 'In Progress').length
+  const missed = lessons.filter(l => l.occurrenceStatus === 'Missed').length
+  const upcoming = lessons.filter(l => ['Upcoming', 'Due Now'].includes(l.occurrenceStatus)).length
+  const complianceRate = totalScheduled > 0 ? Math.round(((conducted + inProgress) / totalScheduled) * 100) : 0
+
+  const conductedWithTurnout = lessons.filter(l => l.occurrenceStatus === 'Conducted')
+  const averageTurnout = conductedWithTurnout.length > 0
+    ? Math.round(conductedWithTurnout.reduce((sum, l) => sum + l.turnoutRate, 0) / conductedWithTurnout.length)
+    : 0
+
+  res.json({
+    success: true,
+    data: {
+      targetDate,
+      summary: {
+        totalScheduled,
+        conducted,
+        inProgress,
+        missed,
+        upcoming,
+        complianceRate,
+        averageTurnout
+      },
+      lessons
+    }
+  })
+})

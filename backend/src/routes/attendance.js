@@ -6,7 +6,8 @@ import {
   endSessionAndRunMesh,
   getActiveSessions,
   getHistoricalSessions,
-  getSessionRecords
+  getSessionRecords,
+  getTimetableOccurrenceTracking
 } from '../controllers/attendanceController.js'
 import { authMiddleware, adminOnly, lecturerOrAdmin, optionalStudentAuth } from '../middleware/authMiddleware.js'
 
@@ -14,6 +15,9 @@ const router = express.Router()
 
 // Active live sessions for students and lecturers
 router.get('/active', optionalStudentAuth, getActiveSessions)
+
+// Timetable occurrence & lesson tracking (Admin/Lecturer)
+router.get('/timetable-tracking', lecturerOrAdmin, getTimetableOccurrenceTracking)
 
 // Lecturer/Admin Routes
 router.post('/start', lecturerOrAdmin, startSession)

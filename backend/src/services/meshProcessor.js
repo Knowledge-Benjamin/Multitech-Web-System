@@ -10,7 +10,23 @@ import pool from '../config/database.js'
  * @returns {number|null} - The window_index if matched, otherwise null
  */
 export function backtraceToken(sessionSecret, qiToken, maxWindows = 720) {
-  for (let i = 0; i < maxWindows; i++) {
+  if (!sessionSecret || !qiToken) return null
+
+  // Fast check: check recent windows first (last ~3 minutes) for instant O(1) matching
+  for (let i = 0; i < 36; i++) {
+    const expectedToken = crypto
+      .createHmac('sha256', sessionSecret)
+      .update(i.toString())
+      .digest('hex')
+      .substring(0, 8) 
+    
+    if (expectedToken === qiToken) {
+      return i
+    }
+  }
+
+  // Fallback scan across remaining windows
+  for (let i = 36; i < maxWindows; i++) {
     const expectedToken = crypto
       .createHmac('sha256', sessionSecret)
       .update(i.toString())
@@ -43,8 +59,8 @@ export async function runMeshAnalysis(sessionId) {
     const logs = logsRes.rows
 
     if (logs.length === 0) {
-      await client.query('ROLLBACK')
-      return { success: true, message: 'No logs to process.' }
+      await client.query('COMMIT')
+      return { success: true, verifiedCount: 0, mapData: [], message: 'No BLE logs recorded.' }
     }
 
     // 2. Data Structures
@@ -58,13 +74,15 @@ export async function runMeshAnalysis(sessionId) {
     const verifiedStudents = new Map() // Map of studentId -> { x, y }
 
     // 3. Find Wave 1 (Front Row)
-    // Identify students who witnessed the Lecturer (target_ephemeral_id = 'lecturer_anchor') 
-    // with an RSSI stronger than -60dBm.
+    // Identify students who witnessed the Lecturer anchor with RSSI > -60dBm.
     let currentX = -2 // Start spacing students from left to right
 
     for (const [studentId, sLogs] of Object.entries(studentLogs)) {
       const sid = Number(studentId)
-      const lecturerPing = sLogs.find(l => l.target_ephemeral_id === 'lecturer_anchor')
+      const lecturerPing = sLogs.find(l => {
+        const target = String(l.target_ephemeral_id || '').toLowerCase()
+        return target === 'lecturer_anchor' || target === 'lecturer' || target === 'anchor'
+      })
       
       if (lecturerPing && lecturerPing.rssi > -60) {
         verifiedStudents.set(sid, { x: currentX, y: 1 })
@@ -106,10 +124,10 @@ export async function runMeshAnalysis(sessionId) {
     const verifiedData = []
     for (const [studentId, coords] of verifiedStudents.entries()) {
       await client.query(
-        `INSERT INTO attendance_records (session_id, student_id, verification_type, status, scan_time, x_coord, y_coord) 
-         VALUES ($1, $2, 'BLE_Mesh', 'Present', CURRENT_TIMESTAMP, $3, $4)
+        `INSERT INTO attendance_records (session_id, student_id, verification_type, status, scan_time, x_coord, y_coord, created_at) 
+         VALUES ($1, $2, 'BLE_Mesh', 'Present', CURRENT_TIMESTAMP, $3, $4, NOW())
          ON CONFLICT (session_id, student_id) DO UPDATE 
-         SET x_coord = EXCLUDED.x_coord, y_coord = EXCLUDED.y_coord`,
+         SET verification_type = 'BLE_Mesh', status = 'Present', x_coord = EXCLUDED.x_coord, y_coord = EXCLUDED.y_coord`,
         [sessionId, studentId, coords.x, coords.y]
       )
       verifiedData.push({ studentId, x: coords.x, y: coords.y })

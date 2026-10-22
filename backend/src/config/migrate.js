@@ -287,6 +287,111 @@ const initializeDatabase = async () => {
       )
     `)
 
+    // Rooms table for timetables
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS rooms (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        capacity INTEGER NOT NULL DEFAULT 40,
+        type VARCHAR(50) DEFAULT 'Classroom',
+        building VARCHAR(100),
+        status VARCHAR(20) DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    // Class Schedules table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS class_schedules (
+        id SERIAL PRIMARY KEY,
+        course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+        room_id INTEGER REFERENCES rooms(id) ON DELETE SET NULL,
+        lecturer_id INTEGER,
+        lecturer_table_id INTEGER REFERENCES lecturers(id) ON DELETE SET NULL,
+        academic_term_id INTEGER REFERENCES academic_terms(id) ON DELETE CASCADE,
+        day_of_week VARCHAR(20) NOT NULL,
+        start_time TIME NOT NULL,
+        end_time TIME NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    // Class Sessions table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS class_sessions (
+        id SERIAL PRIMARY KEY,
+        schedule_id INTEGER REFERENCES class_schedules(id) ON DELETE CASCADE,
+        date DATE DEFAULT CURRENT_DATE,
+        start_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        end_time TIMESTAMP WITH TIME ZONE,
+        session_secret VARCHAR(255) NOT NULL,
+        status VARCHAR(30) DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+    await ensureTableColumns('class_sessions', [
+      ['date', 'DATE DEFAULT CURRENT_DATE'],
+      ['start_time', 'TIMESTAMP WITH TIME ZONE DEFAULT NOW()'],
+      ['end_time', 'TIMESTAMP WITH TIME ZONE'],
+      ['status', "VARCHAR(30) DEFAULT 'active'"],
+      ['updated_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP']
+    ])
+
+    // Attendance Records table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS attendance_records (
+        id SERIAL PRIMARY KEY,
+        session_id INTEGER REFERENCES class_sessions(id) ON DELETE CASCADE,
+        student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+        verification_type VARCHAR(50) NOT NULL DEFAULT 'QR_GPS',
+        latitude NUMERIC,
+        longitude NUMERIC,
+        is_mocked_location BOOLEAN DEFAULT false,
+        status VARCHAR(30) DEFAULT 'Present',
+        scan_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        x_coord NUMERIC,
+        y_coord NUMERIC,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (session_id, student_id)
+      )
+    `)
+    await ensureTableColumns('attendance_records', [
+      ['verification_type', "VARCHAR(50) NOT NULL DEFAULT 'QR_GPS'"],
+      ['latitude', 'NUMERIC'],
+      ['longitude', 'NUMERIC'],
+      ['is_mocked_location', 'BOOLEAN DEFAULT false'],
+      ['status', "VARCHAR(30) DEFAULT 'Present'"],
+      ['scan_time', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'],
+      ['x_coord', 'NUMERIC'],
+      ['y_coord', 'NUMERIC']
+    ])
+
+    // BLE Witness Logs table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS ble_witness_logs (
+        id SERIAL PRIMARY KEY,
+        session_id INTEGER REFERENCES class_sessions(id) ON DELETE CASCADE,
+        reporter_student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+        target_ephemeral_id VARCHAR(100) NOT NULL,
+        rssi INTEGER NOT NULL,
+        window_index INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    // Student Exam PINs table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS student_exam_pins (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+        pin VARCHAR(20) NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        used BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
     // Create indexes for better performance
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_programmes_type ON programmes(type)`)
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_programmes_active ON programmes(active)`)

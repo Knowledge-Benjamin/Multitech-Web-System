@@ -161,3 +161,23 @@ export const lecturerOrAdmin = async (req, res, next) => {
     res.status(401).json({ success: false, message: 'Invalid or expired token' })
   }
 }
+
+/**
+ * Optional student auth: extracts student token if provided, but does not block if absent.
+ */
+export const optionalStudentAuth = async (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1]
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+        algorithms: [JWT_ALGORITHM]
+      })
+      if (decoded.role === 'student') {
+        req.student = decoded
+      }
+    } catch (error) {
+      // Ignore token verification errors in optional mode
+    }
+  }
+  next()
+}

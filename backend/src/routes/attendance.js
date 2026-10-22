@@ -4,12 +4,16 @@ import {
   streamQrCode, 
   submitAttendance,
   endSessionAndRunMesh,
+  getActiveSessions,
   getHistoricalSessions,
   getSessionRecords
 } from '../controllers/attendanceController.js'
-import { authMiddleware, adminOnly, lecturerOrAdmin } from '../middleware/authMiddleware.js'
+import { authMiddleware, adminOnly, lecturerOrAdmin, optionalStudentAuth } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
+
+// Active live sessions for students and lecturers
+router.get('/active', optionalStudentAuth, getActiveSessions)
 
 // Lecturer/Admin Routes
 router.post('/start', lecturerOrAdmin, startSession)
@@ -18,7 +22,7 @@ router.post('/end/:sessionId', lecturerOrAdmin, endSessionAndRunMesh)
 router.get('/sessions', lecturerOrAdmin, getHistoricalSessions)
 router.get('/sessions/:sessionId', lecturerOrAdmin, getSessionRecords)
 
-// Student Mobile App Route (open for now - secured by signed payload in real production)
-router.post('/submit', submitAttendance)
+// Student Mobile App & Web Check-in Route
+router.post('/submit', optionalStudentAuth, submitAttendance)
 
 export default router

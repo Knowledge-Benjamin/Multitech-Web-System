@@ -193,15 +193,15 @@ export const getAttendanceStats = asyncHandler(async (req, res) => {
     SELECT 
       c.course_code, 
       c.name as course_name,
-      COUNT(cs.id) as total_sessions,
-      COUNT(ar.student_id) as attended_sessions
+      COUNT(DISTINCT cs.id) as total_sessions,
+      COUNT(DISTINCT ar.session_id) as attended_sessions
     FROM course_registrations cr
     JOIN student_term_enrollments ste ON cr.student_term_enrollment_id = ste.id
     JOIN class_schedules sch ON cr.course_id = sch.course_id
     JOIN class_sessions cs ON sch.id = cs.schedule_id
     JOIN courses c ON cr.course_id = c.id
     LEFT JOIN attendance_records ar ON cs.id = ar.session_id AND ar.student_id = $1 AND ar.status = 'Present'
-    WHERE ste.student_id = $1 AND cs.end_time IS NOT NULL
+    WHERE ste.student_id = $1 AND (cs.status = 'ended' OR cs.end_time IS NOT NULL)
     GROUP BY c.course_code, c.name
   `
   const { rows } = await pool.query(query, [studentId])
@@ -227,26 +227,30 @@ export const getAttendanceDrilldown = asyncHandler(async (req, res) => {
   const query = `
     SELECT 
       cs.id as session_id,
-      cs.date,
-      cs.start_time,
-      cs.end_time,
-      sch.room,
-      sch.day_of_week,
+      COALESCE(cs.date, cs.start_time::date, cs.created_at::date) as session_date,
+      COALESCE(TO_CHAR(cs.start_time, 'HH24:MI'), TO_CHAR(sch.start_time, 'HH24:MI')) as start_time,
+      COALESCE(TO_CHAR(cs.end_time, 'HH24:MI'), TO_CHAR(sch.end_time, 'HH24:MI')) as end_time,
+      r.name as room_name,
+      COALESCE(l.first_name || ' ' || l.last_name, 'Assigned Faculty') as lecturer_name,
+      COALESCE(ar.verification_type, 'N/A') as verification_method,
       COALESCE(ar.status, 'Absent') as status,
       c.course_code,
-      c.name as course_name
+      c.name as course_name,
+      sch.day_of_week
     FROM class_schedules sch
     JOIN class_sessions cs ON sch.id = cs.schedule_id
     JOIN courses c ON sch.course_id = c.id
+    JOIN rooms r ON sch.room_id = r.id
+    LEFT JOIN lecturers l ON sch.lecturer_table_id = l.id
     JOIN course_registrations cr ON cr.course_id = c.id
     JOIN student_term_enrollments ste ON cr.student_term_enrollment_id = ste.id
     LEFT JOIN attendance_records ar ON cs.id = ar.session_id AND ar.student_id = $1
-    WHERE ste.student_id = $1 AND c.course_code = $2 AND cs.end_time IS NOT NULL
-    ORDER BY cs.date DESC, cs.start_time DESC
+    WHERE ste.student_id = $1 AND c.course_code = $2 AND (cs.status = 'ended' OR cs.end_time IS NOT NULL)
+    ORDER BY session_date DESC, cs.id DESC
   `
   
   const { rows } = await pool.query(query, [studentId, courseCode])
-  res.json({ success: true, data: rows })
+  res.json({ success: true, data: { sessions: rows }, sessions: rows })
 })
 
 export const getMyCoursesMaterials = asyncHandler(async (req, res) => {

@@ -506,6 +506,22 @@ const initializeDatabase = async () => {
     await pool.query(`ALTER TABLE email_messages ADD COLUMN IF NOT EXISTS auto_reply_error_message TEXT`)
     await pool.query(`ALTER TABLE email_messages ADD COLUMN IF NOT EXISTS auto_reply_sent_at TIMESTAMP`)
 
+        // Mailing list subscribers (e.g. Multitech Insider)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS mailing_list_subscribers (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        name VARCHAR(255),
+        list_name VARCHAR(100) NOT NULL DEFAULT 'Multitech Insider',
+        source VARCHAR(100) NOT NULL DEFAULT 'contact_form',
+        status VARCHAR(50) NOT NULL DEFAULT 'subscribed' CHECK (status IN ('subscribed', 'unsubscribed')),
+        created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_mailing_list_email ON mailing_list_subscribers(email)`)
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_mailing_list_status ON mailing_list_subscribers(status)`)
+
     console.log('Database schema initialized successfully!')
     return true
   } catch (error) {

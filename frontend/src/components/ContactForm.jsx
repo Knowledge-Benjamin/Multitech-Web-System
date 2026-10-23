@@ -9,13 +9,17 @@ export default function ContactForm({ pageUrl }) {
     name: '',
     email: '',
     subject: '',
-    message: ''
+    message: '',
+    subscribeMailingList: true
   })
   const [status, setStatus] = useState({ loading: false, success: null, message: '' })
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const { name, value, type, checked } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }))
   }
 
   const handleSubmit = async (e) => {
@@ -32,13 +36,18 @@ export default function ContactForm({ pageUrl }) {
         ...formData,
         pageUrl
       })
-      setFormData({ name: '', email: '', subject: '', message: '' })
-      setStatus({ loading: false, success: true, message: 'Message sent successfully. We will reply soon.' })
+      setFormData({ name: '', email: '', subject: '', message: '', subscribeMailingList: true })
+      setStatus({ 
+        loading: false, 
+        success: true, 
+        message: formData.subscribeMailingList 
+          ? 'Message sent successfully, and you have been subscribed to Multitech Insider!'
+          : 'Message sent successfully. We will reply soon.' 
+      })
     } catch (error) {
-      const status = error.response?.status
-      // Only surface validation errors (4xx) from the server — never expose 5xx internals
+      const errStatus = error.response?.status
       const safeMessage =
-        status && status >= 400 && status < 500
+        errStatus && errStatus >= 400 && errStatus < 500
           ? (error.response?.data?.message || 'Please check your details and try again.')
           : 'Failed to send your message. Please try again later.'
       setStatus({ loading: false, success: false, message: safeMessage })
@@ -65,6 +74,21 @@ export default function ContactForm({ pageUrl }) {
       <div className="contact-form-row">
         <label htmlFor="message">Message</label>
         <textarea id="message" name="message" value={formData.message} onChange={handleChange} rows="6" required />
+      </div>
+
+      <div className="contact-form-subscribe">
+        <label htmlFor="subscribeMailingList" className="subscribe-checkbox-label">
+          <input
+            id="subscribeMailingList"
+            name="subscribeMailingList"
+            type="checkbox"
+            checked={formData.subscribeMailingList}
+            onChange={handleChange}
+          />
+          <span>
+            Subscribe to our mailing list: <strong>Multitech Insider</strong> &mdash; receive the latest campus news, admission notices, and educational insights.
+          </span>
+        </label>
       </div>
 
       <div className="contact-form-actions">

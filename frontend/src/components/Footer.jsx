@@ -1,8 +1,44 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import axios from 'axios'
 import './Footer.css'
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
+
+  const [newsletterEmail, setNewsletterEmail] = useState('')
+  const [newsletterStatus, setNewsletterStatus] = useState({ loading: false, success: null, message: '' })
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault()
+    if (!newsletterEmail || !newsletterEmail.trim()) return
+
+    setNewsletterStatus({ loading: true, success: null, message: '' })
+    try {
+      const res = await axios.post(`${API_BASE_URL}/emails/mailing-list/subscribe`, {
+        email: newsletterEmail.trim(),
+        source: 'footer',
+        listName: 'Multitech Insider'
+      })
+      setNewsletterStatus({
+        loading: false,
+        success: true,
+        message: res.data.message || 'Thank you for subscribing to Multitech Insider!'
+      })
+      setNewsletterEmail('')
+      setTimeout(() => {
+        setNewsletterStatus({ loading: false, success: null, message: '' })
+      }, 5000)
+    } catch (err) {
+      setNewsletterStatus({
+        loading: false,
+        success: false,
+        message: err.response?.data?.message || 'Failed to subscribe. Please try again.'
+      })
+    }
+  }
 
   return (
     <footer className="scope-footer footer">
@@ -30,6 +66,32 @@ export default function Footer() {
             <li><a href="#programmes">Programmes</a></li>
             <li><a href="#about">About Us</a></li>
           </ul>
+        </div>
+
+        <div className="footer-section footer-newsletter">
+          <h4>Multitech Insider</h4>
+          <p>
+            Subscribe to our mailing list for the latest campus news, intake announcements, and educational insights.
+          </p>
+          <form onSubmit={handleSubscribe} className="footer-newsletter-form">
+            <div className="footer-input-group">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                required
+              />
+              <button type="submit" disabled={newsletterStatus.loading}>
+                {newsletterStatus.loading ? '...' : 'Join'}
+              </button>
+            </div>
+            {newsletterStatus.message && (
+              <div className={`footer-newsletter-msg ${newsletterStatus.success ? 'success' : 'error'}`}>
+                {newsletterStatus.message}
+              </div>
+            )}
+          </form>
         </div>
 
         <div className="footer-section">

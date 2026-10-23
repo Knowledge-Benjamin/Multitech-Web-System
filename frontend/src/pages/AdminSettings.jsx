@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+   import { useState, useEffect } from 'react'
 import axios from 'axios'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminSettings.css'
@@ -22,8 +22,10 @@ export default function AdminSettings() {
   const [driveAccountEmail, setDriveAccountEmail] = useState(null)
   const [emailDestination, setEmailDestination] = useState('')
   const [acknowledgementTemplate, setAcknowledgementTemplate] = useState('')
+  const [whatsappNumber, setWhatsappNumber] = useState('')
   const [emailLoading, setEmailLoading] = useState(true)
   const [emailSaving, setEmailSaving] = useState(false)
+  const [whatsappSaving, setWhatsappSaving] = useState(false)
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -157,6 +159,7 @@ export default function AdminSettings() {
       })
       setEmailDestination(response.data.data.contact_destination_email || '')
       setAcknowledgementTemplate(response.data.data.application_acknowledgement_template || '')
+      setWhatsappNumber(response.data.data.whatsapp_cta_number || '')
     } catch (error) {
       console.error('Error fetching email settings:', error)
     } finally {
@@ -182,6 +185,24 @@ export default function AdminSettings() {
       alert(error.response?.data?.message || 'Could not save email settings.')
     } finally {
       setEmailSaving(false)
+    }
+  }
+
+  const handleSaveWhatsAppNumber = async (e) => {
+    e.preventDefault()
+    setWhatsappSaving(true)
+    try {
+      await axios.put(
+        `${API_BASE_URL}/emails/settings`,
+        { whatsapp_cta_number: whatsappNumber },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      alert('WhatsApp number saved successfully.')
+    } catch (error) {
+      console.error('Error saving WhatsApp number:', error)
+      alert(error.response?.data?.message || 'Could not save WhatsApp number.')
+    } finally {
+      setWhatsappSaving(false)
     }
   }
 
@@ -431,6 +452,40 @@ export default function AdminSettings() {
 
         {activeTab === 'email' && (
           <div className="tab-content">
+            <div className="settings-card">
+              <div className="settings-card-header">
+                <h2>WhatsApp Chat CTA</h2>
+                <p>Choose the WhatsApp number visitors will contact from the floating button on public pages.</p>
+              </div>
+              {emailLoading ? (
+                <p>Loading settings...</p>
+              ) : (
+                <form onSubmit={handleSaveWhatsAppNumber} className="email-settings-form">
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="whatsapp-cta-number">WhatsApp number *</label>
+                      <input
+                        id="whatsapp-cta-number"
+                        type="tel"
+                        value={whatsappNumber}
+                        onChange={(e) => setWhatsappNumber(e.target.value)}
+                        placeholder="+256 774 461 072"
+                        pattern="\+?[\d\s().-]+"
+                        title="Enter a valid number with country code, for example +256 774 461 072."
+                        required
+                      />
+                      <small>Include the country code. Spaces, parentheses, hyphens and a leading + are accepted.</small>
+                    </div>
+                  </div>
+                  <div className="form-actions">
+                    <button type="submit" className="btn-primary" disabled={whatsappSaving}>
+                      {whatsappSaving ? 'Saving...' : 'Save WhatsApp Number'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+
             <div className="settings-card">
               <div className="settings-card-header">
                 <h2>Contact Form Destination</h2>

@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit'
 import {
   sendContactMessage,
   getEmailSettings,
+  getWhatsAppSettings,
   updateEmailSettings,
   getEmailMessages,
   getEmailMessage,
@@ -39,6 +40,7 @@ const subscribeLimiter = rateLimit({
 
 // Public Contact Form
 router.post('/contact', contactFormLimiter, sendContactMessage)
+router.get('/whatsapp-settings', getWhatsAppSettings)
 
 // Public Mailing List (Multitech Insider)
 router.post('/mailing-list/subscribe', subscribeLimiter, subscribeToMailingList)

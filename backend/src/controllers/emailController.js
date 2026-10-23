@@ -58,20 +58,39 @@ export const sendContactMessage = asyncHandler(async (req, res) => {
 export const getEmailSettings = asyncHandler(async (req, res) => {
   const contactEmail = await getSetting('contact_destination_email')
   const acknowledgementTemplate = await getSetting('application_acknowledgement_template')
+  const whatsappNumber = await getSetting('whatsapp_cta_number')
   res.json({
     success: true,
     data: {
       contact_destination_email: contactEmail,
-      application_acknowledgement_template: acknowledgementTemplate
+      application_acknowledgement_template: acknowledgementTemplate,
+      whatsapp_cta_number: whatsappNumber
     }
   })
 })
 
+export const getWhatsAppSettings = asyncHandler(async (req, res) => {
+  const whatsappNumber = await getSetting('whatsapp_cta_number')
+  res.json({ success: true, data: { whatsapp_cta_number: whatsappNumber } })
+})
+
 export const updateEmailSettings = asyncHandler(async (req, res) => {
-  const { contact_destination_email, application_acknowledgement_template } = req.body
+  const { contact_destination_email, application_acknowledgement_template, whatsapp_cta_number } = req.body
 
   if (contact_destination_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact_destination_email)) {
     return res.status(400).json({ success: false, message: 'A valid contact destination email is required.' })
+  }
+
+  let normalizedWhatsAppNumber
+  if (typeof whatsapp_cta_number !== 'undefined') {
+    if (typeof whatsapp_cta_number !== 'string' || !/^\+?[\d\s().-]+$/.test(whatsapp_cta_number.trim())) {
+      return res.status(400).json({ success: false, message: 'Enter a valid WhatsApp number with its country code.' })
+    }
+
+    normalizedWhatsAppNumber = whatsapp_cta_number.replace(/\D/g, '')
+    if (normalizedWhatsAppNumber.length < 8 || normalizedWhatsAppNumber.length > 15) {
+      return res.status(400).json({ success: false, message: 'WhatsApp number must contain 8 to 15 digits, including its country code.' })
+    }
   }
 
   if (contact_destination_email) {
@@ -82,7 +101,11 @@ export const updateEmailSettings = asyncHandler(async (req, res) => {
     await upsertSetting('application_acknowledgement_template', application_acknowledgement_template)
   }
 
-  res.json({ success: true, message: 'Email settings updated successfully.' })
+  if (normalizedWhatsAppNumber) {
+    await upsertSetting('whatsapp_cta_number', normalizedWhatsAppNumber)
+  }
+
+  res.json({ success: true, message: 'Settings updated successfully.' })
 })
 
 export const getEmailMessages = asyncHandler(async (req, res) => {

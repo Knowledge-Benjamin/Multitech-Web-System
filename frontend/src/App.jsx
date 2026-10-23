@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import WhatsAppCta from './components/WhatsAppCta'
 import ProtectedRoute from './components/ProtectedRoute'
 import ProtectedStudentRoute from './components/ProtectedStudentRoute'
 import ProtectedLecturerRoute from './components/ProtectedLecturerRoute'
@@ -296,6 +297,7 @@ function App() {
                 </Routes>
               </main>
               <Footer />
+              <WhatsAppCta />
             </div>
           }
         />

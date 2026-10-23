@@ -4,11 +4,16 @@ import rateLimit from 'express-rate-limit'
 import {
   sendContactMessage,
   getEmailSettings,
+  getWhatsAppSettings,
   updateEmailSettings,
   getEmailMessages,
   getEmailMessage,
   markEmailMessageRead,
-  replyToEmailMessage
+  replyToEmailMessage,
+  subscribeToMailingList,
+  getMailingListSubscribers,
+  unsubscribeFromMailingList,
+  deleteMailingListSubscriber
 } from '../controllers/emailController.js'
 import {
   sendCustomAdminEmail,
@@ -26,7 +31,26 @@ const contactFormLimiter = rateLimit({
   message: { success: false, message: 'Too many messages sent. Please wait before trying again.' }
 })
 
+// Rate limit on mailing list subscription
+const subscribeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: 'Too many subscription requests. Please wait a moment.' }
+})
+
+// Public Contact Form
 router.post('/contact', contactFormLimiter, sendContactMessage)
+router.get('/whatsapp-settings', getWhatsAppSettings)
+
+// Public Mailing List (Multitech Insider)
+router.post('/mailing-list/subscribe', subscribeLimiter, subscribeToMailingList)
+router.post('/mailing-list/unsubscribe', unsubscribeFromMailingList)
+
+// Admin Mailing List Management
+router.get('/mailing-list/subscribers', authMiddleware, adminOnly, getMailingListSubscribers)
+router.delete('/mailing-list/subscribers/:id', authMiddleware, adminOnly, deleteMailingListSubscriber)
+
+// Admin Email Settings & Messages
 router.get('/settings', authMiddleware, adminOnly, getEmailSettings)
 router.put('/settings', authMiddleware, adminOnly, updateEmailSettings)
 router.get('/messages', authMiddleware, adminOnly, getEmailMessages)

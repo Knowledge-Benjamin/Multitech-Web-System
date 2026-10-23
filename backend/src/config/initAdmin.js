@@ -68,6 +68,20 @@ const initAdmin = async () => {
       console.warn('Could not ensure default contact_destination_email:', err.message)
     }
 
+    // Ensure the public WhatsApp CTA has an initial admin-editable number
+    try {
+      const whatsappRes = await pool.query('SELECT setting_value FROM settings WHERE setting_key = $1', ['whatsapp_cta_number'])
+      if (whatsappRes.rows.length === 0) {
+        await pool.query(
+          `INSERT INTO settings (setting_key, setting_value, updated_at) VALUES ($1, $2, NOW())`,
+          ['whatsapp_cta_number', '256774461072']
+        )
+        console.log('✓ Default whatsapp_cta_number inserted')
+      }
+    } catch (err) {
+      console.warn('Could not ensure default whatsapp_cta_number:', err.message)
+    }
+
     // Ensure default application acknowledgement template exists
     try {
       const templateRes = await pool.query('SELECT setting_value FROM settings WHERE setting_key = $1', ['application_acknowledgement_template'])

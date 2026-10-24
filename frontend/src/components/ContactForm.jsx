@@ -76,7 +76,7 @@ export default function ContactForm({ pageUrl }) {
         <textarea id="message" name="message" value={formData.message} onChange={handleChange} rows="6" required />
       </div>
 
-      <div className="contact-form-subscribe">
+      <div className={`contact-form-subscribe${formData.subscribeMailingList ? ' is-checked' : ''}`}>
         <label htmlFor="subscribeMailingList" className="subscribe-checkbox-label">
           <input
             id="subscribeMailingList"
@@ -84,9 +84,16 @@ export default function ContactForm({ pageUrl }) {
             type="checkbox"
             checked={formData.subscribeMailingList}
             onChange={handleChange}
+            aria-describedby="subscribeMailingListDescription"
           />
-          <span>
-            Subscribe to our mailing list: <strong>Multitech Insider</strong> &mdash; receive the latest campus news, admission notices, and educational insights.
+          <span className="subscribe-checkbox-copy">
+            <span className="subscribe-checkbox-heading">
+              <strong>Get updates from Multitech Insider</strong>
+              <span className="subscribe-checkbox-optional">Optional</span>
+            </span>
+            <span id="subscribeMailingListDescription" className="subscribe-checkbox-description">
+              Receive campus news, admission notices, and educational insights by email.
+            </span>
           </span>
         </label>
       </div>

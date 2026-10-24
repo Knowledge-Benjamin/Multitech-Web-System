@@ -36,31 +36,106 @@
 }
 
 .contact-form-subscribe {
-  padding: 0.85rem 1rem;
+  padding: 1rem 1.1rem;
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #dbe4ef;
+  border-radius: 14px;
   margin-top: 0.25rem;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.contact-form-subscribe.is-checked {
+  background: #f2f7ff;
+  border-color: #b8d3f5;
 }
 
 .subscribe-checkbox-label {
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  font-size: 0.88rem;
+  align-items: center;
+  gap: 0.9rem;
   color: #334155;
   cursor: pointer;
-  line-height: 1.4;
+  line-height: 1.5;
   user-select: none;
 }
 
 .subscribe-checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: #2563eb;
-  margin-top: 2px;
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-content: center;
+  width: 24px;
+  height: 24px;
+  margin: 0;
   flex-shrink: 0;
+  border: 1.5px solid #94a3b8;
+  border-radius: 7px;
+  background: #fff;
+  color: #fff;
   cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.subscribe-checkbox-label input[type="checkbox"]::before {
+  content: '';
+  width: 11px;
+  height: 6px;
+  border: solid currentColor;
+  border-width: 0 0 2px 2px;
+  transform: rotate(-45deg) scale(0);
+  transition: transform 120ms ease-in-out;
+}
+
+.subscribe-checkbox-label input[type="checkbox"]:checked {
+  background: #0759b5;
+  border-color: #0759b5;
+}
+
+.subscribe-checkbox-label input[type="checkbox"]:checked::before {
+  transform: rotate(-45deg) scale(1);
+}
+
+.subscribe-checkbox-label input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(7, 89, 181, 0.2);
+}
+
+.subscribe-checkbox-copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.subscribe-checkbox-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  color: #183153;
+  font-size: 0.96rem;
+}
+
+.subscribe-checkbox-optional {
+  padding: 0.12rem 0.48rem;
+  border-radius: 999px;
+  background: #e8eef6;
+  color: #52657c;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.subscribe-checkbox-description {
+  color: #5b6878;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.contact-form-subscribe:focus-within {
+  border-color: #7eafe8;
+  box-shadow: 0 0 0 3px rgba(7, 89, 181, 0.1);
 }
 
 .contact-form-actions {
@@ -87,5 +162,29 @@
 @media (max-width: 720px) {
   .contact-form-actions {
     justify-content: center;
+  }
+
+  .contact-form-subscribe {
+    padding: 0.9rem;
+  }
+
+  .subscribe-checkbox-label {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .subscribe-checkbox-label input[type="checkbox"] {
+    width: 26px;
+    height: 26px;
+    margin-top: 0.1rem;
+  }
+
+  .subscribe-checkbox-heading {
+    align-items: flex-start;
+    font-size: 0.94rem;
+  }
+
+  .subscribe-checkbox-description {
+    font-size: 0.84rem;
   }
 }

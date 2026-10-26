@@ -270,7 +270,7 @@ export default function AdminTimetable() {
   })
 
   return (
-    <div className="scope-admintimetable admin-layout fade-in-section is-visible">
+    <div className="scope-admintimetable admin-layout">
       <AdminSidebar />
       <main className="admin-content" style={{ background: 'var(--color-background)', padding: '2rem' }}>
         

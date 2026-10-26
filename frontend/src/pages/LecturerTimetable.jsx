@@ -47,7 +47,7 @@ export default function LecturerTimetable() {
   const activeDaysCount = DAYS_OF_WEEK.filter(day => groupedSchedules[day].length > 0).length
 
   return (
-    <div className="scope-lecturertimetable scope-admindashboard admin-layout fade-in-section is-visible">
+    <div className="scope-lecturertimetable scope-admindashboard admin-layout">
       <LecturerSidebar />
 
       <main className="admin-content">

@@ -139,7 +139,7 @@ export default function StudentDashboard() {
   const financials = data?.financials
 
   return (
-    <div className="scope-studentdashboard scope-admindashboard admin-layout fade-in-section is-visible">
+    <div className="scope-studentdashboard scope-admindashboard admin-layout">
       <StudentSidebar />
 
       <main className="admin-content student-dashboard-main">

@@ -1,10 +1,5 @@
 /* ── Lecturer Layout ────────────────────────────────────────────────────────── */
-.lecturer-layout {
-  display: flex;
-  min-height: 100vh;
-  background: #f0f4ff;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
-}
+/* .lecturer-layout handled globally via .admin-layout */
 
 /* ── Sidebar ────────────────────────────────────────────────────────────────── */
 .lecturer-sidebar {
@@ -123,12 +118,7 @@
 }
 
 /* ── Main ────────────────────────────────────────────────────────────────────── */
-.lecturer-main {
-  flex: 1;
-  margin-left: 260px;
-  padding: 32px;
-  min-height: 100vh;
-}
+/* .lecturer-main handled globally via .admin-content */
 
 .lecturer-topbar {
   margin-bottom: 28px;

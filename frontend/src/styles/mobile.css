@@ -177,8 +177,7 @@
     flex-direction: column;
   }
 
-  .sidebar,
-  .admin-sidebar {
+  .sidebar {
     width: 100%;
     position: fixed;
     bottom: 0;
@@ -357,8 +356,7 @@
     gap: var(--spacing-lg);
   }
 
-  .sidebar,
-  .admin-sidebar {
+  .sidebar {
     width: 200px;
   }
 
@@ -396,8 +394,7 @@
     display: none !important;
   }
 
-  .sidebar,
-  .admin-sidebar {
+  .sidebar {
     width: 250px;
   }
 }

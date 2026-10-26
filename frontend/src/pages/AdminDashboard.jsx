@@ -44,7 +44,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="scope-admindashboard admin-layout fade-in-section is-visible">
+    <div className="scope-admindashboard admin-layout">
       <AdminSidebar />
 
       <main className="admin-content">

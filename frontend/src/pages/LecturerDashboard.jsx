@@ -41,7 +41,7 @@ export default function LecturerDashboard() {
   const lecturerName = lecturer ? `${lecturer.first_name || ''} ${lecturer.last_name || ''}`.trim() : 'Academic Faculty'
 
   return (
-    <div className="scope-lecturerdashboard scope-admindashboard admin-layout fade-in-section is-visible">
+    <div className="scope-lecturerdashboard scope-admindashboard admin-layout">
       <LecturerSidebar />
 
       <main className="admin-content">

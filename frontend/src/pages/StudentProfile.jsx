@@ -13,7 +13,7 @@ export default function StudentProfile() {
   const profile = data?.profile
 
   return (
-    <div className="scope-studentprofile scope-admindashboard admin-layout fade-in-section is-visible">
+    <div className="scope-studentprofile scope-admindashboard admin-layout">
       <StudentSidebar />
       <main className="admin-content" style={{ background: 'var(--color-background)' }}>
         <header className="content-header" style={{ marginBottom: '2rem' }}>

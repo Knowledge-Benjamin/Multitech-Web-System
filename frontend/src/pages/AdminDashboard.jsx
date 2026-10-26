@@ -51,8 +51,15 @@ export default function AdminDashboard() {
         {/* Animated Hero Section */}
         <header className="dashboard-hero fade-in-item">
           <div className="hero-content">
-            <h1>Welcome back, {admin.username}!</h1>
-            <p>Here's what's happening with the university today.</p>
+            <div className="hero-badge">
+              <span className="hero-badge-dot"></span>
+              Institutional Administration
+            </div>
+            <h1>Welcome back, {admin.username || 'Administrator'}!</h1>
+            <p>
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              &nbsp;&bull;&nbsp;Here's what's happening with the university today.
+            </p>
           </div>
           <div className="hero-decoration"></div>
         </header>

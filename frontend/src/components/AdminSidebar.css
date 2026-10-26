@@ -94,40 +94,48 @@
   width: 100%;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  padding: 8px var(--spacing-md) !important;
+  color: rgba(255, 255, 255, 0.6);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-sm) var(--spacing-md);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  transition: color 0.2s;
+  letter-spacing: 0.06em;
+  transition: color 0.2s ease, background 0.2s ease;
+  box-sizing: border-box !important;
+  border-radius: 6px;
+  margin-bottom: 2px;
 }
 
 .group-header:hover {
-  color: rgba(255, 255, 255, 0.8);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .group-chevron {
-  transition: transform 0.3s ease;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  color: rgba(255, 255, 255, 0.5);
 }
 .group-chevron.open {
   transform: rotate(180deg);
+  color: #ffffff;
 }
 
 .group-items {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .group-items.expanded {
   grid-template-rows: 1fr;
 }
 
-.group-items > * {
+.group-items-inner {
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -203,25 +211,41 @@
 /* Toggle Button */
 .sidebar-toggle {
   position: absolute;
-  top: 25px;
-  right: -14px;
-  background: var(--color-secondary);
-  color: white;
-  border: 3px solid var(--color-bg-secondary, #f0f2f7); /* Matches main background */
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: 26px;
+  right: -12px;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  background: #ffffff !important;
+  color: var(--color-primary, #0052cc) !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.12) !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   cursor: pointer;
   z-index: 1050;
-  transition: transform 0.2s;
-  box-sizing: content-box;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s, box-shadow 0.2s, border-color 0.2s;
+  outline: none;
 }
 
 .sidebar-toggle:hover {
-  transform: scale(1.1);
+  background: #f8fafc !important;
+  color: var(--color-primary-dark, #003d99) !important;
+  border-color: rgba(0, 82, 204, 0.4) !important;
+  transform: scale(1.12);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22) !important;
+}
+
+.sidebar-toggle:active {
+  transform: scale(0.95);
 }
 
 /* Collapsed State */
@@ -310,4 +334,12 @@
   .sidebar-toggle {
     display: none;
   }
+}
+
+/* Ensure all nav icons remain accessible in collapsed icon-dock mode */
+.admin-sidebar.collapsed .group-items {
+  grid-template-rows: 1fr !important;
+}
+.admin-sidebar.collapsed .group-items-inner {
+  overflow: visible;
 }

@@ -26,41 +26,75 @@
 /* Hero Section */
 .dashboard-hero {
   position: relative;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-  border-radius: 16px;
-  padding: 3rem 2.5rem;
-  margin-bottom: 2.5rem;
-  color: white;
+  background: linear-gradient(135deg, #0b1528 0%, #172554 45%, #1d4ed8 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  padding: 2.25rem 2.5rem;
+  margin-bottom: 2rem;
+  color: #ffffff;
   overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.35), 0 4px 12px -2px rgba(15, 23, 42, 0.15);
 }
 
 .hero-content {
   position: relative;
   z-index: 2;
+  max-width: 760px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #93c5fd;
+  margin-bottom: 0.85rem;
+}
+
+.hero-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
 }
 
 .hero-content h1 {
-  font-size: 2.25rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  letter-spacing: -0.5px;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #ffffff !important;
+  margin: 0 0 0.45rem 0;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .hero-content p {
-  font-size: 1.1rem;
-  opacity: 0.9;
+  font-size: 0.98rem;
+  color: #e2e8f0 !important;
+  opacity: 0.95;
   margin: 0;
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 .hero-decoration {
   position: absolute;
-  top: -50%;
-  right: -5%;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+  top: -60px;
+  right: -60px;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, rgba(30, 58, 138, 0.1) 50%, transparent 70%);
   border-radius: 50%;
+  pointer-events: none;
   z-index: 1;
 }
 

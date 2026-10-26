@@ -81,7 +81,7 @@ export default function LecturerSidebar() {
         onClick={() => setIsCollapsed(!isCollapsed)}
         aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
-        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
       <div className="sidebar-header">

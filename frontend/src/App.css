@@ -152,3 +152,11 @@ body.admin-page.sidebar-collapsed {
     width: 100%;
   }
 }
+
+/* High-contrast guarantee for all dashboard hero banners */
+.dashboard-hero .hero-content h1 {
+  color: #ffffff !important;
+}
+.dashboard-hero .hero-content p {
+  color: #e2e8f0 !important;
+}

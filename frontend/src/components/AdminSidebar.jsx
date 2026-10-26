@@ -42,11 +42,11 @@ export default function AdminSidebar() {
     if (isCollapsed) {
       document.body.classList.add('sidebar-collapsed')
       localStorage.setItem('sidebarCollapsed', 'true')
-      setExpandedGroups({ academics: false, website: false, structure: false, operations: false })
+      
     } else {
       document.body.classList.remove('sidebar-collapsed')
       localStorage.setItem('sidebarCollapsed', 'false')
-      setExpandedGroups({ academics: true, website: true, structure: true, operations: true })
+      
     }
   }, [isCollapsed])
 
@@ -66,7 +66,7 @@ export default function AdminSidebar() {
   return (
     <aside className={`admin-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <button className="scope-adminsidebar sidebar-toggle" onClick={() => setIsCollapsed(!isCollapsed)}>
-        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
       <div className="sidebar-header">
@@ -93,6 +93,7 @@ export default function AdminSidebar() {
             <ChevronDown size={14} className={`group-chevron ${expandedGroups.academics ? 'open' : ''}`} />
           </button>
           <div className={`group-items ${expandedGroups.academics ? 'expanded' : ''}`}>
+            <div className="group-items-inner">
             <Link to="/admin/programmes" className={`nav-item ${isActive('/admin/programmes') ? 'active' : ''}`}>
               <span className="nav-icon"><BookOpen size={18} /></span>
               <span className="sidebar-text">Programmes</span>
@@ -122,7 +123,8 @@ export default function AdminSidebar() {
               <span className="sidebar-text">Academic Calendar</span>
             </Link>
           </div>
-        </div>
+                    </div>
+          </div>
 
         {/* Website Content */}
         <div className="nav-group">
@@ -131,6 +133,7 @@ export default function AdminSidebar() {
             <ChevronDown size={14} className={`group-chevron ${expandedGroups.website ? 'open' : ''}`} />
           </button>
           <div className={`group-items ${expandedGroups.website ? 'expanded' : ''}`}>
+            <div className="group-items-inner">
             <Link to="/admin/announcements" className={`nav-item ${isActive('/admin/announcements') ? 'active' : ''}`}>
               <span className="nav-icon"><Megaphone size={18} /></span>
               <span className="sidebar-text">Announcements</span>
@@ -160,7 +163,8 @@ export default function AdminSidebar() {
               <span className="sidebar-text">Communications</span>
             </Link>
           </div>
-        </div>
+                    </div>
+          </div>
 
         {/* Academic Structure */}
         <div className="nav-group">
@@ -169,6 +173,7 @@ export default function AdminSidebar() {
             <ChevronDown size={14} className={`group-chevron ${expandedGroups.structure ? 'open' : ''}`} />
           </button>
           <div className={`group-items ${expandedGroups.structure ? 'expanded' : ''}`}>
+            <div className="group-items-inner">
             <Link to="/admin/campuses" className={`nav-item ${isActive('/admin/campuses') ? 'active' : ''}`}>
               <span className="nav-icon"><Building2 size={18} /></span>
               <span className="sidebar-text">Campuses</span>
@@ -182,7 +187,8 @@ export default function AdminSidebar() {
               <span className="sidebar-text">Departments</span>
             </Link>
           </div>
-        </div>
+                    </div>
+          </div>
 
         {/* Operations */}
         <div className="nav-group">
@@ -191,6 +197,7 @@ export default function AdminSidebar() {
             <ChevronDown size={14} className={`group-chevron ${expandedGroups.operations ? 'open' : ''}`} />
           </button>
           <div className={`group-items ${expandedGroups.operations ? 'expanded' : ''}`}>
+            <div className="group-items-inner">
             <Link to="/admin/timetable" className={`nav-item ${isActive('/admin/timetable') ? 'active' : ''}`}>
               <span className="nav-icon"><Clock size={18} /></span>
               <span className="sidebar-text">Timetable</span>
@@ -204,7 +211,8 @@ export default function AdminSidebar() {
               <span className="sidebar-text">Reports</span>
             </Link>
           </div>
-        </div>
+                    </div>
+          </div>
       </nav>
       
       <div className="sidebar-footer">

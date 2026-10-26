@@ -97,53 +97,58 @@
 }
 
 /* ========================================
-   Global Admin Layout Styles
+   Global Portal & Admin Layout Styles
    ======================================== */
 
-/* The sidebar is position:fixed. Admin pages fill the full viewport
-   and are offset by padding-left on the body. The JS toggles the
-   sidebar-collapsed class on body to switch between widths. */
+/* Portals (Admin, Student, Faculty) use a self-contained flexbox architecture.
+   The sidebar is sticky in the flex flow, eliminating body-level padding dependencies
+   and containing-block traps with transforms/animations. */
 
 body.admin-page {
-  padding-top: 0 !important; /* No header on admin pages */
-  padding-left: 270px;
-  transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding-top: 0 !important; /* No header on portal pages */
+  padding-left: 0 !important;
+  margin: 0;
+  overflow-x: hidden;
 }
 
 body.admin-page.sidebar-collapsed {
-  padding-left: 80px;
+  padding-left: 0 !important;
 }
 
-/* Root wrapper for each admin page */
+/* Root horizontal flex wrapper for each portal page */
 .admin-layout {
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: row !important;
   min-height: 100vh;
-  background: var(--color-bg-secondary, #f0f2f7);
   width: 100%;
+  background: var(--color-bg-secondary, #f0f2f7);
+  position: relative;
+  align-items: stretch;
 }
 
 /* Main scrollable content area */
 .admin-content {
-  flex: 1;
+  flex: 1 1 0% !important;
+  min-width: 0 !important; /* Prevents tables/grids/charts from blowing out container width */
   padding: 2rem 2.5rem;
   width: 100%;
-  max-width: 100%;
   overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 @media (max-width: 1024px) {
   .admin-content {
-    padding: 1.75rem 2rem;
+    padding: 1.5rem 1.75rem;
   }
 }
 
 @media (max-width: 768px) {
-  body.admin-page {
-    padding-left: 0 !important;
+  .admin-layout {
+    flex-direction: column !important;
   }
 
   .admin-content {
-    padding: 1.25rem;
+    padding: 1.25rem 1rem;
+    width: 100%;
   }
 }

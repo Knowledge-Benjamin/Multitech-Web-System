@@ -1,7 +1,4 @@
-.announcements-container {
-  margin-left: 250px;
-  padding: var(--spacing-2xl);
-}
+/* .announcements-container handled via .admin-content */
 
 .announcements-grid {
   display: grid;

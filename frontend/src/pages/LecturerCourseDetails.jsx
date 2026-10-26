@@ -240,7 +240,7 @@ export default function LecturerCourseDetails() {
 
   if (isLoading) {
     return (
-      <div className="scope-lecturercoursedetails scope-admindashboard admin-layout fade-in-section is-visible">
+      <div className="scope-lecturercoursedetails scope-admindashboard admin-layout">
         <LecturerSidebar />
         <main className="admin-content">
           <div className="loading-state">
@@ -255,7 +255,7 @@ export default function LecturerCourseDetails() {
   const { course, term, enrolled_students } = data || {}
 
   return (
-    <div className="scope-lecturercoursedetails scope-admindashboard admin-layout fade-in-section is-visible">
+    <div className="scope-lecturercoursedetails scope-admindashboard admin-layout">
       <LecturerSidebar />
 
       <main className="admin-content">

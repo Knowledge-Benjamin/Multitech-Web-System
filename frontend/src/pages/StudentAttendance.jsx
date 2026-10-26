@@ -154,7 +154,7 @@ export default function StudentAttendance() {
   }
 
   return (
-    <div className="scope-studentattendance scope-admindashboard admin-layout fade-in-section is-visible">
+    <div className="scope-studentattendance scope-admindashboard admin-layout">
       <StudentSidebar />
       <main className="admin-content" style={{ background: 'var(--color-background)' }}>
         <header className="content-header" style={{ marginBottom: '2rem' }}>

@@ -28,7 +28,7 @@ export default function StudentFinances() {
   }
 
   return (
-    <div className="scope-studentfinances scope-admindashboard admin-layout fade-in-section is-visible">
+    <div className="scope-studentfinances scope-admindashboard admin-layout">
       <StudentSidebar />
       <main className="admin-content" style={{ background: 'var(--color-background)' }}>
         <header className="content-header hide-on-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>

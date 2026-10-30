@@ -1,4 +1,5 @@
 import pool from '../config/database.js'
+import { migrateIdCardsSchema } from '../scripts/migrateIdCards.js'
 
 const ensureProgrammeColumns = async () => {
   const columnDefinitions = [
@@ -521,6 +522,9 @@ const initializeDatabase = async () => {
     `)
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_mailing_list_email ON mailing_list_subscribers(email)`)
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_mailing_list_status ON mailing_list_subscribers(status)`)
+
+    // ID Cards, Staff records, Verifier Delegations, and Audit Logs
+    await migrateIdCardsSchema()
 
     console.log('Database schema initialized successfully!')
     return true

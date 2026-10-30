@@ -57,6 +57,8 @@ const LecturerTimetable = lazy(() => import('./pages/LecturerTimetable'))
 const AdminAttendanceReports = lazy(() => import('./pages/AdminAttendanceReports'))
 const AdminTimetable = lazy(() => import('./pages/AdminTimetable'))
 const AdminLecturers = lazy(() => import('./pages/AdminLecturers'))
+const AdminIdCards = lazy(() => import('./pages/admin/AdminIdCards'))
+const VerifyIdCard = lazy(() => import('./pages/VerifyIdCard'))
 
 function App() {
   return (
@@ -250,6 +252,20 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Institutional ID Cards Management */}
+        <Route
+          path="/admin/id-cards"
+          element={
+            <ProtectedRoute>
+              <AdminIdCards />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Public & Privileged Credential Verification Gateway */}
+        <Route path="/verify/id/:token" element={<VerifyIdCard />} />
+        <Route path="/verify/scan" element={<VerifyIdCard />} />
 
         {/* Unified Portal & Auth Routes */}
         <Route path="/portal/login" element={<PortalLogin />} />

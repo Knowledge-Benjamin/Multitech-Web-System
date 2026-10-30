@@ -48,6 +48,7 @@ import facultiesRoutes from './routes/faculties.js'
 import adminFacultiesRoutes from './routes/adminFaculties.js'
 import departmentsRoutes from './routes/departments.js'
 import adminDepartmentsRoutes from './routes/adminDepartments.js'
+import idCardRoutes from './routes/idCards.js'
 if (!process.env.JWT_SECRET) {
   console.error('FATAL ERROR: JWT_SECRET environment variable is not defined.')
   process.exit(1)
@@ -201,6 +202,7 @@ const initializeApp = async () => {
   app.use('/api/campuses', campusesRoutes)
   app.use('/api/faculties', facultiesRoutes)
   app.use('/api/departments', departmentsRoutes)
+  app.use('/api/id-cards', idCardRoutes)
 
   // 404 handler
   app.use('*', (req, res) => {

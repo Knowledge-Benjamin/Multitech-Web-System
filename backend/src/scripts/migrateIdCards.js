@@ -52,7 +52,8 @@ export const migrateIdCardsSchema = async () => {
       role_title VARCHAR(150) NOT NULL,
       campus_name VARCHAR(100) DEFAULT 'Main Campus',
       photo_url TEXT,
-      qr_token VARCHAR(255) UNIQUE NOT NULL,
+      qr_token TEXT UNIQUE NOT NULL,
+      nfc_uid VARCHAR(64),
       barcode_value VARCHAR(100),
       blood_group VARCHAR(10),
       emergency_contact VARCHAR(100),
@@ -123,6 +124,13 @@ export const migrateIdCardsSchema = async () => {
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_verifier_delegations_status ON id_verifier_delegations(status)`)
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_verification_logs_card_id ON id_verification_logs(card_id)`)
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_verification_logs_scanned_at ON id_verification_logs(scanned_at DESC)`)
+
+  // Schema upgrades for existing tables
+  await pool.query(`
+    ALTER TABLE institutional_id_cards ALTER COLUMN qr_token TYPE TEXT;
+    ALTER TABLE institutional_id_cards ADD COLUMN IF NOT EXISTS nfc_uid VARCHAR(64);
+    ALTER TABLE id_verification_logs ALTER COLUMN qr_token TYPE TEXT;
+  `)
   console.log('✓ Created indexes')
 
   // Seed sample staff members if empty

@@ -49,6 +49,7 @@ export default function AdminIdCards() {
   })
   const [delegationSubmitting, setDelegationSubmitting] = useState(false)
   const [delegationMessage, setDelegationMessage] = useState('')
+  const [reissuingTokens, setReissuingTokens] = useState(false)
 
   // Fetch cards and stats
   const fetchCards = async () => {
@@ -111,6 +112,23 @@ export default function AdminIdCards() {
       alert('Sync failed: ' + (err.response?.data?.message || err.message))
     } finally {
       setSyncing(false)
+    }
+  }
+
+  // Reissue all HMAC JWT tokens for all cards
+  const handleReissueTokens = async () => {
+    if (!window.confirm('This will re-generate all cryptographic QR tokens for all ID cards. Existing printed QR codes will become invalid. Continue?')) return
+    try {
+      setReissuingTokens(true)
+      const res = await api.post('/id-cards/reissue-tokens')
+      if (res.data?.success) {
+        alert(res.data.message || 'Tokens re-issued successfully.')
+        fetchCards()
+      }
+    } catch (err) {
+      alert('Reissue failed: ' + (err.response?.data?.message || err.message))
+    } finally {
+      setReissuingTokens(false)
     }
   }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
-import { RotateCw, ShieldCheck, Download, FlipHorizontal, Eye } from 'lucide-react'
+import { RotateCw, ShieldCheck, Download, FlipHorizontal, Eye, Lock, Key } from 'lucide-react'
+import api from '../services/api'
 import './IdCard3D.css'
 
 export default function IdCard3D({
@@ -13,11 +14,22 @@ export default function IdCard3D({
   const [isRotating, setIsRotating] = useState(false)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('')
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
+  const [liveTime, setLiveTime] = useState(new Date())
+  const [sebPin, setSebPin] = useState(null)
+  const [fetchingPin, setFetchingPin] = useState(false)
   const cardRef = useRef(null)
 
   const verificationUrl = card?.qr_token
     ? `${window.location.origin}/verify/id/${card.qr_token}`
     : ''
+
+  // Live ticking cryptographic clock
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLiveTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   // Generate QR Code data URL
   useEffect(() => {
@@ -34,6 +46,19 @@ export default function IdCard3D({
         .catch((err) => console.error('Failed to generate QR code', err))
     }
   }, [verificationUrl])
+
+  // Gyroscope / device orientation on mobile
+  useEffect(() => {
+    if (printable) return
+    const handleOrientation = (e) => {
+      if (isRotating) return
+      const beta = Math.max(-25, Math.min(25, e.beta || 0))   // front-back tilt
+      const gamma = Math.max(-25, Math.min(25, e.gamma || 0)) // left-right tilt
+      setTilt({ x: beta * 0.35, y: gamma * 0.35 })
+    }
+    window.addEventListener('deviceorientation', handleOrientation)
+    return () => window.removeEventListener('deviceorientation', handleOrientation)
+  }, [isRotating, printable])
 
   // Mouse tilt perspective handler
   const handleMouseMove = (e) => {
@@ -65,6 +90,30 @@ export default function IdCard3D({
     }, 2400) // Duration of 360 spin animation
   }
 
+  // 1-Tap SEB Exam Unlock
+  const handleFetchSebPin = async () => {
+    if (sebPin) {
+      setSebPin(null)
+      return
+    }
+    try {
+      setFetchingPin(true)
+      const token = localStorage.getItem('studentToken') || localStorage.getItem('token') || localStorage.getItem('adminToken')
+      const res = await api.get(`/id-cards/verify/${card.qr_token}/seb-pin`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
+      if (res.data?.success && res.data.data?.has_active_pin) {
+        setSebPin(res.data.data)
+      } else {
+        alert(res.data?.data?.message || 'No scheduled exam paper with active PIN today.')
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Unable to retrieve today\'s exam PIN')
+    } finally {
+      setFetchingPin(false)
+    }
+  }
+
   if (!card) {
     return (
       <div className="id-card-empty-state">
@@ -87,6 +136,9 @@ export default function IdCard3D({
     const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase()
     return `${month} ${d.getFullYear()}`
   }
+
+  const formattedLiveTime = liveTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  const formattedLiveDate = liveTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
 
   // Base style for tilt transform
   const cardTransform = isRotating
@@ -114,6 +166,15 @@ export default function IdCard3D({
             <div className="card-security-pattern" />
             <div className="card-hologram-seal" />
 
+            {/* Dynamic Gyroscope Shimmer Sheen */}
+            <div
+              className="card-shimmer-overlay"
+              style={{
+                '--tilt-x': `${tilt.x}deg`,
+                '--tilt-y': `${tilt.y}deg`
+              }}
+            />
+
             {/* Header Banner */}
             <header className="card-header">
               <div className="card-brand">
@@ -122,7 +183,6 @@ export default function IdCard3D({
                   alt="Multitech Business School"
                   className="card-crest"
                   onError={(e) => {
-                    // Fallback to text seal if asset is unavailable
                     e.target.style.display = 'none'
                   }}
                 />
@@ -207,6 +267,13 @@ export default function IdCard3D({
                 </div>
               </div>
             </div>
+
+            {/* Live Synchronized Cryptographic Clock */}
+            <div className="card-live-clock" title="Live synchronized timestamp proving active session">
+              <span className="clock-pulse-dot" />
+              <span className="clock-time">{formattedLiveTime}</span>
+              <span className="clock-date">{formattedLiveDate}</span>
+            </div>
           </div>
 
           {/* ═══════════════════════════════════════════════════════════
@@ -217,6 +284,28 @@ export default function IdCard3D({
             <div className="card-magnetic-stripe">
               <span className="stripe-glare" />
             </div>
+
+            {/* Dynamic Gyroscope Shimmer Sheen on Back */}
+            <div
+              className="card-shimmer-overlay"
+              style={{
+                '--tilt-x': `${tilt.x}deg`,
+                '--tilt-y': `${tilt.y}deg`
+              }}
+            />
+
+            {/* NFC UID Chip Indicator (if present) */}
+            {card.nfc_uid && (
+              <div className="card-nfc-indicator" title={`NFC UID: ${card.nfc_uid}`}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2a10 10 0 0 1 10 10"/>
+                  <path d="M12 6a6 6 0 0 1 6 6"/>
+                  <path d="M12 10a2 2 0 0 1 2 2"/>
+                  <circle cx="12" cy="20" r="1"/>
+                </svg>
+                <span>NFC ENABLED</span>
+              </div>
+            )}
 
             <div className="card-back-content">
               {/* Left Column: Barcode & Rules */}
@@ -251,6 +340,13 @@ export default function IdCard3D({
                     <strong>HASH:</strong> {card.qr_token ? card.qr_token.slice(0, 10).toUpperCase() : 'SECURED'}
                   </span>
                 </div>
+
+                {/* Authorized Registrar Signature Block */}
+                <div className="card-signature-block">
+                  <div className="signature-line" />
+                  <span className="signature-title">ACADEMIC REGISTRAR</span>
+                  <span className="signature-institution">Multitech Business School</span>
+                </div>
               </div>
 
               {/* Right Column: 2D QR Verification Seal */}
@@ -277,6 +373,32 @@ export default function IdCard3D({
         </div>
       </div>
 
+      {/* 1-Tap SEB Exam Unlock Banner */}
+      {sebPin && (
+        <div className="seb-pin-reveal-banner">
+          <div className="seb-pin-badge">
+            <Lock size={16} />
+            <div>
+              <div className="seb-pin-title">TODAY&apos;S SEB EXAM PIN: <span className="seb-pin-num">{sebPin.pin_code}</span></div>
+              <div className="seb-pin-sub">{sebPin.course_name || 'Active Examination'} • Valid Today</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Permit Status Badge */}
+      {card.permit_status && (
+        <div className={`permit-status-badge permit-${card.permit_status}`}>
+          <ShieldCheck size={14} />
+          <span>
+            {card.permit_status === 'valid' && 'Exam Permit: Valid & Admitted'}
+            {card.permit_status === 'conditional' && 'Exam Permit: Conditional (Fees Outstanding)'}
+            {card.permit_status === 'blocked' && 'Entry Blocked — Refer to Admin'}
+            {card.permit_status === 'expired' && 'Card Expired'}
+          </span>
+        </div>
+      )}
+
       {/* Interactive Controls (Hidden during physical print) */}
       {showControls && (
         <div className="id-card-controls">
@@ -300,6 +422,19 @@ export default function IdCard3D({
             <RotateCw size={15} className={isRotating ? 'spin-icon' : ''} />
             <span>{isRotating ? 'Rotating 360°...' : '360° Rotate'}</span>
           </button>
+
+          {roleType === 'student' && card.qr_token && (
+            <button
+              type="button"
+              className={`card-ctrl-btn btn-seb-unlock ${sebPin ? 'has-pin' : ''}`}
+              onClick={handleFetchSebPin}
+              disabled={fetchingPin}
+              title="1-Tap SEB Exam Unlock: Surface today's active exam PIN"
+            >
+              <Key size={15} />
+              <span>{fetchingPin ? 'Checking PIN...' : sebPin ? 'Hide Exam PIN' : "Today's Exam PIN"}</span>
+            </button>
+          )}
 
           {card.qr_token && (
             <a

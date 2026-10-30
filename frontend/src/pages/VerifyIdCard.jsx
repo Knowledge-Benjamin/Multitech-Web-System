@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   ShieldCheck, AlertTriangle, XCircle, CheckCircle2, UserCheck,
-  Building, Calendar, Clock, CreditCard, Lock, ArrowLeft
+  Building, Calendar, Clock, CreditCard, Lock, ArrowLeft, Award, Key
 } from 'lucide-react'
 import api from '../services/api'
 import IdCard3D from '../components/IdCard3D'
@@ -15,13 +15,18 @@ export default function VerifyIdCard() {
   const [error, setError] = useState('')
   const [admitting, setAdmitting] = useState(false)
   const [admitMessage, setAdmitMessage] = useState('')
+  const [invigilating, setInvigilating] = useState(false)
+  const [invigilateMsg, setInvigilateMsg] = useState('')
 
   useEffect(() => {
     const verifyCard = async () => {
       try {
         setLoading(true)
         setError('')
-        const res = await api.get(`/id-cards/verify/${token}`)
+        const tokenAuth = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('lecturerToken') || localStorage.getItem('studentToken')
+        const res = await api.get(`/id-cards/verify/${token}`, {
+          headers: tokenAuth ? { Authorization: `Bearer ${tokenAuth}` } : {}
+        })
         if (res.data?.success) {
           setData(res.data)
         } else {
@@ -43,10 +48,13 @@ export default function VerifyIdCard() {
     try {
       setAdmitting(true)
       setAdmitMessage('')
+      const tokenAuth = localStorage.getItem('token') || localStorage.getItem('adminToken')
       const res = await api.post(`/id-cards/verify/${token}/admit`, {
         action_type: 'admitted_exam',
         room_or_hall: 'Main Examination Hall',
         notes: 'Admitted via verification web gateway'
+      }, {
+        headers: tokenAuth ? { Authorization: `Bearer ${tokenAuth}` } : {}
       })
       if (res.data?.success) {
         setAdmitMessage(`Admitted successfully! Recorded at ${new Date().toLocaleTimeString()}`)
@@ -57,6 +65,31 @@ export default function VerifyIdCard() {
       setAdmitting(false)
     }
   }
+
+  const handleStartInvigilatorSession = async () => {
+    try {
+      setInvigilating(true)
+      setInvigilateMsg('')
+      const tokenAuth = localStorage.getItem('lecturerToken') || localStorage.getItem('token') || localStorage.getItem('adminToken')
+      const res = await api.post('/id-cards/invigilator-session', {
+        lecturer_card_token: token,
+        room_location: 'Main Examination Hall',
+        exam_session_id: Date.now()
+      }, {
+        headers: tokenAuth ? { Authorization: `Bearer ${tokenAuth}` } : {}
+      })
+      if (res.data?.success) {
+        setInvigilateMsg(`Verified invigilator session active: ${res.data.data?.lecturer_name} bound to examination hall.`)
+      }
+    } catch (err) {
+      setInvigilateMsg('Failed: ' + (err.response?.data?.message || err.message))
+    } finally {
+      setInvigilating(false)
+    }
+  }
+
+  const permitStatus = data?.data?.permit_status || data?.card?.permit_status
+  const isJwtVerified = data?.data?.jwt_verified || data?.card?.jwt_verified
 
   return (
     <div className="verify-page-wrapper">
@@ -120,6 +153,38 @@ export default function VerifyIdCard() {
                   )}
                 </div>
 
+                {/* Live Permit Status Gate */}
+                {permitStatus && (
+                  <div className={`verify-permit-gate gate-${permitStatus}`}>
+                    <div className="gate-icon-ring">
+                      {permitStatus === 'valid' && <ShieldCheck size={28} />}
+                      {permitStatus === 'conditional' && <AlertTriangle size={28} />}
+                      {permitStatus === 'blocked' && <XCircle size={28} />}
+                      {permitStatus === 'expired' && <Clock size={28} />}
+                    </div>
+                    <div className="gate-text">
+                      <h3>
+                        {permitStatus === 'valid' && 'Admission Authorized (All Clearances Met)'}
+                        {permitStatus === 'conditional' && 'Conditional Admission (Fees Balance Outstanding)'}
+                        {permitStatus === 'blocked' && 'Entry Blocked (Card Suspended / Restricted)'}
+                        {permitStatus === 'expired' && 'Card Expired (Requires Renewal)'}
+                      </h3>
+                      <p>
+                        {permitStatus === 'valid' && 'Student meets academic, exam, and tuition registration clearance for immediate hall entry.'}
+                        {permitStatus === 'conditional' && `Fees balance pending${data.data?.fees_balance ? `: UGX ${Number(data.data.fees_balance).toLocaleString()}` : ''}. Admittance at invigilator discretion.`}
+                        {permitStatus === 'blocked' && 'This credential has been flagged or suspended by university administration.'}
+                        {permitStatus === 'expired' && 'Validity term has elapsed. Student must present renewed credentials.'}
+                      </p>
+                    </div>
+                    {isJwtVerified && (
+                      <div className="gate-jwt-verified" title="Cryptographically verified via HS256 HMAC signature">
+                        <ShieldCheck size={13} />
+                        <span>HMAC SIGNED &amp; VERIFIED</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Privileged Verifier Mode Alert */}
                 {data.is_authorized_verifier && (
                   <div className="privileged-officer-banner">
@@ -131,25 +196,25 @@ export default function VerifyIdCard() {
                 {/* Identity Metadata Card */}
                 <div className="credential-meta-card">
                   <div className="meta-card-photo-strip">
-                    {data.card?.photo_url ? (
+                    {data.card?.photo_url || data.data?.photo_url ? (
                       <img
-                        src={data.card.photo_url}
-                        alt={data.card.cardholder_name}
+                        src={data.card?.photo_url || data.data?.photo_url}
+                        alt={data.card?.cardholder_name || data.data?.cardholder_name}
                         className="meta-photo"
                         crossOrigin="anonymous"
                       />
                     ) : (
                       <div className="meta-photo placeholder">
-                        {data.card?.cardholder_name?.charAt(0) || 'M'}
+                        {(data.card?.cardholder_name || data.data?.cardholder_name)?.charAt(0) || 'M'}
                       </div>
                     )}
                     <div className="meta-primary-info">
-                      <span className={`meta-role-pill role-${data.card?.cardholder_type}`}>
-                        {data.card?.cardholder_type?.toUpperCase()}
+                      <span className={`meta-role-pill role-${data.card?.cardholder_type || data.data?.cardholder_type}`}>
+                        {(data.card?.cardholder_type || data.data?.cardholder_type)?.toUpperCase()}
                       </span>
-                      <h3>{data.card?.cardholder_name}</h3>
+                      <h3>{data.card?.cardholder_name || data.data?.cardholder_name}</h3>
                       <span className="meta-id-number mono-font">
-                        {data.card?.identifier_number}
+                        {data.card?.identifier_number || data.data?.identifier_number}
                       </span>
                     </div>
                   </div>
@@ -157,24 +222,47 @@ export default function VerifyIdCard() {
                   <div className="meta-grid">
                     <div className="meta-item">
                       <label>CARD NUMBER</label>
-                      <span className="mono-font">{data.card?.card_number}</span>
+                      <span className="mono-font">{data.card?.card_number || data.data?.card_number}</span>
                     </div>
                     <div className="meta-item">
                       <label>PROGRAMME / DEPARTMENT</label>
-                      <span>{data.card?.department_or_programme}</span>
+                      <span>{data.card?.department_or_programme || data.data?.department_or_programme}</span>
                     </div>
                     <div className="meta-item">
                       <label>CAMPUS</label>
-                      <span>{data.card?.campus_name || 'Main Campus'}</span>
+                      <span>{data.card?.campus_name || data.data?.campus_name || 'Main Campus'}</span>
                     </div>
                     <div className="meta-item">
                       <label>EXPIRATION DATE</label>
                       <span className="mono-font">
-                        {data.card?.expires_at ? new Date(data.card.expires_at).toLocaleDateString() : 'N/A'}
+                        {(data.card?.expires_at || data.data?.expires_at) ? new Date(data.card?.expires_at || data.data?.expires_at).toLocaleDateString() : 'N/A'}
                       </span>
                     </div>
                   </div>
                 </div>
+
+                {/* Lecturer Verified Invigilator Session Binding */}
+                {(data.card?.cardholder_type === 'lecturer' || data.data?.cardholder_type === 'lecturer') && (
+                  <div className="invigilator-binding-card">
+                    <div className="invigilator-header">
+                      <Award size={18} />
+                      <h4>VERIFIED INVIGILATOR SESSION BINDING</h4>
+                    </div>
+                    <p>Bind this verified faculty card to the active examination hall session to authorize room logs and invigilator remarks.</p>
+                    <div className="invigilator-actions">
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={handleStartInvigilatorSession}
+                        disabled={invigilating}
+                      >
+                        <Building size={14} />
+                        <span>{invigilating ? 'Binding Invigilator...' : 'Start Invigilator Session (Main Hall)'}</span>
+                      </button>
+                      {invigilateMsg && <span className="invigilator-msg">{invigilateMsg}</span>}
+                    </div>
+                  </div>
+                )}
 
                 {/* Privileged Student Examination & Fee Clearance */}
                 {data.is_authorized_verifier && data.student_clearance && (
@@ -247,7 +335,7 @@ export default function VerifyIdCard() {
                     <span>DIGITAL CREDENTIAL TWIN</span>
                     <span className="live-seal">LIVE AUTHENTICATED</span>
                   </div>
-                  <IdCard3D card={data.card} showControls={true} />
+                  <IdCard3D card={data.card || data.data} showControls={true} />
                 </div>
               </div>
             </div>

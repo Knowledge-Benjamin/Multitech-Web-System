@@ -440,3 +440,98 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Permit Gate Section ───────────────────────────── */
+.verify-permit-gate {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 14px;
+  margin-bottom: 1.5rem;
+  border: 1.5px solid;
+  position: relative;
+  background: #ffffff;
+}
+.gate-valid       { border-color: #16a34a; background: rgba(22, 163, 74, 0.04); color: #15803d; }
+.gate-conditional { border-color: #d97706; background: rgba(217, 119, 6, 0.04); color: #b45309; }
+.gate-blocked     { border-color: #dc2626; background: rgba(220, 38, 38, 0.05); color: #b91c1c; }
+.gate-expired     { border-color: #94a3b8; background: rgba(148, 163, 184, 0.05); color: #475569; }
+
+.gate-icon-ring {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.gate-text h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: inherit;
+}
+.gate-text p {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+  line-height: 1.4;
+  color: #334155;
+}
+.gate-jwt-verified {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #15803d;
+  letter-spacing: 0.04em;
+  background: rgba(22, 163, 74, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* ── Invigilator Binding Section ───────────────────── */
+.invigilator-binding-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+.invigilator-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0052cc;
+  margin-bottom: 0.4rem;
+}
+.invigilator-header h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.invigilator-binding-card p {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+.invigilator-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.invigilator-msg {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #15803d;
+}

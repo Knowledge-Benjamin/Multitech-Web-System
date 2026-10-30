@@ -4,6 +4,24 @@ import jwt from 'jsonwebtoken'
 
 const JWT_ALGORITHM = 'HS256'
 
+// ─────────────────────────────────────────────────────────────────────────────
+// QR TOKEN: HMAC-Signed JWT generator
+// cid uses cardNumber (unique, available before INSERT)
+// ─────────────────────────────────────────────────────────────────────────────
+const generateQrToken = (cardId, cardNumber, cardholderType, identifierNumber) => {
+  const payload = {
+    cid: cardId,          // card identifier (cardNumber used as cid pre-insert)
+    cn: cardNumber,       // e.g. MBS-STU-00001
+    t: cardholderType,    // student / lecturer / administrative / support_staff
+    reg: identifierNumber // student number or staff ID
+  }
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    algorithm: 'HS256',
+    expiresIn: '4y',
+    issuer: 'multitech-id-system'
+  })
+}
+
 // Helper: Check if a user has active verification delegation
 export const verifyScannerPermission = async (req) => {
   const token = req.headers.authorization?.split(' ')[1]
@@ -87,7 +105,8 @@ export const syncIdCards = async (req, res) => {
       const existing = await pool.query('SELECT id, qr_token FROM institutional_id_cards WHERE student_id = $1', [stu.student_id])
 
       if (existing.rows.length === 0) {
-        const qrToken = crypto.randomBytes(24).toString('hex')
+        const identifierNumber = stu.student_number || `STU-${stu.student_id}`
+        const qrToken = generateQrToken(cardNumber, cardNumber, 'student', identifierNumber)
         await pool.query(`
           INSERT INTO institutional_id_cards (
             card_number, cardholder_type, student_id, cardholder_name,
@@ -98,7 +117,7 @@ export const syncIdCards = async (req, res) => {
           cardNumber,
           stu.student_id,
           fullName,
-          stu.student_number || `STU-${stu.student_id}`,
+          identifierNumber,
           stu.programme_name || 'Academic Studies',
           stu.passport_photo_url,
           qrToken,
@@ -138,7 +157,7 @@ export const syncIdCards = async (req, res) => {
       const existing = await pool.query('SELECT id FROM institutional_id_cards WHERE lecturer_id = $1', [lec.id])
 
       if (existing.rows.length === 0) {
-        const qrToken = crypto.randomBytes(24).toString('hex')
+        const qrToken = generateQrToken(cardNumber, cardNumber, 'lecturer', identifier)
         await pool.query(`
           INSERT INTO institutional_id_cards (
             card_number, cardholder_type, lecturer_id, cardholder_name,
@@ -167,7 +186,7 @@ export const syncIdCards = async (req, res) => {
       const existing = await pool.query('SELECT id FROM institutional_id_cards WHERE staff_member_id = $1', [st.id])
 
       if (existing.rows.length === 0) {
-        const qrToken = crypto.randomBytes(24).toString('hex')
+        const qrToken = generateQrToken(cardNumber, cardNumber, st.role_type, st.employee_number)
         await pool.query(`
           INSERT INTO institutional_id_cards (
             card_number, cardholder_type, staff_member_id, cardholder_name,
@@ -360,8 +379,9 @@ export const getMyCard = async (req, res) => {
 
         if (sRes.rows.length > 0) {
           const s = sRes.rows[0]
-          const qrToken = crypto.randomBytes(24).toString('hex')
           const cardNum = `MBS-STU-${String(s.id).padStart(5, '0')}`
+          const identifierNumber = s.student_number || `STU-${s.id}`
+          const qrToken = generateQrToken(cardNum, cardNum, 'student', identifierNumber)
           const ins = await pool.query(`
             INSERT INTO institutional_id_cards (
               card_number, cardholder_type, student_id, cardholder_name,
@@ -369,7 +389,7 @@ export const getMyCard = async (req, res) => {
               photo_url, qr_token, barcode_value, expires_at
             ) VALUES ($1, 'student', $2, $3, $4, $5, 'Student', $6, $7, $8, NOW() + INTERVAL '3 years')
             RETURNING *
-          `, [cardNum, s.id, `${s.first_name} ${s.last_name}`, s.student_number, s.programme_name || 'Academic Studies', s.passport_photo_url, qrToken, s.student_number])
+          `, [cardNum, s.id, `${s.first_name} ${s.last_name}`, identifierNumber, s.programme_name || 'Academic Studies', s.passport_photo_url, qrToken, s.student_number])
           card = ins.rows[0]
         }
       }
@@ -382,9 +402,9 @@ export const getMyCard = async (req, res) => {
         const lRes = await pool.query('SELECT id, first_name, last_name, email FROM lecturers WHERE id = $1', [lecturerId])
         if (lRes.rows.length > 0) {
           const l = lRes.rows[0]
-          const qrToken = crypto.randomBytes(24).toString('hex')
           const cardNum = `MBS-LEC-${String(l.id).padStart(5, '0')}`
           const identifier = `LEC-${String(l.id).padStart(4, '0')}`
+          const qrToken = generateQrToken(cardNum, cardNum, 'lecturer', identifier)
           const ins = await pool.query(`
             INSERT INTO institutional_id_cards (
               card_number, cardholder_type, lecturer_id, cardholder_name,
@@ -415,10 +435,46 @@ export const getMyCard = async (req, res) => {
 export const verifyCardByToken = async (req, res) => {
   try {
     const { token } = req.params
-    const cardResult = await pool.query(`
-      SELECT * FROM institutional_id_cards
-      WHERE qr_token = $1
-    `, [token])
+
+    // Step a: Fast JWT signature verification (skip for legacy hex tokens that won't parse as JWT)
+    let jwtVerified = false
+    try {
+      jwt.verify(token, process.env.JWT_SECRET, {
+        algorithms: ['HS256'],
+        issuer: 'multitech-id-system'
+      })
+      jwtVerified = true
+    } catch (jwtErr) {
+      // If it looks like a JWT (has dots) but fails verification → tampered token, reject immediately
+      if (token.split('.').length === 3) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid or tampered ID card token'
+        })
+      }
+      // Otherwise it's a legacy hex token — allow DB lookup to proceed
+      jwtVerified = false
+    }
+
+    // Step b: DB lookup for current card status (DB is the source of truth for suspensions)
+    let cardResult
+    if (jwtVerified) {
+      // For student cards, JOIN students to get live permit data
+      cardResult = await pool.query(`
+        SELECT 
+          ic.*,
+          s.current_status AS student_status,
+          (
+            (SELECT COALESCE(SUM(amount), 0) FROM invoices WHERE student_id = s.id) -
+            (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE student_id = s.id)
+          ) AS fees_balance
+        FROM institutional_id_cards ic
+        LEFT JOIN students s ON ic.student_id = s.id
+        WHERE ic.qr_token = $1
+      `, [token])
+    } else {
+      cardResult = await pool.query(`SELECT * FROM institutional_id_cards WHERE qr_token = $1`, [token])
+    }
 
     if (cardResult.rows.length === 0) {
       return res.status(404).json({
@@ -432,12 +488,40 @@ export const verifyCardByToken = async (req, res) => {
     const isExpired = card.expires_at && new Date(card.expires_at) < new Date()
     const isSuspended = card.status !== 'active'
 
+    // Step d: Compute permit_status for student cards
+    let permitStatus = null
+    let feesBalance = null
+    if (card.cardholder_type === 'student') {
+      const studentSuspended = card.student_status === 'suspended' || card.student_status === 'expelled'
+      feesBalance = parseFloat(card.fees_balance || 0)
+
+      if (isSuspended || studentSuspended) {
+        permitStatus = 'blocked'
+      } else if (isExpired) {
+        permitStatus = 'expired'
+      } else if (feesBalance > 0) {
+        permitStatus = 'conditional'
+      } else {
+        permitStatus = 'valid'
+      }
+    } else {
+      // Non-student cards
+      if (isSuspended) {
+        permitStatus = 'blocked'
+      } else if (isExpired) {
+        permitStatus = 'expired'
+      } else {
+        permitStatus = 'valid'
+      }
+    }
+
     // Check verifier permissions
     const verifierCheck = await verifyScannerPermission(req)
+    const isPrivileged = verifierCheck.isAuthorized
 
-    // Calculate clearance if cardholder is student
+    // Calculate legacy clearance if non-JWT student card (preserve old behavior)
     let studentClearance = null
-    if (card.student_id) {
+    if (card.student_id && !jwtVerified) {
       const invRes = await pool.query(`
         SELECT COALESCE(SUM(amount), 0) AS total_invoiced
         FROM invoices WHERE student_id = $1
@@ -453,7 +537,6 @@ export const verifyCardByToken = async (req, res) => {
       const balance = Math.max(0, totalInvoiced - totalPaid)
       const percentPaid = totalInvoiced > 0 ? Math.min(100, Math.round((totalPaid / totalInvoiced) * 100)) : 100
 
-      // Check exam PIN
       const pinRes = await pool.query(`
         SELECT pin, expires_at, used
         FROM student_exam_pins
@@ -470,6 +553,8 @@ export const verifyCardByToken = async (req, res) => {
         exam_pass_eligible: balance <= 0,
         active_exam_pin: pinRes.rows[0]?.pin || null
       }
+      // Sync feesBalance with legacy calc for consistency
+      if (feesBalance === null) feesBalance = balance
     }
 
     // Determine verification verdict
@@ -496,35 +581,54 @@ export const verifyCardByToken = async (req, res) => {
       req.headers['user-agent']?.substring(0, 255) || 'Web Browser'
     ])
 
-    // Public view: Safe institutional authentication badge
-    const publicCardData = {
-      card_number: card.card_number,
-      cardholder_name: card.cardholder_name,
-      cardholder_type: card.cardholder_type,
-      role_title: card.role_title,
-      identifier_number: card.identifier_number,
-      department_or_programme: card.department_or_programme,
-      campus_name: card.campus_name,
-      photo_url: card.photo_url,
-      status: card.status,
-      issued_at: card.issued_at,
-      expires_at: card.expires_at,
-      institution: 'Multitech Business School',
-      is_valid: !isExpired && !isSuspended
-    }
-
-    if (!verifierCheck.isAuthorized) {
+    // Step e: Public response — minimal safe fields only
+    if (!isPrivileged) {
       return res.json({
         success: true,
         verified: true,
         is_authorized_verifier: false,
-        card: publicCardData,
-        message: isSuspended ? `Notice: This card is currently ${card.status}.` : isExpired ? 'Notice: This credential has expired.' : 'Official Multitech Business School Verified Credential'
+        data: {
+          card_number: card.card_number,
+          cardholder_name: card.cardholder_name,
+          cardholder_type: card.cardholder_type,
+          identifier_number: card.identifier_number,
+          photo_url: card.photo_url,
+          permit_status: permitStatus,
+          card_status: card.status,
+          expires_at: card.expires_at,
+          jwt_verified: jwtVerified,
+          is_privileged_view: false
+        },
+        card: {
+          ...card,
+          is_valid: !isExpired && !isSuspended,
+          permit_status: permitStatus
+        },
+        message: isSuspended
+          ? `Notice: This card is currently ${card.status}.`
+          : isExpired
+            ? 'Notice: This credential has expired.'
+            : 'Official Multitech Business School Verified Credential'
       })
     }
 
-    // Privileged verifier view: Full operational clearance
-    res.json({
+    // Step e: Privileged verifier — full operational clearance
+    // Fetch student contact if student card
+    let studentContact = null
+    if (card.student_id && isPrivileged) {
+      try {
+        const contactRes = await pool.query(`
+          SELECT a.email, a.phone_number
+          FROM students s
+          JOIN student_accounts sa ON s.student_account_id = sa.id
+          JOIN applications a ON sa.application_id = a.id
+          WHERE s.id = $1
+        `, [card.student_id])
+        if (contactRes.rows.length > 0) studentContact = contactRes.rows[0]
+      } catch (_) { /* non-fatal */ }
+    }
+
+    return res.json({
       success: true,
       verified: true,
       is_authorized_verifier: true,
@@ -533,9 +637,26 @@ export const verifyCardByToken = async (req, res) => {
         type: verifierCheck.verifierType,
         email: verifierCheck.verifierEmail
       },
+      data: {
+        card_number: card.card_number,
+        cardholder_name: card.cardholder_name,
+        cardholder_type: card.cardholder_type,
+        identifier_number: card.identifier_number,
+        department_or_programme: card.department_or_programme,
+        photo_url: card.photo_url,
+        permit_status: permitStatus,
+        fees_balance: feesBalance,
+        card_status: card.status,
+        expires_at: card.expires_at,
+        issued_at: card.issued_at,
+        jwt_verified: jwtVerified,
+        is_privileged_view: true,
+        student_contact: studentContact
+      },
       card: {
         ...card,
-        is_valid: !isExpired && !isSuspended
+        is_valid: !isExpired && !isSuspended,
+        permit_status: permitStatus
       },
       student_clearance: studentClearance,
       message: `Verified by authorized officer ${verifierCheck.verifierName}`
@@ -760,5 +881,132 @@ export const checkMyDelegationStatus = async (req, res) => {
     res.json({ success: true, ...status })
   } catch (error) {
     res.json({ success: true, isAuthorized: false })
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. GET SEB EXAM PIN FOR STUDENT (student viewing their own card)
+// ─────────────────────────────────────────────────────────────────────────────
+export const getCardSebPin = async (req, res) => {
+  try {
+    // Only works for the student viewing their OWN card
+    const { token: qrToken } = req.params
+
+    // Find the card
+    const cardRes = await pool.query(
+      'SELECT ic.*, s.id AS student_id FROM institutional_id_cards ic LEFT JOIN students s ON ic.student_id = s.id WHERE ic.qr_token = $1',
+      [qrToken]
+    )
+    if (!cardRes.rows.length) return res.status(404).json({ success: false, message: 'Card not found' })
+
+    const card = cardRes.rows[0]
+
+    // Must be a student card
+    if (card.cardholder_type !== 'student' || !card.student_id) {
+      return res.status(403).json({ success: false, message: 'SEB PIN only available for student cards' })
+    }
+
+    // Get today's active exam PIN for this student
+    const pinRes = await pool.query(`
+      SELECT ep.pin AS pin_code, ep.expires_at, ep.created_at
+      FROM student_exam_pins ep
+      WHERE ep.student_id = $1
+        AND ep.used = false
+        AND ep.expires_at > NOW()
+      ORDER BY ep.created_at DESC
+      LIMIT 1
+    `, [card.student_id])
+
+    if (!pinRes.rows.length) {
+      return res.json({ success: true, data: { has_active_pin: false, message: 'No active exam scheduled for today' } })
+    }
+
+    const pin = pinRes.rows[0]
+    return res.json({
+      success: true,
+      data: {
+        has_active_pin: true,
+        pin_code: pin.pin_code,
+        course_name: pin.course_name,
+        exam_date: pin.exam_date,
+        expires_at: pin.expires_at
+      }
+    })
+  } catch (err) {
+    console.error('getCardSebPin error:', err)
+    return res.status(500).json({ success: false, message: 'Server error' })
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 11. INVIGILATOR SESSION BINDING
+// ─────────────────────────────────────────────────────────────────────────────
+export const beginInvigilatorSession = async (req, res) => {
+  try {
+    const { lecturer_card_token, exam_session_id, room_location } = req.body
+
+    if (!lecturer_card_token) return res.status(400).json({ success: false, message: 'Lecturer card token required' })
+
+    // Verify the card
+    const cardRes = await pool.query(
+      `SELECT ic.*, l.first_name, l.last_name, l.email FROM institutional_id_cards ic 
+       LEFT JOIN lecturers l ON ic.lecturer_id = l.id
+       WHERE ic.qr_token = $1 AND ic.cardholder_type = 'lecturer'`,
+      [lecturer_card_token]
+    )
+    if (!cardRes.rows.length) {
+      return res.status(404).json({ success: false, message: 'Lecturer ID card not found or invalid' })
+    }
+
+    const card = cardRes.rows[0]
+
+    // Log the invigilator session start
+    const lecturerName = `${card.first_name || ''} ${card.last_name || ''}`.trim() || card.cardholder_name
+    await pool.query(`
+      INSERT INTO id_verification_logs (
+        card_id, card_number, qr_token, verifier_type, verifier_name,
+        scan_location, verification_result, action_taken, notes, scanned_at
+      ) VALUES ($1, $2, $3, 'lecturer_invigilator', $4, $5, 'verified', 'invigilator_session_start', $6, NOW())
+    `, [
+      card.id,
+      card.card_number,
+      card.qr_token,
+      lecturerName,
+      room_location || 'Main Examination Hall',
+      JSON.stringify({ room_location, exam_session_id, bound_at: new Date().toISOString() })
+    ])
+
+    return res.json({
+      success: true,
+      message: 'Invigilator session bound successfully',
+      data: {
+        lecturer_name: `${card.first_name || ''} ${card.last_name || ''}`.trim() || card.cardholder_name,
+        card_number: card.card_number,
+        session_started_at: new Date().toISOString(),
+        exam_session_id
+      }
+    })
+  } catch (err) {
+    console.error('beginInvigilatorSession error:', err)
+    return res.status(500).json({ success: false, message: 'Server error' })
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 12. REISSUE ALL TOKENS AS JWT (Admin only — for existing hex-token cards)
+// ─────────────────────────────────────────────────────────────────────────────
+export const reissueAllTokens = async (req, res) => {
+  try {
+    const allCards = await pool.query('SELECT id, card_number, cardholder_type, identifier_number FROM institutional_id_cards')
+    let count = 0
+    for (const card of allCards.rows) {
+      const newToken = generateQrToken(card.card_number, card.card_number, card.cardholder_type, card.identifier_number)
+      await pool.query('UPDATE institutional_id_cards SET qr_token = $1, updated_at = NOW() WHERE id = $2', [newToken, card.id])
+      count++
+    }
+    return res.json({ success: true, message: `Re-issued JWT tokens for ${count} cards` })
+  } catch (err) {
+    console.error('reissueAllTokens error:', err)
+    return res.status(500).json({ success: false, message: 'Server error' })
   }
 }

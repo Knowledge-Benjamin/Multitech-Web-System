@@ -5,7 +5,7 @@ import {
   GraduationCap, Users, Megaphone, FileText, Info, Layers, Star,
   Mail, FileSpreadsheet, Building2, Library, Building, Clock,
   Radio, BarChart2, Settings, LogOut, ChevronLeft, ChevronRight,
-  ChevronDown
+  ChevronDown, CreditCard
 } from 'lucide-react'
 import './AdminSidebar.css'
 
@@ -121,6 +121,10 @@ export default function AdminSidebar() {
             <Link to="/admin/calendar" className={`nav-item ${isActive('/admin/calendar') ? 'active' : ''}`}>
               <span className="nav-icon"><CalendarDays size={18} /></span>
               <span className="sidebar-text">Academic Calendar</span>
+            </Link>
+            <Link to="/admin/id-cards" className={`nav-item ${isActive('/admin/id-cards') ? 'active' : ''}`}>
+              <span className="nav-icon"><CreditCard size={18} /></span>
+              <span className="sidebar-text">Institutional ID Cards</span>
             </Link>
           </div>
                     </div>

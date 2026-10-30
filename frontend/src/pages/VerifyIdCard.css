@@ -1,0 +1,442 @@
+/* ═════════════════════════════════════════════════════════════════════════════
+   PUBLIC & PRIVILEGED ID VERIFICATION GATEWAY STYLES
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+.verify-page-wrapper {
+  min-height: 100vh;
+  background-color: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+}
+
+.verify-header-bar {
+  background-color: #0b1528;
+  color: #ffffff;
+  padding: 0.9rem 0;
+  border-bottom: 2px solid #0052cc;
+}
+
+.verify-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.bar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.verify-brand-crest {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.verify-brand-title {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+}
+
+.verify-brand-sub {
+  display: block;
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.verify-home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.verify-home-link:hover {
+  color: #ffffff;
+}
+
+.verify-main-container {
+  flex: 1;
+  padding: 2.5rem 0;
+}
+
+/* ── States ──────────────────────────────────────────────────────────────── */
+.verify-card-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  text-align: center;
+  max-width: 580px;
+  margin: 0 auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.verify-loading-box h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0b1528;
+  margin: 1.25rem 0 0.5rem 0;
+}
+
+.verify-loading-box p {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.loading-spinner {
+  width: 42px;
+  height: 42px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #0052cc;
+  border-radius: 50%;
+  margin: 0 auto;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.verify-error-box h2 {
+  color: #991b1b;
+  font-size: 1.4rem;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.error-icon-wrap {
+  color: #ef4444;
+}
+
+.error-desc {
+  font-size: 0.95rem;
+  color: #475569;
+  margin-bottom: 1.5rem;
+}
+
+.security-notice {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* ── Success Layout ──────────────────────────────────────────────────────── */
+.verify-success-layout {
+  display: grid;
+  grid-template-columns: 1fr 520px;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.verify-status-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.status-badge-header {
+  padding: 1.25rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-badge-header.is-valid {
+  background-color: #052e16;
+  color: #ffffff;
+  border: 1px solid #166534;
+}
+
+.status-badge-header.is-invalid {
+  background-color: #450a0a;
+  color: #ffffff;
+  border: 1px solid #991b1b;
+}
+
+.status-shield-icon {
+  flex-shrink: 0;
+}
+
+.status-badge-header.is-valid .status-shield-icon {
+  color: #22c55e;
+}
+
+.status-badge-header.is-invalid .status-shield-icon {
+  color: #ef4444;
+}
+
+.status-badge-header h2 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.2rem 0;
+}
+
+.status-badge-header p {
+  font-size: 0.78rem;
+  opacity: 0.85;
+  margin: 0;
+}
+
+.privileged-officer-banner {
+  background-color: #0052cc;
+  color: #ffffff;
+  padding: 0.65rem 1rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.credential-meta-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.meta-card-photo-strip {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 1.25rem;
+}
+
+.meta-photo {
+  width: 72px;
+  height: 88px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #cbd5e1;
+  background: #0b1528;
+}
+
+.meta-photo.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.6rem;
+  background: #1e293b;
+}
+
+.meta-primary-info h3 {
+  margin: 0.25rem 0 0.35rem 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0b1528;
+}
+
+.meta-role-pill {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.06em;
+}
+
+.meta-role-pill.role-student {
+  background: #e0edff;
+  color: #0052cc;
+}
+
+.meta-role-pill.role-lecturer {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.meta-role-pill.role-administrative {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.meta-role-pill.role-support_staff {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.meta-id-number {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0052cc;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.meta-item label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+}
+
+.meta-item span {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* ── Privileged Section ──────────────────────────────────────────────────── */
+.privileged-clearance-box {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.privileged-clearance-box h4 {
+  margin: 0 0 1rem 0;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #475569;
+}
+
+.clearance-metrics-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.clearance-metric-card {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.clearance-metric-card.cleared {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+
+.clearance-metric-card.unpaid,
+.clearance-metric-card.restricted {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+}
+
+.clearance-metric-card.pin-card {
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
+  color: #1e40af;
+}
+
+.metric-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.metric-stat {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.metric-sub {
+  font-size: 0.72rem;
+  opacity: 0.85;
+  margin-top: 0.2rem;
+}
+
+.admit-btn-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admit-confirm-text {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #15803d;
+}
+
+.public-gate-notice {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 0.85rem 1rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* ── Right Column: 3D Card Presentation ──────────────────────────────────── */
+.card-presentation-shell {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.presentation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.06em;
+}
+
+.live-seal {
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+@media (max-width: 960px) {
+  .verify-success-layout {
+    grid-template-columns: 1fr;
+  }
+}

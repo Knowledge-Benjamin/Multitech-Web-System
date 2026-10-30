@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import api from '../services/api'
 import StudentSidebar from '../components/StudentSidebar'
+import IdCard3D from '../components/IdCard3D'
 import { useApiQuery } from '../hooks/useApiQuery'
 import './AdminDashboard.css'
 import './StudentDashboard.css'
@@ -23,6 +24,9 @@ export default function StudentDashboard() {
   const [downloadingLetter, setDownloadingLetter] = useState(false)
   const [offerSuccessMessage, setOfferSuccessMessage] = useState('')
   const [offerErrorMessage, setOfferErrorMessage] = useState('')
+  const [showIdCardModal, setShowIdCardModal] = useState(false)
+  const [idCard, setIdCard] = useState(null)
+  const [idCardLoading, setIdCardLoading] = useState(false)
 
   const studentUser = JSON.parse(localStorage.getItem('studentUser') || '{}')
   const token = localStorage.getItem('studentToken')
@@ -127,6 +131,20 @@ export default function StudentDashboard() {
       alert(err.response?.data?.message || 'Error downloading admission letter')
     } finally {
       setDownloadingLetter(false)
+    }
+  }
+
+  const fetchIdCard = async () => {
+    try {
+      setIdCardLoading(true)
+      const res = await api.get('/id-cards/my-card', {
+        headers: { Authorization: `Bearer ` }
+      })
+      if (res.data?.success) setIdCard(res.data.data)
+    } catch (err) {
+      console.error('ID card fetch failed', err)
+    } finally {
+      setIdCardLoading(false)
     }
   }
 
@@ -526,6 +544,19 @@ export default function StudentDashboard() {
                   </span>
                 </div>
               </Link>
+
+              <div className="stat-card fade-in-item" style={{ cursor: 'pointer' }} onClick={() => { setShowIdCardModal(true); fetchIdCard() }}>
+                <div className="stat-icon-wrapper bg-blue">
+                  <CreditCard size={24} className="text-blue" />
+                </div>
+                <div className="stat-content">
+                  <h3>My ID Card</h3>
+                  <div className="stat-value-row">
+                    <p className="stat-number" style={{ fontSize: '1.2rem' }}>Digital ID</p>
+                    <span className="trend positive">View Card</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Main Content Grid: Student Record & Financial Summary */}
@@ -662,6 +693,29 @@ export default function StudentDashboard() {
                 </Link>
               </div>
             </section>
+
+            {/* Digital ID Card Modal */}
+            {showIdCardModal && (
+              <div className="id-modal-backdrop" onClick={() => setShowIdCardModal(false)}>
+                <div className="id-modal-dialog" onClick={e => e.stopPropagation()}>
+                  <div className="id-modal-header">
+                    <h3>Institutional ID Card</h3>
+                    <button type="button" className="id-modal-close" onClick={() => setShowIdCardModal(false)}>&#x2715;</button>
+                  </div>
+                  <div className="id-modal-body">
+                    {idCardLoading ? (
+                      <div className="loading-state"><div className="spinner"></div><p>Loading your ID card...</p></div>
+                    ) : idCard ? (
+                      <IdCard3D card={idCard} />
+                    ) : (
+                      <div className="empty-state" style={{ padding: '2rem', textAlign: 'center' }}>
+                        <p style={{ color: '#64748b' }}>Your ID card has not been issued yet. Contact the registrar.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </main>

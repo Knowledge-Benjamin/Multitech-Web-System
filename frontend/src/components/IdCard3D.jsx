@@ -134,11 +134,14 @@ export default function IdCard3D({
     support_staff: 'SUPPORT STAFF'
   }[roleType] || 'INSTITUTIONAL'
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'DEC 2028'
-    const d = new Date(dateString)
-    const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase()
-    return `${month} ${d.getFullYear()}`
+  const formatDate = (dateString, includeDay = false) => {
+    if (!dateString) return 'NOT SET'
+    const date = new Date(dateString)
+    if (Number.isNaN(date.getTime())) return 'NOT SET'
+    const options = includeDay
+      ? { day: '2-digit', month: 'short', year: 'numeric' }
+      : { month: 'short', year: 'numeric' }
+    return date.toLocaleDateString('en-GB', options).toUpperCase()
   }
 
   const formattedLiveTime = liveTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -264,6 +267,10 @@ export default function IdCard3D({
                 </div>
 
                 <div className="detail-row footer-row">
+                  <div className="detail-group">
+                    <label>ISSUED</label>
+                    <span className="issue-date mono-font">{formatDate(card.issued_at || card.created_at, true)}</span>
+                  </div>
                   <div className="detail-group">
                     <label>VALID THRU</label>
                     <span className="expiry-date mono-font">{formatDate(card.expires_at)}</span>

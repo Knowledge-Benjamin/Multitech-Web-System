@@ -27,6 +27,7 @@ export default function StudentDashboard() {
   const [showIdCardModal, setShowIdCardModal] = useState(false)
   const [idCard, setIdCard] = useState(null)
   const [idCardLoading, setIdCardLoading] = useState(false)
+  const [idCardError, setIdCardError] = useState('')
 
   const studentUser = JSON.parse(localStorage.getItem('studentUser') || '{}')
   const token = localStorage.getItem('studentToken')
@@ -135,14 +136,29 @@ export default function StudentDashboard() {
   }
 
   const fetchIdCard = async () => {
+    setIdCard(null)
+    setIdCardError('')
+    setIdCardLoading(true)
     try {
-      setIdCardLoading(true)
+      const currentToken = localStorage.getItem('studentToken')
+      if (!currentToken) {
+        setIdCardError('Your student session has expired. Please sign in again.')
+        return
+      }
+
       const res = await api.get('/id-cards/my-card', {
-        headers: { Authorization: `Bearer ` }
+        headers: { Authorization: `Bearer ${currentToken}` }
       })
-      if (res.data?.success) setIdCard(res.data.data)
+      if (res.data?.success && res.data.data) {
+        setIdCard(res.data.data)
+      } else {
+        setIdCardError(res.data?.message || 'Unable to load your ID card.')
+      }
     } catch (err) {
       console.error('ID card fetch failed', err)
+      setIdCardError(err.response?.status === 404
+        ? 'Your ID card has not been issued yet. Contact the registrar.'
+        : err.response?.data?.message || 'Unable to load your ID card. Please try again.')
     } finally {
       setIdCardLoading(false)
     }
@@ -705,6 +721,10 @@ export default function StudentDashboard() {
                   <div className="id-modal-body">
                     {idCardLoading ? (
                       <div className="loading-state"><div className="spinner"></div><p>Loading your ID card...</p></div>
+                    ) : idCardError ? (
+                      <div className="empty-state" style={{ padding: '2rem', textAlign: 'center' }}>
+                        <p style={{ color: '#64748b' }}>{idCardError}</p>
+                      </div>
                     ) : idCard ? (
                       <IdCard3D card={idCard} />
                     ) : (

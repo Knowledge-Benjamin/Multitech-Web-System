@@ -363,14 +363,21 @@ export const getMyCard = async (req, res) => {
     let card = null
 
     if (req.student) {
-      const studentId = req.student.id || req.student.studentId
-      const result = await pool.query('SELECT * FROM institutional_id_cards WHERE student_id = $1', [studentId])
+      const studentId = req.student.studentId
+      if (!studentId) {
+        return res.status(404).json({ success: false, message: 'Student record not found for this account' })
+      }
+
+      const result = await pool.query(
+        'SELECT * FROM institutional_id_cards WHERE student_id = $1',
+        [studentId]
+      )
       if (result.rows.length > 0) {
         card = result.rows[0]
       } else {
-        // Auto-generate if missing
-        const sRes = await pool.query(`
-          SELECT s.id, s.student_number, a.first_name, a.last_name, a.passport_photo_url, p.name as programme_name
+        const studentResult = await pool.query(`
+          SELECT s.id, s.student_number, a.first_name, a.last_name,
+                 a.passport_photo_url, p.name AS programme_name
           FROM students s
           JOIN student_accounts sa ON s.student_account_id = sa.id
           JOIN applications a ON sa.application_id = a.id
@@ -378,21 +385,33 @@ export const getMyCard = async (req, res) => {
           WHERE s.id = $1
         `, [studentId])
 
-        if (sRes.rows.length > 0) {
-          const s = sRes.rows[0]
-          const cardNum = `MBS-STU-${String(s.id).padStart(5, '0')}`
-          const identifierNumber = s.student_number || `STU-${s.id}`
-          const qrToken = generateQrToken(cardNum, cardNum, 'student', identifierNumber)
-          const ins = await pool.query(`
-            INSERT INTO institutional_id_cards (
-              card_number, cardholder_type, student_id, cardholder_name,
-              identifier_number, department_or_programme, role_title,
-              photo_url, qr_token, barcode_value, expires_at
-            ) VALUES ($1, 'student', $2, $3, $4, $5, 'Student', $6, $7, $8, NOW() + INTERVAL '3 years')
-            RETURNING *
-          `, [cardNum, s.id, `${s.first_name} ${s.last_name}`, identifierNumber, s.programme_name || 'Academic Studies', s.passport_photo_url, qrToken, s.student_number])
-          card = ins.rows[0]
+        if (studentResult.rows.length === 0) {
+          return res.status(404).json({ success: false, message: 'Student record not found for this account' })
         }
+
+        const student = studentResult.rows[0]
+        const cardNum = `MBS-STU-${String(student.id).padStart(5, '0')}`
+        const identifierNumber = student.student_number || `STU-${student.id}`
+        const fullName = `${student.first_name || ''} ${student.last_name || ''}`.trim()
+        const qrToken = generateQrToken(cardNum, cardNum, 'student', identifierNumber)
+        const ins = await pool.query(`
+          INSERT INTO institutional_id_cards (
+            card_number, cardholder_type, student_id, cardholder_name,
+            identifier_number, department_or_programme, role_title,
+            photo_url, qr_token, barcode_value, expires_at
+          ) VALUES ($1, 'student', $2, $3, $4, $5, 'Student', $6, $7, $8, NOW() + INTERVAL '3 years')
+          RETURNING *
+        `, [
+          cardNum,
+          student.id,
+          fullName,
+          identifierNumber,
+          student.programme_name || 'Academic Studies',
+          student.passport_photo_url,
+          qrToken,
+          student.student_number || cardNum
+        ])
+        card = ins.rows[0]
       }
     } else if (req.lecturer) {
       const lecturerId = req.lecturer.id || req.lecturer.lecturerId

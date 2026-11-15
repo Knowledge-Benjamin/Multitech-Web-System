@@ -49,7 +49,8 @@ export const getMyProfile = asyncHandler(async (req, res) => {
 
   // 1. Basic Student Info
   const studentRes = await pool.query(`
-    SELECT s.*, p.name AS programme_name, a.first_name, a.last_name, a.gender, a.date_of_birth, sa.email, a.phone
+    SELECT s.*, p.name AS programme_name, a.first_name, a.last_name, a.gender,
+           a.date_of_birth, a.passport_photo_url, sa.email, a.phone
     FROM students s
     JOIN programmes p ON s.programme_id = p.id
     JOIN student_accounts sa ON s.student_account_id = sa.id

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useApiQuery } from '../hooks/useApiQuery'
 import {
   LayoutDashboard, CreditCard, BookOpen, Clock, Megaphone,
   Award, CheckSquare, FileText, User, LogOut, ChevronLeft, ChevronRight
@@ -10,10 +11,20 @@ export default function StudentSidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const student = JSON.parse(localStorage.getItem('studentUser') || '{}')
+  const API = import.meta.env.VITE_API_URL
+  const { data: profileResponse } = useApiQuery(`${API}/student-profile`, 'studentDashboardProfile', {
+    queryOptions: { staleTime: 5 * 60 * 1000 }
+  })
+  const avatarPhotoUrl = profileResponse?.data?.profile?.passport_photo_url || student.photo_url
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
   
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('studentSidebarCollapsed') === 'true'
   })
+
+  useEffect(() => {
+    setAvatarLoadFailed(false)
+  }, [avatarPhotoUrl])
 
   // Ensure body layout classes match admin standard
   useEffect(() => {
@@ -62,7 +73,16 @@ export default function StudentSidebar() {
       </button>
 
       <div className="sidebar-header">
-        <div className="avatar">{getInitials(student.name)}</div>
+        <div className="avatar">
+          {avatarPhotoUrl && !avatarLoadFailed ? (
+            <img
+              className="student-avatar-image"
+              src={avatarPhotoUrl}
+              alt={`${student.name || 'Student'} profile`}
+              onError={() => setAvatarLoadFailed(true)}
+            />
+          ) : getInitials(student.name)}
+        </div>
         <div className="header-info">
           <h2>STUDENT PORTAL</h2>
           <p className="sidebar-text">{student.name || 'Student'}</p>

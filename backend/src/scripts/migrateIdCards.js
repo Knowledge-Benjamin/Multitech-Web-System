@@ -54,6 +54,9 @@ export const migrateIdCardsSchema = async () => {
       photo_url TEXT,
       qr_token TEXT UNIQUE NOT NULL,
       nfc_uid VARCHAR(64),
+      nfc_key_version SMALLINT NOT NULL DEFAULT 1,
+      nfc_last_counter INTEGER,
+      nfc_last_seen_at TIMESTAMP,
       barcode_value VARCHAR(100),
       blood_group VARCHAR(10),
       emergency_contact VARCHAR(100),
@@ -129,8 +132,12 @@ export const migrateIdCardsSchema = async () => {
   await pool.query(`
     ALTER TABLE institutional_id_cards ALTER COLUMN qr_token TYPE TEXT;
     ALTER TABLE institutional_id_cards ADD COLUMN IF NOT EXISTS nfc_uid VARCHAR(64);
+    ALTER TABLE institutional_id_cards ADD COLUMN IF NOT EXISTS nfc_key_version SMALLINT NOT NULL DEFAULT 1;
+    ALTER TABLE institutional_id_cards ADD COLUMN IF NOT EXISTS nfc_last_counter INTEGER;
+    ALTER TABLE institutional_id_cards ADD COLUMN IF NOT EXISTS nfc_last_seen_at TIMESTAMP;
     ALTER TABLE id_verification_logs ALTER COLUMN qr_token TYPE TEXT;
   `)
+  await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_id_cards_nfc_uid ON institutional_id_cards(LOWER(nfc_uid)) WHERE nfc_uid IS NOT NULL`)
   console.log('✓ Created indexes')
 
   // Seed sample staff members if empty

@@ -32,6 +32,24 @@ VITE_ENVIRONMENT=production
    - DigitalOcean App Platform
    - Traditional VPS (DigitalOcean, Linode, AWS Lightsail)
 
+### NTAG 424 DNA phone-tap verification
+
+The NFC verification route accepts NTAG 424 DNA Secure Dynamic Messaging (SUN)
+data at `/verify/nfc?p=...&c=...`. Personalized tags must place the encrypted
+PICC data in `p` and the SUN MAC in `c`; the MAC input window must match the
+empty-window configuration expected by the verifier.
+
+The backend requires `NTAG424_ISSUER_KEY` as a 32-character hexadecimal
+AES-128 key. Store it only as a production secret (for example, a Render
+environment secret); never commit it to source control or expose it to the
+frontend. The verifier checks the SUN MAC and rejects reused counters.
+
+This implements tap verification only. The application does not yet provision
+or enroll physical tags, and it has not been validated against personalized
+NTAG 424 DNA hardware. Do not enable it for production credentials until the
+key derivation and tag configuration have been confirmed with the selected
+personalization equipment and physical-card tests have passed.
+
 2. **Security Hardening**
 ```javascript
 // Update server.js for production:

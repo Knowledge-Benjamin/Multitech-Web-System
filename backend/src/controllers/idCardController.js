@@ -1,6 +1,7 @@
 import pool from '../config/database.js'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
+import { decodeNtag424SdmPiccData, verifyNtag424SunTap } from '../services/ntag424Sdm.js'
 
 const JWT_ALGORITHM = 'HS256'
 
@@ -432,6 +433,69 @@ export const getMyCard = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // 5. PUBLIC & PRIVILEGED VERIFICATION BY TOKEN
 // ─────────────────────────────────────────────────────────────────────────────
+export const verifyCardByNfcTap = async (req, res) => {
+  res.set('Cache-Control', 'no-store')
+  const issuerKey = process.env.NTAG424_ISSUER_KEY
+  if (!issuerKey || !/^[0-9a-f]{32}$/i.test(issuerKey)) {
+    return res.status(503).json({
+      success: false,
+      message: 'NFC verification is not configured'
+    })
+  }
+
+  const { p: piccData, c: mac } = req.query
+  if (typeof piccData !== 'string' || typeof mac !== 'string') {
+    return res.status(400).json({ success: false, message: 'Invalid NFC tap data' })
+  }
+
+  try {
+    const decodedTap = decodeNtag424SdmPiccData({ piccData, issuerKey })
+    const cardResult = await pool.query(
+      'SELECT id, nfc_key_version FROM institutional_id_cards WHERE LOWER(nfc_uid) = $1',
+      [decodedTap.uid.toLowerCase()]
+    )
+    if (cardResult.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid NFC credential' })
+    }
+
+    const card = cardResult.rows[0]
+    verifyNtag424SunTap({
+      piccData,
+      mac,
+      issuerKey,
+      keyVersion: Number(card.nfc_key_version)
+    })
+
+    const counterResult = await pool.query(`
+      UPDATE institutional_id_cards
+      SET nfc_last_counter = $1, nfc_last_seen_at = NOW()
+      WHERE id = $2
+        AND (nfc_last_counter IS NULL OR nfc_last_counter < $1)
+      RETURNING qr_token
+    `, [decodedTap.counter, card.id])
+
+    if (counterResult.rows.length === 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'This NFC tap has already been used'
+      })
+    }
+
+    req.params.token = counterResult.rows[0].qr_token
+    req.nfcSunVerified = true
+    return verifyCardByToken(req, res)
+  } catch (error) {
+    if (error.message === 'Invalid NFC tap' ||
+        error.message === 'Invalid PICC data' ||
+        error.message === 'Invalid SUN MAC' ||
+        error.message === 'Invalid NFC issuer key') {
+      return res.status(401).json({ success: false, message: 'Invalid NFC credential' })
+    }
+    console.error('NFC card verification error:', error)
+    return res.status(500).json({ success: false, message: 'NFC verification failed' })
+  }
+}
+
 export const verifyCardByToken = async (req, res) => {
   try {
     const { token } = req.params
@@ -485,6 +549,11 @@ export const verifyCardByToken = async (req, res) => {
     }
 
     const card = cardResult.rows[0]
+    const publicCard = { ...card }
+    delete publicCard.nfc_uid
+    delete publicCard.nfc_key_version
+    delete publicCard.nfc_last_counter
+    delete publicCard.nfc_last_seen_at
     const isExpired = card.expires_at && new Date(card.expires_at) < new Date()
     const isSuspended = card.status !== 'active'
 
@@ -597,10 +666,11 @@ export const verifyCardByToken = async (req, res) => {
           card_status: card.status,
           expires_at: card.expires_at,
           jwt_verified: jwtVerified,
+          nfc_sun_verified: req.nfcSunVerified === true,
           is_privileged_view: false
         },
         card: {
-          ...card,
+          ...publicCard,
           is_valid: !isExpired && !isSuspended,
           permit_status: permitStatus
         },
@@ -650,6 +720,7 @@ export const verifyCardByToken = async (req, res) => {
         expires_at: card.expires_at,
         issued_at: card.issued_at,
         jwt_verified: jwtVerified,
+        nfc_sun_verified: req.nfcSunVerified === true,
         is_privileged_view: true,
         student_contact: studentContact
       },

@@ -265,6 +265,7 @@ function App() {
 
         {/* Public & Privileged Credential Verification Gateway */}
         <Route path="/verify/id/:token" element={<VerifyIdCard />} />
+        <Route path="/verify/nfc" element={<VerifyIdCard />} />
         <Route path="/verify/scan" element={<VerifyIdCard />} />
 
         {/* Unified Portal & Auth Routes */}

@@ -212,7 +212,7 @@ export default function IdCard3D({
 
             {/* Main Body */}
             <div className="card-front-body">
-              {/* Left Column: Photo & Chip */}
+              {/* Left Column: Photo & NFC chip */}
               <div className="card-photo-column">
                 <div className="card-photo-frame">
                   {card.photo_url ? (
@@ -229,9 +229,7 @@ export default function IdCard3D({
                   )}
                   <div className="card-photo-corner-accent" />
                 </div>
-
-                {/* Smart Contact Chip Graphic */}
-                <div className="card-smart-chip" title="Contactless & Smart Storage Secure ID">
+                <div className="card-smart-chip" title="NFC smart-card chip location">
                   <div className="chip-lines line-top" />
                   <div className="chip-core" />
                   <div className="chip-lines line-bottom" />
@@ -308,7 +306,7 @@ export default function IdCard3D({
               }}
             />
 
-            {/* NFC UID Chip Indicator (if present) */}
+            {/* NFC UID Indicator (shown only when a UID is assigned) */}
             {card.nfc_uid && (
               <div className="card-nfc-indicator" title={`NFC UID: ${card.nfc_uid}`}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

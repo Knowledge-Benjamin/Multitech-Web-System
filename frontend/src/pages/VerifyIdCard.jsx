@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useLocation, Link } from 'react-router-dom'
 import {
   ShieldCheck, AlertTriangle, XCircle, CheckCircle2, UserCheck,
   Building, Calendar, Clock, CreditCard, Lock, ArrowLeft, Award, Key
@@ -10,6 +10,8 @@ import './VerifyIdCard.css'
 
 export default function VerifyIdCard() {
   const { token } = useParams()
+  const location = useLocation()
+  const isNfcTap = location.pathname === '/verify/nfc'
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
@@ -17,20 +19,40 @@ export default function VerifyIdCard() {
   const [admitMessage, setAdmitMessage] = useState('')
   const [invigilating, setInvigilating] = useState(false)
   const [invigilateMsg, setInvigilateMsg] = useState('')
+  const credentialToken = token || data?.card?.qr_token
+  const nfcSunVerified = data?.data?.nfc_sun_verified === true
 
   useEffect(() => {
     const verifyCard = async () => {
       try {
         setLoading(true)
         setError('')
+        setData(null)
         const tokenAuth = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('lecturerToken') || localStorage.getItem('studentToken')
-        const res = await api.get(`/id-cards/verify/${token}`, {
-          headers: tokenAuth ? { Authorization: `Bearer ${tokenAuth}` } : {}
-        })
-        if (res.data?.success) {
+        let res
+        if (isNfcTap) {
+          const query = new URLSearchParams(location.search)
+          const piccData = query.get('p')
+          const mac = query.get('c')
+          if (!piccData || !mac) {
+            setError('The NFC tap is missing its dynamic authentication data.')
+            return
+          }
+          res = await api.get('/id-cards/nfc/verify', {
+            params: { p: piccData, c: mac },
+            headers: tokenAuth ? { Authorization: `Bearer ${tokenAuth}` } : {}
+          })
+        } else {
+          res = await api.get(`/id-cards/verify/${token}`, {
+            headers: tokenAuth ? { Authorization: `Bearer ${tokenAuth}` } : {}
+          })
+        }
+        if (res.data?.success && (!isNfcTap || res.data?.data?.nfc_sun_verified === true)) {
           setData(res.data)
         } else {
-          setError(res.data?.message || 'Verification record not found.')
+          setError(res.data?.message || (isNfcTap
+            ? 'The NFC tap could not be cryptographically authenticated.'
+            : 'Verification record not found.'))
         }
       } catch (err) {
         setError(err.response?.data?.message || 'This credential could not be verified. It may be invalid, revoked, or expired.')
@@ -39,17 +61,19 @@ export default function VerifyIdCard() {
       }
     }
 
-    if (token) {
+    if (token || isNfcTap) {
       verifyCard()
+    } else {
+      setLoading(false)
     }
-  }, [token])
+  }, [token, isNfcTap, location.search])
 
   const handleAdmit = async () => {
     try {
       setAdmitting(true)
       setAdmitMessage('')
       const tokenAuth = localStorage.getItem('token') || localStorage.getItem('adminToken')
-      const res = await api.post(`/id-cards/verify/${token}/admit`, {
+      const res = await api.post(`/id-cards/verify/${credentialToken}/admit`, {
         action_type: 'admitted_exam',
         room_or_hall: 'Main Examination Hall',
         notes: 'Admitted via verification web gateway'
@@ -72,7 +96,7 @@ export default function VerifyIdCard() {
       setInvigilateMsg('')
       const tokenAuth = localStorage.getItem('lecturerToken') || localStorage.getItem('token') || localStorage.getItem('adminToken')
       const res = await api.post('/id-cards/invigilator-session', {
-        lecturer_card_token: token,
+        lecturer_card_token: credentialToken,
         room_location: 'Main Examination Hall',
         exam_session_id: Date.now()
       }, {
@@ -115,8 +139,8 @@ export default function VerifyIdCard() {
           {loading ? (
             <div className="verify-card-box verify-loading-box">
               <div className="loading-spinner" />
-              <h3>Verifying Credential Authenticity...</h3>
-              <p>Cryptographic token handshake with Multitech central registry.</p>
+              <h3>{isNfcTap ? 'Authenticating NFC Tap...' : 'Verifying Credential Authenticity...'}</h3>
+              <p>{isNfcTap ? 'Validating the tag’s dynamic cryptographic message and counter.' : 'Cryptographic token handshake with Multitech central registry.'}</p>
             </div>
           ) : error ? (
             <div className="verify-card-box verify-error-box">
@@ -139,7 +163,7 @@ export default function VerifyIdCard() {
                       <ShieldCheck size={32} className="status-shield-icon" />
                       <div>
                         <h2>AUTHENTIC CREDENTIAL VERIFIED</h2>
-                        <p>Officially issued and registered by Multitech Business School</p>
+                        <p>{nfcSunVerified ? 'Secure dynamic NFC message authenticated by Multitech Business School' : 'Officially issued and registered by Multitech Business School'}</p>
                       </div>
                     </>
                   ) : (
@@ -180,6 +204,12 @@ export default function VerifyIdCard() {
                       <div className="gate-jwt-verified" title="Cryptographically verified via HS256 HMAC signature">
                         <ShieldCheck size={13} />
                         <span>HMAC SIGNED &amp; VERIFIED</span>
+                      </div>
+                    )}
+                    {nfcSunVerified && (
+                      <div className="gate-jwt-verified" title="NTAG 424 DNA Secure Dynamic Messaging MAC and counter verified">
+                        <ShieldCheck size={13} />
+                        <span>NFC SUN AUTHENTICATED</span>
                       </div>
                     )}
                   </div>

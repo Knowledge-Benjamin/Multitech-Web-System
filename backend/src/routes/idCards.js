@@ -5,6 +5,7 @@ import {
   getIdCardById,
   getMyCard,
   verifyCardByToken,
+  verifyCardByNfcTap,
   admitCardholder,
   batchPrintCards,
   updateCardStatus,
@@ -40,6 +41,7 @@ const anyPortalUser = (req, res, next) => {
 // ── Public & Scanner Endpoints ────────────────────────────────────────────────
 // Public verification gate (or privileged if bearer token is provided)
 router.get('/verify/:token', verifyCardByToken)
+router.get('/nfc/verify', verifyCardByNfcTap)
 
 // 1-Click exam hall / campus entry check-in
 router.post('/verify/:token/admit', admitCardholder)

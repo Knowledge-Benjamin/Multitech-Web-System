@@ -11,7 +11,8 @@ import {
   getDelegations,
   createDelegation,
   revokeDelegation,
-  checkMyDelegationStatus
+  checkMyDelegationStatus,
+  reissueAllTokens
 } from '../controllers/idCardController.js'
 import { authMiddleware, adminOnly } from '../middleware/authMiddleware.js'
 import jwt from 'jsonwebtoken'

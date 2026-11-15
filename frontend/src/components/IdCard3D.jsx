@@ -70,10 +70,14 @@ export default function IdCard3D({
     const y = e.clientY - rect.top - rect.height / 2
     const rotateY = (x / (rect.width / 2)) * 12
     const rotateX = -(y / (rect.height / 2)) * 12
+    cardEl.style.setProperty('--pointer-x', `${((x + rect.width / 2) / rect.width) * 100}%`)
+    cardEl.style.setProperty('--pointer-y', `${((y + rect.height / 2) / rect.height) * 100}%`)
     setTilt({ x: rotateX, y: rotateY })
   }
 
   const handleMouseLeave = () => {
+    cardRef.current?.style.setProperty('--pointer-x', '50%')
+    cardRef.current?.style.setProperty('--pointer-y', '50%')
     setTilt({ x: 0, y: 0 })
   }
 
@@ -164,11 +168,21 @@ export default function IdCard3D({
           <div className="id-card-face id-card-front">
             {/* Fine Guilloche & Security Pattern Background */}
             <div className="card-security-pattern" />
+            <svg className="card-foil-waves" viewBox="0 0 480 302" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M-30 226C70 166 121 190 205 152S351 110 510 36" />
+              <path d="M-30 234C70 174 121 198 205 160S351 118 510 44" />
+              <path d="M-30 242C70 182 121 206 205 168S351 126 510 52" />
+              <path d="M-30 250C70 190 121 214 205 176S351 134 510 60" />
+              <path d="M-30 258C70 198 121 222 205 184S351 142 510 68" />
+              <path d="M90 302C150 244 215 266 278 216S390 177 500 104" />
+              <path d="M-25 216C89 158 151 177 227 142S364 98 502 27" />
+            </svg>
             <div className="card-hologram-seal" />
 
             {/* Dynamic Gyroscope Shimmer Sheen */}
             <div
               className="card-shimmer-overlay"
+              aria-hidden="true"
               style={{
                 '--tilt-x': `${tilt.x}deg`,
                 '--tilt-y': `${tilt.y}deg`

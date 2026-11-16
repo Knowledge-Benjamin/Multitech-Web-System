@@ -2,13 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import {
-  Check, UploadCloud, FileText, Image as ImageIcon, Trash2, Copy,
-  ExternalLink, Download, AlertCircle, CheckCircle2, Sparkles,
-  ArrowRight, ArrowLeft, Edit3, Clock, ShieldCheck, User, Mail,
-  Phone, MapPin, School, CreditCard, ChevronRight
+  Check, UploadCloud, FileText, Trash2, Copy, Download, AlertCircle,
+  CheckCircle2, Sparkles, ArrowRight, ArrowLeft, Edit3, ShieldCheck,
+  User, Mail, Phone, MapPin, School, CreditCard
 } from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import './Apply.css'
+import Seo from '../components/Seo'
 
 const STEPS = [
   { id: 'intake', title: 'Intake & Choices', icon: School, desc: 'Select intake term and programme preferences' },
@@ -35,6 +35,9 @@ export default function Apply() {
   const [draftRestored, setDraftRestored] = useState(false)
   const [copyFeedback, setCopyFeedback] = useState(false)
   const [downloadingSlip, setDownloadingSlip] = useState(false)
+  const [slipError, setSlipError] = useState('')
+  const wizardRef = useRef(null)
+  const stepRefs = useRef([])
 
   // Errors state for inline validation
   const [errors, setErrors] = useState({})
@@ -85,17 +88,32 @@ export default function Apply() {
   const [successData, setSuccessData] = useState(null)
 
   // API Queries
-  const { data: intakeRes, isLoading: loadingIntakes } = useApiQuery('/intakes/active', 'activeIntakes')
+  const {
+    data: intakeRes,
+    isLoading: loadingIntakes,
+    isError: intakeError,
+    refetch: refetchIntakes
+  } = useApiQuery('/intakes/active', 'activeIntakes')
   const intakes = intakeRes?.data || []
 
-  const { data: progRes, isLoading: loadingProgrammes } = useApiQuery(
+  const {
+    data: progRes,
+    isLoading: loadingProgrammes,
+    isError: programmesError,
+    refetch: refetchProgrammes
+  } = useApiQuery(
     formData.intake_id ? `/programmes?intake_id=${formData.intake_id}` : null,
     ['intakeProgrammes', formData.intake_id],
     { queryOptions: { enabled: !!formData.intake_id } }
   )
   const programmes = progRes?.data || []
 
-  const { data: campRes } = useApiQuery('/campuses', 'activeCampuses')
+  const {
+    data: campRes,
+    isLoading: loadingCampuses,
+    isError: campusesError,
+    refetch: refetchCampuses
+  } = useApiQuery('/campuses', 'activeCampuses')
   const campuses = campRes?.data || []
 
   // 1. Restore draft on initial load
@@ -136,6 +154,20 @@ export default function Apply() {
       return () => clearTimeout(timer)
     }
   }, [formData, currentStep, maxStepReached, successData])
+
+  useEffect(() => {
+    return () => {
+      if (passportPreview) URL.revokeObjectURL(passportPreview)
+    }
+  }, [passportPreview])
+
+  useEffect(() => {
+    const activeStep = stepRefs.current[currentStep]
+    if (activeStep && currentStep > 0) {
+      const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+      activeStep.scrollIntoView({ behavior, block: 'nearest', inline: 'center' })
+    }
+  }, [currentStep])
 
   // 3. Auto-select intake if only 1 active or query param provided
   useEffect(() => {
@@ -257,12 +289,11 @@ export default function Apply() {
   }
 
   // File Handlers with Previews
-  const handlePassportPhotoChange = (e) => {
-    const file = e.target.files?.[0]
+  const setPassportPhoto = (file) => {
     if (!file) return
 
     if (file.size > 10 * 1024 * 1024) {
-      alert('Passport photograph must be smaller than 10MB.')
+      setErrors(prev => ({ ...prev, passport_photo: 'Choose a passport photograph smaller than 10MB.' }))
       return
     }
     setFiles(prev => ({ ...prev, passport_photo: file }))
@@ -270,18 +301,42 @@ export default function Apply() {
     setErrors(prev => ({ ...prev, passport_photo: null }))
   }
 
-  const handleMultipleFiles = (e, fieldName) => {
-    const selected = Array.from(e.target.files || [])
+  const handlePassportPhotoChange = (e) => {
+    setPassportPhoto(e.target.files?.[0])
+    e.target.value = ''
+  }
+
+  const handlePassportPhotoDrop = (e) => {
+    e.preventDefault()
+    setPassportPhoto(e.dataTransfer.files?.[0])
+  }
+
+  const addMultipleFiles = (fileList, fieldName) => {
+    const selected = Array.from(fileList || [])
+    if (selected.length === 0) return
+
     const oversized = selected.filter(f => f.size > 10 * 1024 * 1024)
-    if (oversized.length > 0) {
-      alert(`The following file(s) exceed 10MB and were not added: ${oversized.map(f => f.name).join(', ')}`)
-    }
     const valid = selected.filter(f => f.size <= 10 * 1024 * 1024)
     setFiles(prev => ({
       ...prev,
       [fieldName]: [...prev[fieldName], ...valid]
     }))
-    setErrors(prev => ({ ...prev, [fieldName]: null }))
+    setErrors(prev => ({
+      ...prev,
+      [fieldName]: oversized.length
+        ? `${oversized.length} file(s) were not added because each file must be 10MB or smaller.`
+        : null
+    }))
+  }
+
+  const handleMultipleFiles = (e, fieldName) => {
+    addMultipleFiles(e.target.files, fieldName)
+    e.target.value = ''
+  }
+
+  const handleFileDrop = (e, fieldName) => {
+    e.preventDefault()
+    addMultipleFiles(e.dataTransfer.files, fieldName)
   }
 
   const removeFile = (fieldName, index) => {
@@ -374,20 +429,25 @@ export default function Apply() {
       const next = Math.min(currentStep + 1, STEPS.length - 1)
       setCurrentStep(next)
       setMaxStepReached(prev => Math.max(prev, next))
-      window.scrollTo({ top: 180, behavior: 'smooth' })
+      scrollToWizard()
     }
   }
 
   const prevStep = () => {
     setCurrentStep(prev => Math.max(prev - 1, 0))
-    window.scrollTo({ top: 180, behavior: 'smooth' })
+    scrollToWizard()
   }
 
   const jumpToStep = (index) => {
     if (index <= maxStepReached) {
       setCurrentStep(index)
-      window.scrollTo({ top: 180, behavior: 'smooth' })
+      scrollToWizard()
     }
+  }
+
+  const scrollToWizard = () => {
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+    wizardRef.current?.scrollIntoView({ behavior, block: 'start' })
   }
 
   // Submit Application
@@ -431,7 +491,7 @@ export default function Apply() {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
 
-      if (res.data.success) {
+      if (res.data?.success && res.data.data) {
         setSuccessData(res.data.data)
         localStorage.removeItem(DRAFT_KEY)
 
@@ -442,6 +502,8 @@ export default function Apply() {
         if (res.data.data.student) {
           localStorage.setItem('studentUser', JSON.stringify(res.data.data.student))
         }
+      } else {
+        setSubmitError(res.data?.message || 'We could not confirm your application. Please review your details and try again.')
       }
     } catch (err) {
       setSubmitError(err.response?.data?.message || 'Failed to submit application. Please review your entries and try again.')
@@ -459,6 +521,7 @@ export default function Apply() {
   const handleDownloadApplicationSlip = async () => {
     if (!successData?.reference_number) return
     setDownloadingSlip(true)
+    setSlipError('')
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/applications/${successData.reference_number}/acknowledgement`,
@@ -473,8 +536,8 @@ export default function Apply() {
       link.click()
       link.remove()
       window.URL.revokeObjectURL(url)
-    } catch (err) {
-      alert('Unable to download application slip right now. Your confirmation email contains a complete copy.')
+    } catch {
+      setSlipError('The application slip could not be downloaded. A copy was sent to your email.')
     } finally {
       setDownloadingSlip(false)
     }
@@ -508,9 +571,10 @@ export default function Apply() {
                 type="button"
                 onClick={() => handleCopy(successData.reference_number)}
                 className="btn-copy"
-                title="Copy Reference"
+                aria-label="Copy application reference number"
               >
-                <Copy size={16} /> {copyFeedback ? 'Copied!' : 'Copy'}
+                <Copy size={16} aria-hidden="true" />
+                <span aria-live="polite">{copyFeedback ? 'Copied' : 'Copy'}</span>
               </button>
             </div>
             <div className="ref-hint">
@@ -521,24 +585,25 @@ export default function Apply() {
           {/* Quick Action Buttons */}
           <div className="success-action-buttons">
             <button
+              type="button"
               onClick={() => navigate('/student/dashboard')}
               className="button button-primary button-lg"
-              style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
               <span>Go to Your Applicant Portal</span>
-              <ArrowRight size={18} />
+              <ArrowRight size={18} aria-hidden="true" />
             </button>
 
             <button
+              type="button"
               onClick={handleDownloadApplicationSlip}
               disabled={downloadingSlip}
               className="button button-outline button-lg"
-              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
-              <Download size={18} />
+              <Download size={18} aria-hidden="true" />
               <span>{downloadingSlip ? 'Downloading...' : 'Download Application Slip (PDF)'}</span>
             </button>
           </div>
+          {slipError && <p className="slip-download-error" role="status">{slipError}</p>}
 
           {/* Credentials Box */}
           <div className="credentials-box">
@@ -604,13 +669,26 @@ export default function Apply() {
             </div>
 
             <div className="form-group">
-              <label>Intake Session *</label>
+              <label htmlFor="intake_id">Intake Session *</label>
               {loadingIntakes ? (
-                <div className="field-loading">Loading active intakes...</div>
+                <div className="field-loading" role="status">Loading active intakes...</div>
+              ) : intakeError ? (
+                <div className="field-message is-error" role="alert">
+                  <span>We couldn’t load active intakes. Please try again.</span>
+                  <button type="button" onClick={() => refetchIntakes()}>Retry</button>
+                </div>
+              ) : intakes.length === 0 ? (
+                <div className="field-message" role="status">
+                  <span>No active intakes are available right now. Please contact Admissions for guidance.</span>
+                  <a href="/contact">Contact Admissions</a>
+                </div>
               ) : (
                 <select
+                  id="intake_id"
                   name="intake_id"
                   value={formData.intake_id}
+                  aria-invalid={Boolean(errors.intake_id)}
+                  aria-describedby={errors.intake_id ? 'intake-error' : undefined}
                   onChange={(e) => {
                     handleInputChange(e)
                     setFormData(p => ({
@@ -632,7 +710,7 @@ export default function Apply() {
                   })}
                 </select>
               )}
-              {errors.intake_id && <span className="field-error">{errors.intake_id}</span>}
+              {errors.intake_id && <span className="field-error" id="intake-error">{errors.intake_id}</span>}
             </div>
 
             {formData.intake_id && (
@@ -642,7 +720,31 @@ export default function Apply() {
                   <span className="choices-badge">Max 3 Choices</span>
                 </div>
 
-                {formData.choices.map((choice, index) => {
+                {loadingCampuses ? (
+                  <div className="field-loading" role="status">Loading campus choices...</div>
+                ) : campusesError ? (
+                  <div className="field-message is-error" role="alert">
+                    <span>We couldn’t load campuses for programme selection.</span>
+                    <button type="button" onClick={() => refetchCampuses()}>Retry</button>
+                  </div>
+                ) : campuses.length === 0 ? (
+                  <div className="field-message" role="status">
+                    <span>No active campuses are available for programme selection right now.</span>
+                  </div>
+                ) : null}
+
+                {loadingProgrammes ? (
+                  <div className="field-loading" role="status">Loading programmes for this intake...</div>
+                ) : programmesError ? (
+                  <div className="field-message is-error" role="alert">
+                    <span>We couldn’t load programmes for this intake.</span>
+                    <button type="button" onClick={() => refetchProgrammes()}>Retry</button>
+                  </div>
+                ) : programmes.length === 0 ? (
+                  <div className="field-message" role="status">
+                    <span>No programmes are currently available for this intake. Try another intake or contact Admissions.</span>
+                  </div>
+                ) : formData.choices.map((choice, index) => {
                   const selectedProg = programmes.find(
                     p => p.programme_intake_id.toString() === choice.programme_intake_id
                   )
@@ -667,10 +769,14 @@ export default function Apply() {
 
                       <div className="choice-inputs-grid">
                         <div className="form-group mb-0">
-                          <label className="text-xs">Programme</label>
+                          <label className="text-xs" htmlFor={`choice-${index}-programme`}>Programme</label>
                           <select
+                            id={`choice-${index}-programme`}
+                            name={`choice_${index}_programme_intake_id`}
                             value={choice.programme_intake_id}
                             onChange={(e) => handleChoiceChange(index, 'programme_intake_id', e.target.value)}
+                            aria-invalid={Boolean(errors[`choice_${index}_programme_intake_id`])}
+                            aria-describedby={errors[`choice_${index}_programme_intake_id`] ? `choice-${index}-programme-error` : undefined}
                             className={`form-control ${errors[`choice_${index}_programme_intake_id`] ? 'has-error' : ''}`}
                           >
                             <option value="">-- Select Programme --</option>
@@ -681,16 +787,20 @@ export default function Apply() {
                             ))}
                           </select>
                           {errors[`choice_${index}_programme_intake_id`] && (
-                            <span className="field-error">{errors[`choice_${index}_programme_intake_id`]}</span>
+                            <span className="field-error" id={`choice-${index}-programme-error`}>{errors[`choice_${index}_programme_intake_id`]}</span>
                           )}
                         </div>
 
                         <div className="form-group mb-0">
-                          <label className="text-xs">Campus</label>
+                          <label className="text-xs" htmlFor={`choice-${index}-campus`}>Campus</label>
                           <select
+                            id={`choice-${index}-campus`}
+                            name={`choice_${index}_campus_id`}
                             value={choice.campus_id}
                             onChange={(e) => handleChoiceChange(index, 'campus_id', e.target.value)}
                             disabled={!choice.programme_intake_id}
+                            aria-invalid={Boolean(errors[`choice_${index}_campus_id`])}
+                            aria-describedby={errors[`choice_${index}_campus_id`] ? `choice-${index}-campus-error` : undefined}
                             className={`form-control ${errors[`choice_${index}_campus_id`] ? 'has-error' : ''}`}
                           >
                             <option value="">-- Select Campus --</option>
@@ -701,7 +811,7 @@ export default function Apply() {
                               ))}
                           </select>
                           {errors[`choice_${index}_campus_id`] && (
-                            <span className="field-error">{errors[`choice_${index}_campus_id`]}</span>
+                            <span className="field-error" id={`choice-${index}-campus-error`}>{errors[`choice_${index}_campus_id`]}</span>
                           )}
                         </div>
                       </div>
@@ -715,7 +825,7 @@ export default function Apply() {
                   )
                 })}
 
-                {formData.choices.length < 3 && (
+                {programmes.length > 0 && formData.choices.length < 3 && (
                   <button
                     type="button"
                     onClick={addChoice}
@@ -729,7 +839,18 @@ export default function Apply() {
 
             <div className="step-actions">
               <div></div>
-              <button type="button" className="button button-primary" onClick={nextStep}>
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={nextStep}
+                disabled={
+                  loadingIntakes || intakeError || intakes.length === 0 ||
+                  (Boolean(formData.intake_id) && (
+                    loadingProgrammes || programmesError || programmes.length === 0 ||
+                    loadingCampuses || campusesError || campuses.length === 0
+                  ))
+                }
+              >
                 <span>Next: Personal Details</span>
                 <ArrowRight size={16} />
               </button>
@@ -750,21 +871,26 @@ export default function Apply() {
 
             <div className="form-row">
               <div className="form-group">
-                <label>First Name *</label>
+                <label htmlFor="first_name">First Name *</label>
                 <input
                   type="text"
+                  id="first_name"
                   name="first_name"
                   value={formData.first_name}
                   onChange={handleInputChange}
                   placeholder="e.g. John"
+                  aria-required="true"
+                  aria-invalid={Boolean(errors.first_name)}
+                  aria-describedby={errors.first_name ? 'first-name-error' : undefined}
                   className={`form-control ${errors.first_name ? 'has-error' : ''}`}
                 />
-                {errors.first_name && <span className="field-error">{errors.first_name}</span>}
+                {errors.first_name && <span className="field-error" id="first-name-error">{errors.first_name}</span>}
               </div>
               <div className="form-group">
-                <label>Middle Name</label>
+                <label htmlFor="middle_name">Middle Name</label>
                 <input
                   type="text"
+                  id="middle_name"
                   name="middle_name"
                   value={formData.middle_name}
                   onChange={handleInputChange}
@@ -773,26 +899,34 @@ export default function Apply() {
                 />
               </div>
               <div className="form-group">
-                <label>Last / Surname *</label>
+                <label htmlFor="last_name">Last / Surname *</label>
                 <input
                   type="text"
+                  id="last_name"
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleInputChange}
                   placeholder="e.g. Okello"
+                  aria-required="true"
+                  aria-invalid={Boolean(errors.last_name)}
+                  aria-describedby={errors.last_name ? 'last-name-error' : undefined}
                   className={`form-control ${errors.last_name ? 'has-error' : ''}`}
                 />
-                {errors.last_name && <span className="field-error">{errors.last_name}</span>}
+                {errors.last_name && <span className="field-error" id="last-name-error">{errors.last_name}</span>}
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label>Gender *</label>
+                <label htmlFor="gender">Gender *</label>
                 <select
+                  id="gender"
                   name="gender"
                   value={formData.gender}
                   onChange={handleInputChange}
+                  aria-required="true"
+                  aria-invalid={Boolean(errors.gender)}
+                  aria-describedby={errors.gender ? 'gender-error' : undefined}
                   className={`form-control ${errors.gender ? 'has-error' : ''}`}
                 >
                   <option value="">-- Select Gender --</option>
@@ -800,25 +934,30 @@ export default function Apply() {
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
                 </select>
-                {errors.gender && <span className="field-error">{errors.gender}</span>}
+                {errors.gender && <span className="field-error" id="gender-error">{errors.gender}</span>}
               </div>
 
               <div className="form-group">
-                <label>Date of Birth *</label>
+                <label htmlFor="date_of_birth">Date of Birth *</label>
                 <input
                   type="date"
+                  id="date_of_birth"
                   name="date_of_birth"
                   max="2012-12-31"
                   value={formData.date_of_birth}
                   onChange={handleInputChange}
+                  aria-required="true"
+                  aria-invalid={Boolean(errors.date_of_birth)}
+                  aria-describedby={errors.date_of_birth ? 'dob-error' : undefined}
                   className={`form-control ${errors.date_of_birth ? 'has-error' : ''}`}
                 />
-                {errors.date_of_birth && <span className="field-error">{errors.date_of_birth}</span>}
+                {errors.date_of_birth && <span className="field-error" id="dob-error">{errors.date_of_birth}</span>}
               </div>
 
               <div className="form-group">
-                <label>Marital Status</label>
+                <label htmlFor="marital_status">Marital Status</label>
                 <select
+                  id="marital_status"
                   name="marital_status"
                   value={formData.marital_status}
                   onChange={handleInputChange}
@@ -835,35 +974,44 @@ export default function Apply() {
 
             <div className="form-row">
               <div className="form-group">
-                <label>Nationality *</label>
+                <label htmlFor="nationality">Nationality *</label>
                 <input
                   type="text"
+                  id="nationality"
                   name="nationality"
                   value={formData.nationality}
                   onChange={handleInputChange}
                   placeholder="e.g. Ugandan, Kenyan, South Sudanese"
+                  aria-required="true"
+                  aria-invalid={Boolean(errors.nationality)}
+                  aria-describedby={errors.nationality ? 'nationality-error' : undefined}
                   className={`form-control ${errors.nationality ? 'has-error' : ''}`}
                 />
-                {errors.nationality && <span className="field-error">{errors.nationality}</span>}
+                {errors.nationality && <span className="field-error" id="nationality-error">{errors.nationality}</span>}
               </div>
 
               <div className="form-group">
-                <label>Country of Residence *</label>
+                <label htmlFor="country_of_residence">Country of Residence *</label>
                 <input
                   type="text"
+                  id="country_of_residence"
                   name="country_of_residence"
                   value={formData.country_of_residence}
                   onChange={handleInputChange}
                   placeholder="e.g. Uganda"
+                  aria-required="true"
+                  aria-invalid={Boolean(errors.country_of_residence)}
+                  aria-describedby={errors.country_of_residence ? 'residence-error' : undefined}
                   className={`form-control ${errors.country_of_residence ? 'has-error' : ''}`}
                 />
-                {errors.country_of_residence && <span className="field-error">{errors.country_of_residence}</span>}
+                {errors.country_of_residence && <span className="field-error" id="residence-error">{errors.country_of_residence}</span>}
               </div>
 
               <div className="form-group">
-                <label>National ID (NIN) / Passport No.</label>
+                <label htmlFor="id_number">National ID (NIN) / Passport No.</label>
                 <input
                   type="text"
+                  id="id_number"
                   name="id_number"
                   value={formData.id_number}
                   onChange={handleInputChange}
@@ -875,9 +1023,10 @@ export default function Apply() {
 
             <div className="form-row">
               <div className="form-group">
-                <label>Religious Affiliation (Optional)</label>
+                <label htmlFor="religion">Religious Affiliation (Optional)</label>
                 <input
                   type="text"
+                  id="religion"
                   name="religion"
                   value={formData.religion}
                   onChange={handleInputChange}
@@ -900,8 +1049,9 @@ export default function Apply() {
 
               {formData.disability_disclosed && (
                 <div className="disability-details-input fade-in-item">
-                  <label className="text-xs">Accommodation details:</label>
+                  <label className="text-xs" htmlFor="disability_details">Accommodation details:</label>
                   <textarea
+                    id="disability_details"
                     name="disability_details"
                     value={formData.disability_details}
                     onChange={handleInputChange}
@@ -938,42 +1088,53 @@ export default function Apply() {
 
             <div className="form-row">
               <div className="form-group">
-                <label>Email Address *</label>
+                <label htmlFor="email">Email Address *</label>
                 <div className="input-icon-wrapper">
                   <Mail size={16} className="input-icon" />
                   <input
                     type="email"
+                    id="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="name@example.com"
+                    autoComplete="email"
+                    aria-required="true"
+                    aria-invalid={Boolean(errors.email)}
+                    aria-describedby={errors.email ? 'email-error' : undefined}
                     className={`form-control has-icon ${errors.email ? 'has-error' : ''}`}
                   />
                 </div>
-                {errors.email && <span className="field-error">{errors.email}</span>}
+                {errors.email && <span className="field-error" id="email-error">{errors.email}</span>}
               </div>
 
               <div className="form-group">
-                <label>Active Telephone Number *</label>
+                <label htmlFor="phone">Active Telephone Number *</label>
                 <div className="input-icon-wrapper">
                   <Phone size={16} className="input-icon" />
                   <input
                     type="tel"
+                    id="phone"
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
                     placeholder="e.g. +256 700 000 000"
+                    autoComplete="tel"
+                    aria-required="true"
+                    aria-invalid={Boolean(errors.phone)}
+                    aria-describedby={errors.phone ? 'phone-error' : undefined}
                     className={`form-control has-icon ${errors.phone ? 'has-error' : ''}`}
                   />
                 </div>
-                {errors.phone && <span className="field-error">{errors.phone}</span>}
+                {errors.phone && <span className="field-error" id="phone-error">{errors.phone}</span>}
               </div>
             </div>
 
             <div className="form-group">
-              <label>Residential Physical Address</label>
+              <label htmlFor="address">Residential Physical Address</label>
               <input
                 type="text"
+                id="address"
                 name="address"
                 value={formData.address}
                 onChange={handleInputChange}
@@ -984,9 +1145,10 @@ export default function Apply() {
 
             <div className="form-row">
               <div className="form-group">
-                <label>Town / City</label>
+                <label htmlFor="town">Town / City</label>
                 <input
                   type="text"
+                  id="town"
                   name="town"
                   value={formData.town}
                   onChange={handleInputChange}
@@ -996,9 +1158,10 @@ export default function Apply() {
               </div>
 
               <div className="form-group">
-                <label>District / County / State</label>
+                <label htmlFor="county">District / County / State</label>
                 <input
                   type="text"
+                  id="county"
                   name="county"
                   value={formData.county}
                   onChange={handleInputChange}
@@ -1033,55 +1196,69 @@ export default function Apply() {
 
             <div className="form-row">
               <div className="form-group">
-                <label>Full Legal Name *</label>
+                <label htmlFor="kin_name">Full Legal Name *</label>
                 <input
                   type="text"
+                  id="kin_name"
                   name="kin_name"
                   value={formData.kin_name}
                   onChange={handleInputChange}
                   placeholder="e.g. Sarah Namubiru"
+                  aria-required="true"
+                  aria-invalid={Boolean(errors.kin_name)}
+                  aria-describedby={errors.kin_name ? 'kin-name-error' : undefined}
                   className={`form-control ${errors.kin_name ? 'has-error' : ''}`}
                 />
-                {errors.kin_name && <span className="field-error">{errors.kin_name}</span>}
+                {errors.kin_name && <span className="field-error" id="kin-name-error">{errors.kin_name}</span>}
               </div>
 
               <div className="form-group">
-                <label>Relationship *</label>
+                <label htmlFor="kin_relationship">Relationship *</label>
                 <input
                   type="text"
+                  id="kin_relationship"
                   name="kin_relationship"
                   value={formData.kin_relationship}
                   onChange={handleInputChange}
                   placeholder="e.g. Mother, Father, Guardian, Spouse"
+                  aria-required="true"
+                  aria-invalid={Boolean(errors.kin_relationship)}
+                  aria-describedby={errors.kin_relationship ? 'kin-relationship-error' : undefined}
                   className={`form-control ${errors.kin_relationship ? 'has-error' : ''}`}
                 />
-                {errors.kin_relationship && <span className="field-error">{errors.kin_relationship}</span>}
+                {errors.kin_relationship && <span className="field-error" id="kin-relationship-error">{errors.kin_relationship}</span>}
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label>Telephone Number *</label>
+                <label htmlFor="kin_phone">Telephone Number *</label>
                 <div className="input-icon-wrapper">
                   <Phone size={16} className="input-icon" />
                   <input
                     type="tel"
+                    id="kin_phone"
                     name="kin_phone"
                     value={formData.kin_phone}
                     onChange={handleInputChange}
                     placeholder="e.g. +256 772 000 000"
+                    autoComplete="tel"
+                    aria-required="true"
+                    aria-invalid={Boolean(errors.kin_phone)}
+                    aria-describedby={errors.kin_phone ? 'kin-phone-error' : undefined}
                     className={`form-control has-icon ${errors.kin_phone ? 'has-error' : ''}`}
                   />
                 </div>
-                {errors.kin_phone && <span className="field-error">{errors.kin_phone}</span>}
+                {errors.kin_phone && <span className="field-error" id="kin-phone-error">{errors.kin_phone}</span>}
               </div>
 
               <div className="form-group">
-                <label>Email Address (Optional)</label>
+                <label htmlFor="kin_email">Email Address (Optional)</label>
                 <div className="input-icon-wrapper">
                   <Mail size={16} className="input-icon" />
                   <input
                     type="email"
+                    id="kin_email"
                     name="kin_email"
                     value={formData.kin_email}
                     onChange={handleInputChange}
@@ -1093,9 +1270,10 @@ export default function Apply() {
             </div>
 
             <div className="form-group">
-              <label>Physical Address (Optional)</label>
+              <label htmlFor="kin_address">Physical Address (Optional)</label>
               <input
                 type="text"
+                id="kin_address"
                 name="kin_address"
                 value={formData.kin_address}
                 onChange={handleInputChange}
@@ -1144,9 +1322,10 @@ export default function Apply() {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Institution / School Attended</label>
+                    <label htmlFor={`academic-${index}-institution`}>Institution / School Attended</label>
                     <input
                       type="text"
+                      id={`academic-${index}-institution`}
                       value={edu.institution}
                       onChange={(e) => updateAcademicRow(index, 'institution', e.target.value)}
                       placeholder="e.g. Makerere College School"
@@ -1155,9 +1334,10 @@ export default function Apply() {
                   </div>
 
                   <div className="form-group">
-                    <label>Qualification Awarded</label>
+                    <label htmlFor={`academic-${index}-qualification`}>Qualification Awarded</label>
                     <input
                       type="text"
+                      id={`academic-${index}-qualification`}
                       value={edu.qualification}
                       onChange={(e) => updateAcademicRow(index, 'qualification', e.target.value)}
                       placeholder="e.g. Uganda Advanced Certificate of Education (UACE)"
@@ -1168,9 +1348,10 @@ export default function Apply() {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Year Completed</label>
+                    <label htmlFor={`academic-${index}-year`}>Year Completed</label>
                     <input
                       type="number"
+                      id={`academic-${index}-year`}
                       value={edu.year_completed}
                       onChange={(e) => updateAcademicRow(index, 'year_completed', e.target.value)}
                       placeholder="e.g. 2025"
@@ -1179,9 +1360,10 @@ export default function Apply() {
                   </div>
 
                   <div className="form-group">
-                    <label>Grade / Division / Classification</label>
+                    <label htmlFor={`academic-${index}-grade`}>Grade / Division / Classification</label>
                     <input
                       type="text"
+                      id={`academic-${index}-grade`}
                       value={edu.grade}
                       onChange={(e) => updateAcademicRow(index, 'grade', e.target.value)}
                       placeholder="e.g. 18 Points / Division 1"
@@ -1224,11 +1406,15 @@ export default function Apply() {
             </div>
 
             <div className="form-group">
-              <label>Primary Source of Tuition Funding *</label>
+              <label htmlFor="funding_source">Primary Source of Tuition Funding *</label>
               <select
+                id="funding_source"
                 name="funding_source"
                 value={formData.funding_source}
                 onChange={handleInputChange}
+                aria-required="true"
+                aria-invalid={Boolean(errors.funding_source)}
+                aria-describedby={errors.funding_source ? 'funding-source-error' : undefined}
                 className={`form-control ${errors.funding_source ? 'has-error' : ''}`}
               >
                 <option value="">-- Select Source of Funding --</option>
@@ -1238,13 +1424,13 @@ export default function Apply() {
                 <option value="Corporate Sponsor">Corporate / Employer Sponsorship</option>
                 <option value="Other">Other</option>
               </select>
-              {errors.funding_source && <span className="field-error">{errors.funding_source}</span>}
+              {errors.funding_source && <span className="field-error" id="funding-source-error">{errors.funding_source}</span>}
             </div>
 
             <div className="documents-section">
               {/* Passport Photo */}
               <div className="upload-block">
-                <label className="upload-label">
+                <label className="upload-label" htmlFor="passport-photo-upload">
                   <span>Passport Photograph (Recent, clear face, neutral background) *</span>
                 </label>
 
@@ -1269,12 +1455,17 @@ export default function Apply() {
                     </div>
                   </div>
                 ) : (
-                  <label className={`upload-dropzone ${errors.passport_photo ? 'has-error' : ''}`}>
+                  <label
+                    className={`upload-dropzone ${errors.passport_photo ? 'has-error' : ''}`}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={handlePassportPhotoDrop}
+                  >
                     <UploadCloud size={32} className="dropzone-icon" />
                     <span className="dropzone-text">Click to choose or drag &amp; drop passport photo</span>
                     <span className="dropzone-hint">PNG, JPG, or WEBP up to 10MB</span>
                     <input
                       type="file"
+                      id="passport-photo-upload"
                       accept="image/*"
                       onChange={handlePassportPhotoChange}
                       className="hidden-file-input"
@@ -1286,15 +1477,20 @@ export default function Apply() {
 
               {/* National ID / Passport */}
               <div className="upload-block">
-                <label className="upload-label">
+                <label className="upload-label" htmlFor="national-id-upload">
                   <span>National ID / Passport (Front &amp; Back)</span>
                 </label>
-                <label className="upload-dropzone dropzone-compact">
+                <label
+                  className="upload-dropzone dropzone-compact"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => handleFileDrop(e, 'national_id')}
+                >
                   <UploadCloud size={24} className="dropzone-icon" />
                   <span className="dropzone-text">Upload National ID or Passport document(s)</span>
                   <span className="dropzone-hint">PDF or Images up to 10MB</span>
                   <input
                     type="file"
+                    id="national-id-upload"
                     multiple
                     accept="image/*,.pdf"
                     onChange={(e) => handleMultipleFiles(e, 'national_id')}
@@ -1302,6 +1498,7 @@ export default function Apply() {
                   />
                 </label>
 
+                {errors.national_id && <span className="field-error" role="alert">{errors.national_id}</span>}
                 {files.national_id.length > 0 && (
                   <div className="file-chips-list">
                     {files.national_id.map((f, i) => (
@@ -1309,7 +1506,7 @@ export default function Apply() {
                         <FileText size={14} />
                         <span className="file-chip-name">{f.name}</span>
                         <span className="file-chip-size">({(f.size / 1024 / 1024).toFixed(2)} MB)</span>
-                        <button type="button" onClick={() => removeFile('national_id', i)} className="btn-chip-remove">
+                        <button type="button" onClick={() => removeFile('national_id', i)} className="btn-chip-remove" aria-label={`Remove ${f.name}`}>
                           &times;
                         </button>
                       </div>
@@ -1320,15 +1517,20 @@ export default function Apply() {
 
               {/* Academic Documents */}
               <div className="upload-block">
-                <label className="upload-label">
+                <label className="upload-label" htmlFor="academic-docs-upload">
                   <span>Academic Documents (UCE / UACE Passlips, Transcripts, Leaving Certificates) *</span>
                 </label>
-                <label className={`upload-dropzone dropzone-compact ${errors.academic_docs ? 'has-error' : ''}`}>
+                <label
+                  className={`upload-dropzone dropzone-compact ${errors.academic_docs ? 'has-error' : ''}`}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => handleFileDrop(e, 'academic_docs')}
+                >
                   <UploadCloud size={24} className="dropzone-icon" />
                   <span className="dropzone-text">Upload academic certificates and transcripts</span>
                   <span className="dropzone-hint">PDF or Images up to 10MB each</span>
                   <input
                     type="file"
+                    id="academic-docs-upload"
                     multiple
                     accept="image/*,.pdf"
                     onChange={(e) => handleMultipleFiles(e, 'academic_docs')}
@@ -1344,7 +1546,7 @@ export default function Apply() {
                         <FileText size={14} />
                         <span className="file-chip-name">{f.name}</span>
                         <span className="file-chip-size">({(f.size / 1024 / 1024).toFixed(2)} MB)</span>
-                        <button type="button" onClick={() => removeFile('academic_docs', i)} className="btn-chip-remove">
+                        <button type="button" onClick={() => removeFile('academic_docs', i)} className="btn-chip-remove" aria-label={`Remove ${f.name}`}>
                           &times;
                         </button>
                       </div>
@@ -1494,8 +1696,8 @@ export default function Apply() {
               <div className="fee-header">
                 <CreditCard size={20} className="text-primary" />
                 <div>
-                  <h4 style={{ margin: 0, fontSize: '1rem', color: '#0f172a' }}>Application Fee Schedule</h4>
-                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{applicableFee.label}</span>
+                  <h4 className="fee-title">Application Fee Schedule</h4>
+                  <span className="fee-label">{applicableFee.label}</span>
                 </div>
               </div>
               <div className="fee-amount">
@@ -1543,16 +1745,22 @@ export default function Apply() {
   const progressPercent = Math.round(((currentStep + 1) / STEPS.length) * 100)
 
   return (
-    <div className="apply-page">
+    <div className="scope-apply apply-page">
+      <Seo
+        title="Apply to Multitech Business School"
+        description="Start your Multitech Business School application. Choose a programme, provide your details, and submit your documents online."
+        path="/apply"
+        keywords={['apply to multitech', 'university application Uganda', 'Multitech admissions']}
+      />
       {/* Draft Restored Banner */}
       {draftRestored && (
-        <div className="draft-banner">
+        <div className="draft-banner" role="status">
           <div className="container draft-banner-inner">
             <div className="draft-banner-text">
-              <Sparkles size={16} />
+              <Sparkles size={16} aria-hidden="true" />
               <span>We restored your saved application draft so you can continue where you left off.</span>
             </div>
-            <button type="button" onClick={handleClearDraft} className="btn-clear-draft">
+            <button type="button" onClick={handleClearDraft} className="btn-clear-draft" aria-label="Discard saved application and start fresh">
               Clear &amp; Start Fresh
             </button>
           </div>
@@ -1563,18 +1771,18 @@ export default function Apply() {
       <header className="apply-header">
         <div className="container">
           <span className="apply-pill">Admissions Portal</span>
-          <h1>Online Student Application</h1>
+          <h1>Apply to <em>Multitech.</em></h1>
           <p>
-            Apply for undergraduate, diploma, or certificate programmes at Multitech Business School. Your progress is auto-saved as you type.
+            Complete seven steps to submit your application. Your details are saved as you go; uploaded documents are not saved to your draft.
           </p>
         </div>
       </header>
 
       {/* Main Container */}
-      <div className="container apply-container">
+      <div className="container apply-container" ref={wizardRef}>
         {/* Interactive Stepper */}
         <div className="wizard-progress-card">
-          <div className="wizard-progress">
+          <nav className="wizard-progress" aria-label="Application steps">
             {STEPS.map((step, idx) => {
               const Icon = step.icon
               const isPassed = idx < currentStep
@@ -1582,28 +1790,42 @@ export default function Apply() {
               const isClickable = idx <= maxStepReached
 
               return (
-                <div
+                <button
                   key={idx}
+                  ref={element => { stepRefs.current[idx] = element }}
+                  type="button"
                   onClick={() => isClickable && jumpToStep(idx)}
+                  disabled={!isClickable}
                   className={`progress-step ${isActive ? 'active' : ''} ${isPassed ? 'completed' : ''} ${isClickable ? 'clickable' : ''}`}
+                  aria-current={isActive ? 'step' : undefined}
+                  aria-label={`Step ${idx + 1} of ${STEPS.length}: ${step.title}${isActive ? ', current step' : ''}`}
                   title={`Go to ${step.title}`}
                 >
                   <div className="step-number">
                     {isPassed ? <Check size={16} strokeWidth={3} /> : idx + 1}
                   </div>
-                  <div className="step-label">{step.title}</div>
-                </div>
+                  <Icon className="step-icon" size={15} aria-hidden="true" />
+                  <span className="step-label">{step.title}</span>
+                </button>
               )
             })}
-          </div>
+          </nav>
 
           {/* Glowing Slim Progress Bar */}
           <div className="progress-bar-container">
-            <div className="progress-bar-track">
+            <div
+              className="progress-bar-track"
+              role="progressbar"
+              aria-label="Application progress"
+              aria-valuenow={progressPercent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuetext={`Step ${currentStep + 1} of ${STEPS.length}: ${STEPS[currentStep].title}`}
+            >
               <div
                 className="progress-bar-fill"
                 style={{ width: `${progressPercent}%` }}
-              ></div>
+              />
             </div>
             <div className="progress-bar-meta">
               <span>Step {currentStep + 1} of {STEPS.length}: <strong>{STEPS[currentStep].title}</strong></span>

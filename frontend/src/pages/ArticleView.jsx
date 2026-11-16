@@ -1,22 +1,57 @@
-import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
+import { ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
-import { useScrollFade } from '../hooks/useScrollFade'
 import Seo from '../components/Seo'
+import './ArticleView.css'
 
 export default function ArticleView() {
   const { slug } = useParams()
-  const { data: response, isLoading: loading, isError } = useApiQuery(`/articles/${slug}`, `article-${slug}`)
+  const {
+    data: response,
+    isLoading: loading,
+    isError,
+    refetch
+  } = useApiQuery(`/articles/${slug}`, `article-${slug}`)
   const article = response?.data || null
-  const error = isError ? 'Failed to load article.' : ''
-  useScrollFade()
 
-  if (loading) return <div className="container" style={{ padding: '4rem 2rem' }}><h2>Loading...</h2></div>
-  if (error) return <div className="container" style={{ padding: '4rem 2rem' }}><h2>{error}</h2><Link to="/articles">Back to Articles</Link></div>
-  if (!article) return null
+  if (loading) {
+    return (
+      <div className="scope-articleview article-story-loading" role="status" aria-label="Loading article">
+        <div className="article-story-skeleton" />
+      </div>
+    )
+  }
+
+  if (isError || !article) {
+    return (
+      <div className="scope-articleview article-story-message">
+        <span className="article-story-eyebrow">{isError ? 'Story unavailable' : 'Not found'}</span>
+        <h1>{isError ? 'We couldn’t load this story.' : 'This story isn’t available.'}</h1>
+        <p>{isError ? 'Please check your connection and try again.' : 'The article may have been moved or removed.'}</p>
+        <div className="article-story-message-actions">
+          {isError && (
+            <button type="button" className="article-story-retry" onClick={() => refetch()}>
+              Try again
+            </button>
+          )}
+          <Link to="/articles" className="article-back-link">
+            <ArrowLeft size={17} aria-hidden="true" />
+            Back to all stories
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  const publishedDate = article.published_at ? new Date(article.published_at) : null
+  const hasPublishedDate = publishedDate && !Number.isNaN(publishedDate.getTime())
+  const paragraphs = (article.content || '')
+    .split(/\r?\n\s*\r?\n/)
+    .map(paragraph => paragraph.trim())
+    .filter(Boolean)
 
   return (
-    <div className="scope-articleview container fade-in-section" style={{ padding: '4rem 2rem', maxWidth: '800px', margin: '0 auto' }}>
+    <article className="scope-articleview article-story-page">
       <Seo
         title={article.title}
         description={article.excerpt || article.title}
@@ -24,29 +59,53 @@ export default function ArticleView() {
         image={article.featured_image_url || undefined}
         keywords={['multitech article', 'multitech business school']}
       />
-      <Link to="/articles" style={{ color: '#003366', textDecoration: 'none', marginBottom: '1rem', display: 'inline-block' }}>
-        &larr; Back to Articles
-      </Link>
-      
-      <h1 style={{ marginBottom: '0.5rem' }}>{article.title}</h1>
-      <p style={{ color: '#666', marginBottom: '2rem' }}>
-        Published on {new Date(article.published_at).toLocaleDateString()}
-      </p>
 
-      {article.featured_image_url && (
-        <img
-          src={article.featured_image_url}
-          alt={article.title}
-          loading="eager"
-          decoding="async"
-          fetchpriority="high"
-          style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', borderRadius: '8px', marginBottom: '2rem' }}
-        />
-      )}
+      <div className="article-story-shell">
+        <nav className="article-story-breadcrumb" aria-label="Breadcrumb">
+          <Link to="/articles">
+            <ArrowLeft size={16} aria-hidden="true" />
+            All stories
+          </Link>
+          <span aria-hidden="true">/</span>
+          <span>Multitech Journal</span>
+        </nav>
 
-      <div style={{ lineHeight: '1.8', fontSize: '1.1rem', whiteSpace: 'pre-wrap', textAlign: 'justify' }}>
-        {article.content}
+        <header className="article-story-header">
+          <span className="article-story-eyebrow">Multitech journal</span>
+          <h1>{article.title}</h1>
+          {article.excerpt && <p className="article-story-excerpt">{article.excerpt}</p>}
+          {hasPublishedDate && (
+            <time className="article-story-date" dateTime={publishedDate.toISOString()}>
+              {publishedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </time>
+          )}
+        </header>
+
+        {article.featured_image_url && (
+          <figure className="article-story-image">
+            <img src={article.featured_image_url} alt="" loading="eager" decoding="async" fetchPriority="high" />
+          </figure>
+        )}
+
+        <div className="article-story-content">
+          {paragraphs.length > 0 ? (
+            paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)
+          ) : (
+            <p>This story does not have any article text yet.</p>
+          )}
+        </div>
+
+        <footer className="article-story-footer">
+          <Link to="/articles" className="article-back-link">
+            <ArrowLeft size={17} aria-hidden="true" />
+            Back to all stories
+          </Link>
+          <Link to="/articles" className="article-more-link">
+            Explore the journal
+            <ArrowUpRight size={17} aria-hidden="true" />
+          </Link>
+        </footer>
       </div>
-    </div>
+    </article>
   )
 }

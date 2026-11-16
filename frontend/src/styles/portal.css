@@ -22,22 +22,38 @@ body.admin-page .admin-content {
   font-family: var(--font-family-sans);
 }
 
+body.admin-page .admin-main {
+  flex: 1 1 0%;
+  min-width: 0;
+  min-height: 100vh;
+  padding: clamp(1.5rem, 3.2vw, 2.8rem);
+  color: var(--portal-ink);
+  background: #f5f7fb;
+  font-family: var(--font-family-sans);
+}
+
 body.admin-page .admin-content h1,
 body.admin-page .admin-content h2,
 body.admin-page .admin-content h3,
-body.admin-page .admin-content h4 {
+body.admin-page .admin-content h4,
+body.admin-page .admin-main h1,
+body.admin-page .admin-main h2,
+body.admin-page .admin-main h3,
+body.admin-page .admin-main h4 {
   font-family: var(--font-family-display);
   letter-spacing: -0.035em;
 }
 
-body.admin-page .admin-content h1 {
+body.admin-page .admin-content h1,
+body.admin-page .admin-main h1 {
   color: var(--portal-ink);
   font-size: clamp(1.8rem, 3vw, 2.55rem);
   font-weight: 500;
   line-height: 1.12;
 }
 
-body.admin-page .admin-content h2 {
+body.admin-page .admin-content h2,
+body.admin-page .admin-main h2 {
   color: var(--portal-ink);
   font-size: clamp(1.25rem, 2vw, 1.65rem);
   font-weight: 550;
@@ -46,13 +62,20 @@ body.admin-page .admin-content h2 {
 body.admin-page .admin-content button,
 body.admin-page .admin-content input,
 body.admin-page .admin-content select,
-body.admin-page .admin-content textarea {
+body.admin-page .admin-content textarea,
+body.admin-page .admin-main button,
+body.admin-page .admin-main input,
+body.admin-page .admin-main select,
+body.admin-page .admin-main textarea {
   font-family: var(--font-family-sans);
 }
 
 body.admin-page .admin-content input:not([type="checkbox"]):not([type="radio"]),
 body.admin-page .admin-content select,
-body.admin-page .admin-content textarea {
+body.admin-page .admin-content textarea,
+body.admin-page .admin-main input:not([type="checkbox"]):not([type="radio"]),
+body.admin-page .admin-main select,
+body.admin-page .admin-main textarea {
   border-color: #dce3ed;
   border-radius: 0.7rem;
   color: var(--portal-ink);
@@ -60,19 +83,26 @@ body.admin-page .admin-content textarea {
 
 body.admin-page .admin-content input:not([type="checkbox"]):not([type="radio"]):focus,
 body.admin-page .admin-content select:focus,
-body.admin-page .admin-content textarea:focus {
+body.admin-page .admin-content textarea:focus,
+body.admin-page .admin-main input:not([type="checkbox"]):not([type="radio"]):focus,
+body.admin-page .admin-main select:focus,
+body.admin-page .admin-main textarea:focus {
   border-color: #4b7fca;
   outline: none;
   box-shadow: 0 0 0 3px rgba(29, 87, 173, 0.12);
 }
 
 body.admin-page .admin-content input[type="checkbox"],
-body.admin-page .admin-content input[type="radio"] {
+body.admin-page .admin-content input[type="radio"],
+body.admin-page .admin-main input[type="checkbox"],
+body.admin-page .admin-main input[type="radio"] {
   accent-color: var(--portal-blue);
 }
 
 body.admin-page .admin-content button:focus-visible,
 body.admin-page .admin-content a:focus-visible,
+body.admin-page .admin-main button:focus-visible,
+body.admin-page .admin-main a:focus-visible,
 body.admin-page .admin-sidebar a:focus-visible,
 body.admin-page .admin-sidebar button:focus-visible {
   outline: 3px solid rgba(29, 87, 173, 0.38);
@@ -295,6 +325,42 @@ body.admin-page .admin-sidebar .btn-logout:hover {
   background: #fff6f5;
 }
 
+body.admin-page .admin-main .page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+body.admin-page .admin-main .page-title {
+  margin: 0 0 0.45rem;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-weight: 500;
+}
+
+body.admin-page .admin-main .page-subtitle {
+  max-width: 48rem;
+  margin: 0;
+  color: var(--portal-muted);
+  line-height: 1.6;
+}
+
+body.admin-page .admin-main .header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+body.admin-page .admin-main .metric-box,
+body.admin-page .admin-main .registry-filter-bar {
+  border-color: #e5eaf1;
+  border-radius: 1rem;
+  box-shadow: 0 6px 20px rgba(25, 45, 80, 0.045);
+}
+
 .portal-mobile-bar,
 .portal-sidebar-overlay {
   display: none;
@@ -302,6 +368,10 @@ body.admin-page .admin-sidebar .btn-logout:hover {
 
 @media (max-width: 1024px) {
   body.admin-page .admin-content {
+    padding: 1.5rem;
+  }
+
+  body.admin-page .admin-main {
     padding: 1.5rem;
   }
 }
@@ -422,6 +492,21 @@ body.admin-page .admin-sidebar .btn-logout:hover {
     width: 100%;
     min-height: calc(100vh - 3.65rem);
     padding: 1.25rem 1rem 2rem;
+  }
+
+  body.admin-page .admin-main {
+    width: 100%;
+    min-height: calc(100vh - 3.65rem);
+    padding: 1.25rem 1rem 2rem;
+  }
+
+  body.admin-page .admin-main .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  body.admin-page .admin-main .header-actions {
+    justify-content: flex-start;
   }
 }
 

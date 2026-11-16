@@ -987,37 +987,6 @@
   margin-bottom: 2.5rem;
 }
 
-.programmes-section .programme-card {
-  border: 1px solid rgba(15, 42, 75, 0.1);
-  border-radius: 22px;
-  box-shadow: 0 12px 32px rgba(15, 42, 75, 0.12);
-}
-
-.programmes-section .programme-card::after {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  left: 1rem;
-  height: 2px;
-  background: linear-gradient(90deg, #d7ad4a, rgba(255, 255, 255, 0.25));
-  content: '';
-  opacity: 0.8;
-  pointer-events: none;
-  transition: opacity 220ms ease, transform 220ms ease;
-}
-
-.programmes-section .programme-card:hover::after,
-.programmes-section .programme-card:focus-visible::after {
-  transform: translateY(3px);
-  opacity: 1;
-}
-
-.programmes-section .programme-card-title {
-  font-size: clamp(1.15rem, 1.7vw, 1.45rem);
-  font-weight: 600;
-  letter-spacing: -0.035em;
-}
-
 .campuses-section {
   padding: clamp(4rem, 7vw, 6rem) 0;
   background:
@@ -1533,7 +1502,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .programmes-section .programme-card::after,
+  .programme-card--catalog .programme-card-media::after,
   .home-campus-card,
   .home-campus-image,
   .home-campus-link-arrow {

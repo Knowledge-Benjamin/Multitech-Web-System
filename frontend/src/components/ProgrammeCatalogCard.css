@@ -1,0 +1,137 @@
+.programme-card--catalog {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  aspect-ratio: auto;
+  border: 1px solid rgba(15, 42, 75, 0.09);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(15, 42, 75, 0.055);
+  -webkit-box-reflect: none;
+  transition:
+    transform 280ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-color 280ms ease,
+    box-shadow 280ms ease;
+}
+
+.programme-card--catalog:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 82, 204, 0.2);
+  box-shadow: 0 18px 38px rgba(15, 42, 75, 0.11);
+}
+
+.programme-card--catalog:focus-visible {
+  outline: 3px solid rgba(0, 82, 204, 0.38);
+  outline-offset: 4px;
+}
+
+.programme-card-media {
+  position: relative;
+  flex: 0 0 auto;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background:
+    linear-gradient(140deg, rgba(0, 82, 204, 0.12), rgba(215, 173, 74, 0.16)),
+    #f1f5f9;
+}
+
+.programme-card-media::after {
+  position: absolute;
+  top: 0;
+  right: 1.25rem;
+  left: 1.25rem;
+  height: 2px;
+  background: linear-gradient(90deg, #d7ad4a, rgba(215, 173, 74, 0.08));
+  content: '';
+}
+
+.programme-card--catalog .programme-card-image {
+  display: block;
+  transition: transform 550ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.programme-card--catalog:hover .programme-card-image {
+  transform: scale(1.035);
+}
+
+.programme-card--catalog .programme-card-placeholder {
+  color: #64748b;
+  font-family: var(--font-family-editorial);
+  font-size: 1.25rem;
+  font-style: italic;
+}
+
+.programme-card--catalog .programme-card-content--catalog {
+  display: flex;
+  min-height: 190px;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  padding: 1.3rem 1.4rem 1.25rem;
+  transform: none;
+}
+
+.programme-card-eyebrow {
+  margin-bottom: 0.55rem;
+  color: #58738e;
+  font-family: var(--font-family-sans);
+  font-size: 0.65rem;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.programme-card--catalog .programme-card-title {
+  margin: 0;
+  color: #102b4e;
+  font-family: var(--font-family-display);
+  font-size: clamp(1.15rem, 1.5vw, 1.38rem);
+  font-weight: 550;
+  letter-spacing: -0.045em;
+  line-height: 1.2;
+  text-shadow: none;
+}
+
+.programme-card--catalog .programme-card-desc {
+  margin: 0.65rem 0 0;
+  color: #64748b;
+  font-family: var(--font-family-sans);
+  font-size: 0.88rem;
+  font-weight: 350;
+  line-height: 1.55;
+  -webkit-line-clamp: 3;
+}
+
+.programme-card--catalog .programme-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: auto;
+  padding: 1rem 0 0;
+  color: #0052cc;
+  font-size: 0.84rem;
+  font-weight: 650;
+  transition: color 180ms ease, gap 180ms ease;
+}
+
+.programme-card--catalog:hover .programme-card-action,
+.programme-card--catalog:focus-visible .programme-card-action {
+  gap: 0.65rem;
+  color: #24496f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .programme-card--catalog,
+  .programme-card--catalog .programme-card-image,
+  .programme-card--catalog .programme-card-action {
+    transition: none;
+  }
+
+  .programme-card--catalog:hover,
+  .programme-card--catalog:hover .programme-card-image {
+    transform: none;
+  }
+}

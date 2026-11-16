@@ -338,6 +338,375 @@
     width: auto;
     align-self: flex-end;
   }
+}
+
+.programmes-page {
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse at 86% 16%, rgba(0, 82, 204, 0.045), transparent 34rem),
+    linear-gradient(180deg, #f8fafc 0, #fff 42rem);
+}
+
+.programmes-page .page-header {
+  padding: clamp(4rem, 8vw, 6.5rem) 1.5rem 3rem;
+  background: transparent;
+  color: #64748b;
+}
+
+.programmes-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+  color: #0052cc;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.programmes-eyebrow::before,
+.programmes-eyebrow::after {
+  width: 1.25rem;
+  height: 1px;
+  background: #d7ad4a;
+  content: '';
+}
+
+.programmes-page .page-header h1 {
+  margin: 0;
+  color: #102b4e;
+  font-family: var(--font-family-display);
+  font-size: clamp(2.8rem, 6vw, 5rem);
+  font-weight: 300;
+  letter-spacing: -0.075em;
+  line-height: 1;
+}
+
+.programmes-page .page-header h1 em {
+  color: #0052cc;
+  font-family: var(--font-family-editorial);
+  font-size: 0.9em;
+  font-weight: 400;
+  letter-spacing: -0.055em;
+}
+
+.programmes-page .page-header p {
+  max-width: 640px;
+  margin: 1.1rem auto 0;
+  color: #64748b;
+  font-size: clamp(0.98rem, 1.5vw, 1.08rem);
+  font-weight: 350;
+  line-height: 1.7;
+}
+
+.programmes-page > .container {
+  max-width: 1210px;
+  padding: 0 1.5rem 2rem;
+}
+
+.programmes-page .filter-section-wrapper {
+  margin: 0 auto 1.25rem;
+}
+
+.programmes-page .filter-section {
+  justify-content: center;
+}
+
+.programmes-page .filter-btn {
+  padding: 0.65rem 1rem;
+  border: 1px solid rgba(15, 42, 75, 0.08);
+  background: rgba(255, 255, 255, 0.78);
+  color: #52657a;
+  font-size: 0.82rem;
+  font-weight: 550;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.programmes-page .filter-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 82, 204, 0.18);
+  background: #fff;
+  color: #102b4e;
+}
+
+.programmes-page .filter-btn.active {
+  border-color: #365573;
+  background: #365573;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(16, 43, 78, 0.12);
+}
+
+.programmes-page .filter-btn:focus-visible,
+.programmes-page .view-toggle-btn:focus-visible,
+.programmes-page .pagination-btn:focus-visible,
+.programmes-page .pagination-number:focus-visible,
+.programmes-page .clear-filters-btn:focus-visible {
+  outline: 3px solid rgba(0, 82, 204, 0.35);
+  outline-offset: 3px;
+}
+
+.programmes-page .search-filter-bar {
+  align-items: center;
+  margin-bottom: 1.4rem;
+  padding: 1.1rem;
+  border: 1px solid rgba(15, 42, 75, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 10px 28px rgba(15, 42, 75, 0.045);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.programmes-page .search-group,
+.programmes-page .dropdown-group {
+  min-width: 0;
+}
+
+.programmes-page .dropdown-group {
+  align-items: center;
+}
+
+.programmes-page .dropdown-group > select {
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.programmes-page .premium-input {
+  min-height: 46px;
+  border: 1px solid #e3e8ee;
+  border-radius: 10px;
+  background: #f7f8fa;
+  color: #344456;
+  font-family: var(--font-family-sans);
+  font-size: 0.9rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.programmes-page .premium-input:focus {
+  border-color: #aebdcb;
+  outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(53, 87, 117, 0.07);
+}
+
+.programmes-page .view-mode-toggle {
+  flex: 0 0 auto;
+  border: 1px solid #e7ebf0;
+  border-radius: 10px;
+  background: #f2f5f8;
+}
+
+.programmes-page .view-toggle-btn {
+  width: 42px;
+  min-height: 38px;
+  padding: 0.5rem;
+  border-radius: 7px;
+  color: #64748b;
+}
+
+.programmes-page .view-toggle-btn.active {
+  background: #fff;
+  color: #365573;
+  box-shadow: 0 1px 4px rgba(15, 42, 75, 0.1);
+}
+
+.programmes-results-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0 0.5rem;
+  color: #788696;
+  font-size: 0.82rem;
+}
+
+.programmes-results-summary strong {
+  color: #365573;
+  font-weight: 650;
+}
+
+.programmes-page .programmes-list {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  align-items: stretch;
+  gap: 1.25rem;
+  padding: 0.5rem 0 2.25rem;
+}
+
+.programmes-page .programmes-list > .fade-in-section,
+.programmes-page .programme-card-wrap {
+  height: 100%;
+}
+
+.programmes-page .programme-list-item {
+  border: 1px solid rgba(15, 42, 75, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 8px 26px rgba(15, 42, 75, 0.045);
+}
+
+.programmes-page .programme-list-item:hover {
+  border-color: rgba(0, 82, 204, 0.18);
+  box-shadow: 0 15px 34px rgba(15, 42, 75, 0.09);
+}
+
+.programmes-page .programme-list-content h3 {
+  color: #102b4e;
+  font-family: var(--font-family-display);
+  font-size: 1.25rem;
+  font-weight: 550;
+  letter-spacing: -0.04em;
+}
+
+.programmes-page .programme-list-content p {
+  color: #64748b;
+  font-weight: 350;
+}
+
+.programmes-page .programmes-pagination {
+  padding-top: 0.5rem;
+}
+
+.programmes-page .pagination-number.active {
+  background: #365573;
+  color: #fff;
+}
+
+.programmes-page .pagination-btn:hover:not(:disabled) {
+  border-color: #aebdcb;
+  color: #365573;
+}
+
+.programmes-page .no-results {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  padding: 3rem 1rem 4rem;
+}
+
+.programmes-page .no-results p {
+  margin: 0;
+}
+
+.clear-filters-btn {
+  padding: 0.6rem 0.95rem;
+  border: 1px solid rgba(15, 42, 75, 0.13);
+  border-radius: 9px;
+  background: #fff;
+  color: #365573;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.clear-filters-btn:hover {
+  border-color: rgba(0, 82, 204, 0.3);
+  background: #f7f9fc;
+}
+
+.programmes-page .fade-in-section {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 600ms ease, transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.programmes-page .fade-in-section.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.programmes-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 768px) {
+  .programmes-page .page-header {
+    padding: 3.5rem 1.25rem 2.25rem;
+    text-align: left;
+  }
+
+  .programmes-page .page-header h1 {
+    font-size: clamp(2.65rem, 11vw, 4rem);
+  }
+
+  .programmes-page .page-header p {
+    margin: 1rem 0 0;
+  }
+
+  .programmes-eyebrow::after {
+    display: none;
+  }
+
+  .programmes-page > .container {
+    padding: 0 1.25rem 1.5rem;
+  }
+
+  .programmes-page .filter-section-wrapper {
+    margin-bottom: 1rem;
+  }
+
+  .programmes-page .filter-section {
+    justify-content: flex-start;
+    padding: 0 0.25rem;
+  }
+
+  .programmes-page .search-filter-bar {
+    padding: 0.9rem;
+    border-radius: 16px;
+  }
+
+  .programmes-page .dropdown-group {
+    gap: 0.65rem;
+  }
+
+  .programmes-page .programmes-list {
+    gap: 1rem;
+  }
+
+  .programmes-results-summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding-bottom: 0.65rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .programmes-page .fade-in-section {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .programmes-page .filter-btn,
+  .programmes-page .premium-input,
+  .programmes-page .view-toggle-btn,
+  .programmes-page .programme-list-item,
+  .programmes-page .programme-card--catalog,
+  .programmes-page .programme-card--catalog .programme-card-image,
+  .programmes-page .programme-card--catalog .programme-card-action,
+  .clear-filters-btn {
+    transition: none;
+  }
+
+  .programmes-page .filter-btn:hover,
+  .programmes-page .programme-list-item:hover,
+  .programmes-page .programme-card--catalog:hover,
+  .programmes-page .programme-card--catalog:hover .programme-card-image {
+    transform: none;
+  }
 
   .view-toggle-btn {
     width: auto;

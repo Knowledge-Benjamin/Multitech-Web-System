@@ -74,6 +74,14 @@ export default function Programmes() {
     setSearchParams(params)
   }
 
+  const clearFilters = () => {
+    setFilter('all')
+    setCampusFilter('all')
+    setFacultyFilter('all')
+    setSearchQuery('')
+    updateQueryParams('all', 'all', 'all')
+  }
+
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter)
     updateQueryParams(newFilter, campusFilter, facultyFilter)
@@ -125,10 +133,12 @@ export default function Programmes() {
   const renderProgrammeCard = (programme, index) => (
     <div key={programme.id || index} className="fade-in-section" style={{ transitionDelay: `${(index % PAGE_SIZE) * 50}ms` }}>
       <ProgrammeCard
+        variant="catalog"
         title={programme.name}
         description={programme.description}
         imageUrl={programme.image_url}
-        actionText="View Details"
+        eyebrow={programme.type || 'Programme'}
+        actionText="View programme"
         linkTo={`/programmes/${programme.slug || programme.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || programme.id}`}
       />
     </div>
@@ -154,26 +164,29 @@ export default function Programmes() {
   return (
     <div className="scope-programmes programmes-page">
       <div className="page-header fade-in-section">
-        <h1>Our Programmes</h1>
-        <p>Explore our wide range of educational offerings</p>
+        <span className="programmes-eyebrow">Study at Multitech</span>
+        <h1>Find your next <em>step</em></h1>
+        <p>Explore our programmes and filter by study level, campus, or faculty to find the right fit.</p>
       </div>
 
       <div className="container">
         <div className="filter-section-wrapper fade-in-section">
-          <div className="filter-section">
-            <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => handleFilterChange('all')}>All Programmes</button>
-            <button className={`filter-btn ${filter === 'undergraduate' ? 'active' : ''}`} onClick={() => handleFilterChange('undergraduate')}>Undergraduate</button>
-            <button className={`filter-btn ${filter === 'postgraduate' ? 'active' : ''}`} onClick={() => handleFilterChange('postgraduate')}>Postgraduate</button>
-            <button className={`filter-btn ${filter === 'diploma' ? 'active' : ''}`} onClick={() => handleFilterChange('diploma')}>Diploma</button>
-            <button className={`filter-btn ${filter === 'professional' ? 'active' : ''}`} onClick={() => handleFilterChange('professional')}>Professional</button>
-            <button className={`filter-btn ${filter === 'shortcourses' ? 'active' : ''}`} onClick={() => handleFilterChange('shortcourses')}>Short Courses</button>
+          <div className="filter-section" role="group" aria-label="Filter by programme type">
+            <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} aria-pressed={filter === 'all'} onClick={() => handleFilterChange('all')}>All Programmes</button>
+            <button className={`filter-btn ${filter === 'undergraduate' ? 'active' : ''}`} aria-pressed={filter === 'undergraduate'} onClick={() => handleFilterChange('undergraduate')}>Undergraduate</button>
+            <button className={`filter-btn ${filter === 'postgraduate' ? 'active' : ''}`} aria-pressed={filter === 'postgraduate'} onClick={() => handleFilterChange('postgraduate')}>Postgraduate</button>
+            <button className={`filter-btn ${filter === 'diploma' ? 'active' : ''}`} aria-pressed={filter === 'diploma'} onClick={() => handleFilterChange('diploma')}>Diploma</button>
+            <button className={`filter-btn ${filter === 'professional' ? 'active' : ''}`} aria-pressed={filter === 'professional'} onClick={() => handleFilterChange('professional')}>Professional</button>
+            <button className={`filter-btn ${filter === 'shortcourses' ? 'active' : ''}`} aria-pressed={filter === 'shortcourses'} onClick={() => handleFilterChange('shortcourses')}>Short Courses</button>
           </div>
         </div>
 
         {/* Enhanced Search and Structure Filters */}
         <div className="search-filter-bar fade-in-section">
           <div className="search-group">
+            <label className="programmes-sr-only" htmlFor="programme-search">Search programmes</label>
             <input 
+              id="programme-search"
               type="text" 
               placeholder="Search programmes by name or keyword..." 
               value={searchQuery}
@@ -182,21 +195,22 @@ export default function Programmes() {
             />
           </div>
           <div className="dropdown-group">
-            <select value={campusFilter} onChange={handleCampusChange} className="premium-input">
+            <select value={campusFilter} onChange={handleCampusChange} className="premium-input" aria-label="Filter by campus">
               <option value="all">All Campuses</option>
               {campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             
-            <select value={facultyFilter} onChange={handleFacultyChange} className="premium-input">
+            <select value={facultyFilter} onChange={handleFacultyChange} className="premium-input" aria-label="Filter by faculty">
               <option value="all">All Faculties</option>
               {faculties.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
             
-            <div className="view-mode-toggle">
+            <div className="view-mode-toggle" role="group" aria-label="Programme display">
               <button 
                 className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`} 
                 onClick={() => setViewMode('grid')}
                 aria-label="Grid view"
+                aria-pressed={viewMode === 'grid'}
                 title="Grid View"
               >
                 <LayoutGrid size={20} />
@@ -205,6 +219,7 @@ export default function Programmes() {
                 className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`} 
                 onClick={() => setViewMode('list')}
                 aria-label="List view"
+                aria-pressed={viewMode === 'list'}
                 title="List View"
               >
                 <List size={20} />
@@ -215,45 +230,58 @@ export default function Programmes() {
 
         {(loading || loadingCampuses || loadingFaculties) ? (
           <div className="loading fade-in-section">Loading programmes...</div>
-        ) : filteredProgrammes.length > 0 ? (
-          <div>
-            <div className={viewMode === 'grid' ? "programmes-list" : "programmes-compact-list"}>
-              {paginatedProgrammes.map((programme, index) => 
-                viewMode === 'grid' ? renderProgrammeCard(programme, index) : renderProgrammeListItem(programme, index)
-              )}
+        ) : (
+          <>
+            <div className="programmes-results-summary" aria-live="polite">
+              <span><strong>{filteredProgrammes.length}</strong> {filteredProgrammes.length === 1 ? 'programme' : 'programmes'} found</span>
+              <span>Choose a programme to view full details.</span>
             </div>
-            {filteredProgrammes.length > PAGE_SIZE && (
-              <div className="programmes-pagination fade-in-section">
-                <button className="pagination-btn prev-btn" onClick={() => setPage((prev) => Math.max(1, prev - 1))} disabled={page === 1}>
-                  Previous
-                </button>
-                <div className="pagination-numbers">
-                  {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => {
-                    // Only show 5 pages max around current page for clean UI
-                    if (pageNumber === 1 || pageNumber === totalPages || (pageNumber >= page - 1 && pageNumber <= page + 1)) {
-                      return (
-                        <button
-                          key={pageNumber}
-                          className={`pagination-number ${pageNumber === page ? 'active' : ''}`}
-                          onClick={() => setPage(pageNumber)}
-                        >
-                          {pageNumber}
-                        </button>
-                      )
-                    } else if (pageNumber === page - 2 || pageNumber === page + 2) {
-                      return <span key={`ellipsis-${pageNumber}`} className="pagination-ellipsis">...</span>
-                    }
-                    return null
-                  })}
+            {filteredProgrammes.length > 0 ? (
+              <div>
+                <div className={viewMode === 'grid' ? 'programmes-list' : 'programmes-compact-list'}>
+                  {paginatedProgrammes.map((programme, index) => (
+                    viewMode === 'grid'
+                      ? renderProgrammeCard(programme, index)
+                      : renderProgrammeListItem(programme, index)
+                  ))}
                 </div>
-                <button className="pagination-btn next-btn" onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))} disabled={page === totalPages}>
-                  Next
-                </button>
+                {filteredProgrammes.length > PAGE_SIZE && (
+                  <div className="programmes-pagination fade-in-section">
+                    <button className="pagination-btn prev-btn" onClick={() => setPage((prev) => Math.max(1, prev - 1))} disabled={page === 1}>
+                      Previous
+                    </button>
+                    <div className="pagination-numbers">
+                      {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => {
+                        if (pageNumber === 1 || pageNumber === totalPages || (pageNumber >= page - 1 && pageNumber <= page + 1)) {
+                          return (
+                            <button
+                              key={pageNumber}
+                              className={`pagination-number ${pageNumber === page ? 'active' : ''}`}
+                              onClick={() => setPage(pageNumber)}
+                            >
+                              {pageNumber}
+                            </button>
+                          )
+                        }
+                        if (pageNumber === page - 2 || pageNumber === page + 2) {
+                          return <span key={`ellipsis-${pageNumber}`} className="pagination-ellipsis">...</span>
+                        }
+                        return null
+                      })}
+                    </div>
+                    <button className="pagination-btn next-btn" onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))} disabled={page === totalPages}>
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="no-results fade-in-section">
+                <p>No programmes match those filters.</p>
+                <button type="button" className="clear-filters-btn" onClick={clearFilters}>Clear filters</button>
               </div>
             )}
-          </div>
-        ) : (
-          <div className="no-results fade-in-section">No programmes found for the selected filter.</div>
+          </>
         )}
       </div>
     </div>

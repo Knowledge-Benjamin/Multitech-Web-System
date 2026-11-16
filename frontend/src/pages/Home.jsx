@@ -253,8 +253,11 @@ export default function Home() {
               categories.map((cat, index) => (
                 <ProgrammeCard 
                   key={cat.id} 
+                  variant="catalog"
                   title={cat.title} 
                   imageUrl={cat.image_url} 
+                  eyebrow="Study area"
+                  actionText="Explore programmes"
                   linkTo={getCategoryLink(cat.title)} 
                 />
               ))

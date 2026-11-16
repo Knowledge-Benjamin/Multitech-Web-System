@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { BookOpen, ClipboardList, Megaphone, Users, ArrowRight, RefreshCw } from 'lucide-react'
 import {
-  Area,
-  AreaChart,
   CartesianGrid,
   Cell,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -18,14 +18,14 @@ import AdminSidebar from '../components/AdminSidebar'
 import './AdminDashboard.css'
 
 const STATUS_COLORS = {
-  pending: '#a47a35',
-  submitted: '#4778b8',
-  under_review: '#8b6a36',
-  reviewing: '#8b6a36',
-  accepted: '#34785b',
-  offered: '#426d9e',
-  admitted: '#286b50',
-  rejected: '#a85151'
+  pending: '#c19a4b',
+  submitted: '#3977c4',
+  under_review: '#b4873d',
+  reviewing: '#7c8ca2',
+  accepted: '#498065',
+  offered: '#6079a8',
+  admitted: '#2d6d50',
+  rejected: '#a85454'
 }
 
 const formatStatus = (status) => (status || 'pending')
@@ -92,6 +92,11 @@ export default function AdminDashboard() {
     .filter((item) => item.value > 0)
     .sort((a, b) => b.value - a.value)
   const applicationTotal = statusChartData.reduce((total, item) => total + item.value, 0)
+  const applicationTrendTotal = applicationTrend.reduce((total, item) => total + Number(item.count), 0)
+  const statusChartWithPercentages = statusChartData.map((item) => ({
+    ...item,
+    percentage: applicationTotal ? Math.round((item.value / applicationTotal) * 100) : 0
+  }))
   const hasApplicationTrend = applicationTrend.some((item) => Number(item.count) > 0)
 
   if (loading) {
@@ -131,109 +136,100 @@ export default function AdminDashboard() {
       <AdminSidebar />
 
       <main className="admin-content">
-        <header className="dashboard-hero fade-in-item">
-          <div className="hero-content">
-            <div className="hero-badge">
-              <span className="hero-badge-dot"></span>
-              Administration
-            </div>
-            <h1>Welcome back, {admin.username || 'Administrator'}</h1>
-            <p>
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-              &nbsp;&bull;&nbsp;A clear view of admissions and operations.
-            </p>
+        <header className="dashboard-intro">
+          <div className="dashboard-intro-copy">
+            <p className="dashboard-eyebrow">Multitech <span>Administration</span></p>
+            <h1>Welcome back, <em>{admin.username || 'Administrator'}</em></h1>
+            <p className="dashboard-subtitle">Admissions and operations, in one view.</p>
           </div>
-          <div className="hero-decoration"></div>
+          <div className="dashboard-date">
+            <span>Today</span>
+            <strong>{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+          </div>
         </header>
 
         <div className="stats-grid fade-in-section is-visible">
           <Link to="/admin/programmes" className="stat-card fade-in-item">
-            <div className="stat-icon-wrapper bg-blue">
-              <BookOpen size={24} className="text-blue" />
-            </div>
-            <div className="stat-content">
+            <div className="stat-card-heading">
               <h3>Programmes</h3>
-              <div className="stat-value-row">
-                <p className="stat-number">{stats?.programmes || 0}</p>
-                <span className="stat-caption">In catalogue</span>
-              </div>
+              <span className="stat-icon-wrapper"><BookOpen size={20} strokeWidth={1.6} /></span>
             </div>
+            <div className="stat-value-row">
+              <p className="stat-number">{stats?.programmes || 0}</p>
+              <span className="stat-caption">In catalogue</span>
+            </div>
+            <span className="stat-card-rule" />
           </Link>
 
           <Link to="/admin/applications" className="stat-card fade-in-item">
-            <div className="stat-icon-wrapper bg-indigo">
-              <ClipboardList size={24} className="text-indigo" />
-            </div>
-            <div className="stat-content">
+            <div className="stat-card-heading">
               <h3>Applications</h3>
-              <div className="stat-value-row">
-                <p className="stat-number">{stats?.applications || 0}</p>
-                <span className="stat-caption">Received</span>
-              </div>
+              <span className="stat-icon-wrapper"><ClipboardList size={20} strokeWidth={1.6} /></span>
             </div>
+            <div className="stat-value-row">
+              <p className="stat-number">{stats?.applications || 0}</p>
+              <span className="stat-caption">Received</span>
+            </div>
+            <span className="stat-card-rule" />
           </Link>
 
           <Link to="/admin/announcements" className="stat-card fade-in-item">
-            <div className="stat-icon-wrapper bg-amber">
-              <Megaphone size={24} className="text-amber" />
-            </div>
-            <div className="stat-content">
+            <div className="stat-card-heading">
               <h3>Announcements</h3>
-              <div className="stat-value-row">
-                <p className="stat-number">{stats?.announcements || 0}</p>
-                <span className="stat-caption">Published</span>
-              </div>
+              <span className="stat-icon-wrapper"><Megaphone size={20} strokeWidth={1.6} /></span>
             </div>
+            <div className="stat-value-row">
+              <p className="stat-number">{stats?.announcements || 0}</p>
+              <span className="stat-caption">Published</span>
+            </div>
+            <span className="stat-card-rule" />
           </Link>
 
-          <div className="stat-card fade-in-item">
-            <div className="stat-icon-wrapper bg-emerald">
-              <Users size={24} className="text-emerald" />
+          <article className="stat-card fade-in-item">
+            <div className="stat-card-heading">
+              <h3>Admin users</h3>
+              <span className="stat-icon-wrapper"><Users size={20} strokeWidth={1.6} /></span>
             </div>
-            <div className="stat-content">
-              <h3>Admin Users</h3>
-              <div className="stat-value-row">
-                <p className="stat-number">{stats?.admins || 0}</p>
-                <span className="stat-caption">Accounts</span>
-              </div>
+            <div className="stat-value-row">
+              <p className="stat-number">{stats?.admins || 0}</p>
+              <span className="stat-caption">Accounts</span>
             </div>
-          </div>
+            <span className="stat-card-rule" />
+          </article>
         </div>
 
         <section className="dashboard-analytics" aria-label="Application analytics">
           <article className="analytics-card activity-card">
             <div className="analytics-heading">
               <div>
-                <p className="analytics-eyebrow">Admissions</p>
+                <p className="analytics-eyebrow">Admissions <span>— Monthly view</span></p>
                 <h2>Application activity</h2>
               </div>
-              <span className="analytics-period">Last 12 months</span>
+              <div className="analytics-total">
+                <strong>{applicationTrendTotal.toLocaleString()}</strong>
+                <span>past 12 months</span>
+              </div>
             </div>
             {hasApplicationTrend ? (
               <div className="activity-chart" role="img" aria-label="Monthly application activity for the last 12 months">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={applicationTrend} margin={{ top: 12, right: 12, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="applicationActivityFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#2b63a8" stopOpacity={0.18} />
-                        <stop offset="100%" stopColor="#2b63a8" stopOpacity={0.01} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid vertical={false} stroke="#edf0f5" strokeDasharray="3 4" />
+                  <LineChart data={applicationTrend} margin={{ top: 18, right: 18, left: -12, bottom: 2 }}>
+                    <CartesianGrid vertical={false} stroke="#e9e5dc" strokeDasharray="2 6" />
                     <XAxis
                       dataKey="month"
                       tickFormatter={formatMonth}
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fill: '#8290a4', fontSize: 12 }}
-                      minTickGap={18}
+                      tick={{ fill: '#718096', fontSize: 12, fontFamily: 'Inter, sans-serif' }}
+                      minTickGap={16}
                     />
                     <YAxis
                       allowDecimals={false}
+                      domain={[0, 'dataMax']}
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fill: '#8290a4', fontSize: 12 }}
-                      width={42}
+                      tick={{ fill: '#718096', fontSize: 12, fontFamily: 'Inter, sans-serif' }}
+                      width={38}
                     />
                     <Tooltip
                       labelFormatter={(month) => {
@@ -243,17 +239,18 @@ export default function AdminDashboard() {
                           : new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(date)
                       }}
                       formatter={(value) => [value, 'Applications']}
-                      contentStyle={{ border: '1px solid #e4e9f1', borderRadius: 10, boxShadow: '0 8px 24px rgba(27, 41, 66, 0.1)' }}
+                      contentStyle={{ border: '1px solid #e6e1d7', borderRadius: 12, boxShadow: '0 12px 32px rgba(16, 43, 78, 0.12)', fontFamily: 'Inter, sans-serif', fontSize: 13 }}
+                      labelStyle={{ marginBottom: 4, color: '#102b4e', fontWeight: 600 }}
                     />
-                    <Area
+                    <Line
                       type="monotone"
                       dataKey="count"
-                      stroke="#2b63a8"
-                      strokeWidth={2.5}
-                      fill="url(#applicationActivityFill)"
-                      activeDot={{ r: 5, strokeWidth: 0, fill: '#2b63a8' }}
+                      stroke="#0052cc"
+                      strokeWidth={2.8}
+                      dot={{ r: 3.5, strokeWidth: 2, stroke: '#fff', fill: '#0052cc' }}
+                      activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff', fill: '#0052cc' }}
                     />
-                  </AreaChart>
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
             ) : (
@@ -264,8 +261,8 @@ export default function AdminDashboard() {
           <article className="analytics-card status-card">
             <div className="analytics-heading">
               <div>
-                <p className="analytics-eyebrow">Application pipeline</p>
-                <h2>By status</h2>
+                <p className="analytics-eyebrow">Application pipeline <span>— Current mix</span></p>
+                <h2>Applications by status</h2>
               </div>
             </div>
             {applicationTotal > 0 ? (
@@ -278,31 +275,32 @@ export default function AdminDashboard() {
                         dataKey="value"
                         nameKey="name"
                         innerRadius={66}
-                        outerRadius={88}
-                        paddingAngle={3}
+                        outerRadius={87}
+                        paddingAngle={statusChartData.length > 1 ? 3 : 0}
                         stroke="none"
                       >
-                        {statusChartData.map((item) => <Cell key={item.name} fill={item.color} />)}
+                        {statusChartWithPercentages.map((item) => <Cell key={item.name} fill={item.color} />)}
                       </Pie>
                       <Tooltip
                         formatter={(value, name) => [value, name]}
-                        contentStyle={{ border: '1px solid #e4e9f1', borderRadius: 10, boxShadow: '0 8px 24px rgba(27, 41, 66, 0.1)' }}
+                        contentStyle={{ border: '1px solid #e6e1d7', borderRadius: 12, boxShadow: '0 12px 32px rgba(16, 43, 78, 0.12)', fontFamily: 'Inter, sans-serif', fontSize: 13 }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="donut-total" aria-hidden="true">
                     <strong>{applicationTotal.toLocaleString()}</strong>
-                    <span>Applications</span>
+                    <span>{statusChartData.length === 1 ? statusChartData[0].name : 'Applications'}</span>
                   </div>
                 </div>
                 <ul className="status-legend">
-                  {statusChartData.map((item) => (
+                  {statusChartWithPercentages.map((item) => (
                     <li key={item.name}>
                       <span className="legend-name">
                         <i style={{ backgroundColor: item.color }} />
                         {item.name}
                       </span>
                       <strong>{item.value.toLocaleString()}</strong>
+                      <span className="legend-percent">{item.percentage}%</span>
                     </li>
                   ))}
                 </ul>
@@ -315,7 +313,10 @@ export default function AdminDashboard() {
 
         <section className="recent-section fade-in-section is-visible">
           <div className="section-header fade-in-item">
-            <h2>Recent Applications</h2>
+            <div>
+              <p className="analytics-eyebrow">Admissions</p>
+              <h2>Recent applications</h2>
+            </div>
             <Link to="/admin/applications" className="btn-text">
               View All <ArrowRight size={16} />
             </Link>

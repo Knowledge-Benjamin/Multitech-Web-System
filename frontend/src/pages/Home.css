@@ -1237,7 +1237,7 @@
 }
 
 .home-contact-section .contact-form-row label {
-  color: #52657a;
+  color: #617183;
   font-size: 0.8rem;
   font-weight: 550;
   letter-spacing: 0.005em;
@@ -1246,14 +1246,14 @@
 .home-contact-section .contact-form-row input,
 .home-contact-section .contact-form-row textarea {
   min-height: 48px;
-  border-color: #dce3eb;
+  border-color: #e3e8ee;
   border-radius: 9px;
   padding: 0.75rem 0.9rem;
-  background: #fff;
-  color: #1d2b3a;
+  background: #f7f8fa;
+  color: #344456;
   font-family: var(--font-family-sans);
   font-size: 0.94rem;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
 .home-contact-section .contact-form-row textarea {
@@ -1264,9 +1264,9 @@
 .home-contact-section .contact-form-row input:focus,
 .home-contact-section .contact-form-row textarea:focus {
   outline: none;
-  border-color: #7892ad;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(16, 43, 78, 0.07);
+  border-color: #aebdcb;
+  background: #fafbfd;
+  box-shadow: 0 0 0 3px rgba(53, 87, 117, 0.06);
 }
 
 .home-contact-section .contact-form-subscribe,
@@ -1282,7 +1282,7 @@
 .home-contact-section .subscribe-checkbox-label {
   align-items: flex-start;
   gap: 0.7rem;
-  color: #3e4c5c;
+  color: #59697a;
 }
 
 .home-contact-section .subscribe-checkbox-label input[type="checkbox"] {
@@ -1298,9 +1298,14 @@
   height: 5px;
 }
 
+.home-contact-section .subscribe-checkbox-label input[type="checkbox"]:checked {
+  border-color: #58738e;
+  background: #58738e;
+}
+
 .home-contact-section .subscribe-checkbox-heading {
   gap: 0.4rem;
-  color: #29394b;
+  color: #425366;
   font-size: 0.86rem;
 }
 
@@ -1325,19 +1330,19 @@
   min-width: 160px;
   min-height: 48px;
   padding: 0 1.25rem;
-  border: 1px solid #102b4e;
+  border: 1px solid #46627e;
   border-radius: 9px;
-  background: #102b4e;
+  background: #46627e;
   box-shadow: none;
   font-size: 0.9rem;
   font-weight: 550;
   letter-spacing: 0.005em;
-  transition: background-color 160ms ease, border-color 160ms ease;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .home-contact-section .contact-form-actions .button-primary:hover {
-  border-color: #24496f;
-  background: #24496f;
+  border-color: #365573;
+  background: #365573;
 }
 
 .home-contact-section .contact-form-actions .button-primary:focus-visible {
@@ -1390,7 +1395,7 @@
   width: 104%;
   height: 104%;
   object-fit: cover;
-  filter: blur(2.5px) saturate(0.82) brightness(0.78);
+  filter: blur(8px) saturate(0.78) brightness(0.78);
   opacity: 0;
   transform: scale(1.045);
   transition: opacity 1.35s ease, transform 7s ease;
@@ -1406,7 +1411,7 @@
   background:
     linear-gradient(180deg, rgba(14, 32, 58, 0.02) 15%, rgba(14, 32, 58, 0.4) 100%),
     rgba(218, 228, 235, 0.08);
-  backdrop-filter: blur(1.5px);
+  backdrop-filter: blur(3px);
 }
 
 .home-contact-image-caption {

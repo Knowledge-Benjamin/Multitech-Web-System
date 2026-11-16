@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Banknote,
   BookOpen,
   CalendarDays,
   ClipboardList,
@@ -80,6 +79,8 @@ export default function AdminDashboard() {
         !data?.success ||
         !data.stats ||
         !data.operations?.students ||
+        !data.operations?.lecturers ||
+        !data.operations?.staff ||
         !data.operations?.attendance ||
         !Array.isArray(data.operations?.finance) ||
         !Array.isArray(data.recentApplications) ||
@@ -316,6 +317,7 @@ export default function AdminDashboard() {
                 <div>
                   <p className="analytics-eyebrow">Finance</p>
                   <h3>Fees &amp; payments</h3>
+                  <p className="finance-scope">All-time totals · grouped by currency</p>
                 </div>
                 <Link to="/admin/fees" className="operations-finance-link">
                   Fees manager <ArrowRight size={14} />

@@ -1516,6 +1516,12 @@ body.admin-page .scope-admindashboard .section-header h2 {
   letter-spacing: -0.04em;
 }
 
+.scope-admindashboard .finance-scope {
+  margin: 0.18rem 0 0;
+  color: #8792a4;
+  font-size: 0.68rem;
+}
+
 .scope-admindashboard .operations-detail-icon {
   display: grid;
   width: 34px;

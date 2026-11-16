@@ -32,7 +32,7 @@ export default function About() {
     }
   }, [sections, activeSection])
 
-  useScrollFade()
+  useScrollFade(0.1, '0px 0px -50px 0px', [loading, Boolean(hero?.content), sections.length])
 
   const currentSection = sections.find(section => section.id === activeSection) || sections[0] || null
 

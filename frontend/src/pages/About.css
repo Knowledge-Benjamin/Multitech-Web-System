@@ -249,7 +249,7 @@
 .about-section-heading h2 em,
 .about-section-intro h2 em {
   color: #38678e;
-  font-family: var(--font-family-serif, Georgia), serif;
+  font-family: var(--font-family-editorial, Georgia), serif;
   font-weight: 400;
 }
 
@@ -422,7 +422,7 @@
 .about-nav-index {
   min-width: 2rem;
   color: #b28c3d;
-  font-family: var(--font-family-serif, Georgia), serif;
+  font-family: var(--font-family-editorial, Georgia), serif;
   font-size: 1.22rem;
   font-style: italic;
   font-weight: 400;
@@ -497,7 +497,7 @@
   color: #28547b;
   background: linear-gradient(145deg, #dce8f1, #eef2f6);
   box-shadow: 0 5px 16px rgba(31, 64, 98, 0.1);
-  font-family: var(--font-family-serif, Georgia), serif;
+  font-family: var(--font-family-editorial, Georgia), serif;
   font-size: 1.35rem;
 }
 

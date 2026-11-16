@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useApiQuery } from '../hooks/useApiQuery'
 import {
   LayoutDashboard, BookOpen, Banknote, ClipboardList, CalendarDays,
   GraduationCap, Users, Megaphone, FileText, Info, Layers, Star,
@@ -13,11 +14,31 @@ export default function AdminSidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const admin = JSON.parse(localStorage.getItem('adminUser') || '{}')
+  const { data: profileResponse } = useApiQuery('/auth/profile', `adminProfile-${admin.id || 'current'}`, {
+    queryOptions: {
+      enabled: Boolean(localStorage.getItem('adminToken')),
+      staleTime: 5 * 60 * 1000
+    }
+  })
+  const adminName = profileResponse?.profile?.username || admin.username || 'Administrator'
+  const avatarUrl = profileResponse?.profile?.photo_url || admin.photo_url || admin.avatar_url
+  const adminInitials = adminName
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join('')
+    .toUpperCase() || 'AD'
   
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('sidebarCollapsed') === 'true'
   })
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
+
+  useEffect(() => {
+    setAvatarLoadFailed(false)
+  }, [avatarUrl])
 
   useEffect(() => {
     if (!isMobileOpen) return
@@ -111,10 +132,19 @@ export default function AdminSidebar() {
         <div className="sidebar-header">
           <img src="/logo_asset.png" alt="Multitech Business School" className="sidebar-logo" />
           <div className="sidebar-account">
-            <div className="avatar">{isCollapsed ? 'AD' : admin.username?.charAt(0).toUpperCase() || 'A'}</div>
+            <div className="avatar">
+              {avatarUrl && !avatarLoadFailed ? (
+                <img
+                  src={avatarUrl}
+                  alt={`${adminName} profile`}
+                  className="admin-avatar-image"
+                  onError={() => setAvatarLoadFailed(true)}
+                />
+              ) : adminInitials}
+            </div>
             <div className="header-info">
               <h2>Admin portal</h2>
-              <p className="sidebar-text">{admin.username || 'Administrator'}</p>
+              <p className="sidebar-text">{adminName}</p>
             </div>
           </div>
         </div>

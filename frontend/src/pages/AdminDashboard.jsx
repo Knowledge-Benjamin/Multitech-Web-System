@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, ClipboardList, Megaphone, Users, ArrowRight, RefreshCw } from 'lucide-react'
+import {
+  Banknote,
+  BookOpen,
+  CalendarDays,
+  ClipboardList,
+  GraduationCap,
+  Megaphone,
+  Radio,
+  Users,
+  ArrowRight,
+  RefreshCw
+} from 'lucide-react'
 import {
   CartesianGrid,
   Cell,
@@ -39,8 +50,15 @@ const formatMonth = (month) => {
     : new Intl.DateTimeFormat('en', { month: 'short' }).format(date)
 }
 
+const formatCount = (value) => Number(value || 0).toLocaleString('en-UG')
+
+const formatFinancialAmount = (value) => (
+  Number(value || 0).toLocaleString('en-UG', { maximumFractionDigits: 2 })
+)
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null)
+  const [operations, setOperations] = useState(null)
   const [recentApps, setRecentApps] = useState([])
   const [applicationStats, setApplicationStats] = useState([])
   const [applicationTrend, setApplicationTrend] = useState([])
@@ -61,6 +79,9 @@ export default function AdminDashboard() {
       if (
         !data?.success ||
         !data.stats ||
+        !data.operations?.students ||
+        !data.operations?.attendance ||
+        !Array.isArray(data.operations?.finance) ||
         !Array.isArray(data.recentApplications) ||
         !Array.isArray(data.applicationStats) ||
         !Array.isArray(data.applicationTrend)
@@ -69,6 +90,7 @@ export default function AdminDashboard() {
       }
 
       setStats(data.stats)
+      setOperations(data.operations)
       setRecentApps(data.recentApplications)
       setApplicationStats(data.applicationStats)
       setApplicationTrend(data.applicationTrend)
@@ -98,6 +120,11 @@ export default function AdminDashboard() {
     percentage: applicationTotal ? Math.round((item.value / applicationTotal) * 100) : 0
   }))
   const hasApplicationTrend = applicationTrend.some((item) => Number(item.count) > 0)
+  const attendanceRate = operations?.attendance?.rate
+  const hasAttendanceRate = attendanceRate !== null
+    && attendanceRate !== undefined
+    && Number.isFinite(Number(attendanceRate))
+  const financeRows = operations?.finance || []
 
   if (loading) {
     return (
@@ -197,6 +224,132 @@ export default function AdminDashboard() {
             <span className="stat-card-rule" />
           </article>
         </div>
+
+        <section className="operations-overview" aria-labelledby="operations-overview-title">
+          <div className="operations-section-heading">
+            <div>
+              <p className="analytics-eyebrow">Academic operations</p>
+              <h2 id="operations-overview-title">Campus at a glance</h2>
+            </div>
+            <span className="current-term-label">
+              {operations.currentTerm || 'No active academic term'}
+            </span>
+          </div>
+
+          <div className="operations-stats-grid">
+            <Link to="/admin/students" className="operations-stat-card">
+              <span className="operations-icon operations-icon--blue"><GraduationCap size={19} /></span>
+              <span className="operations-stat-copy">
+                <span className="operations-stat-label">Students</span>
+                <strong>{formatCount(operations.students.total)}</strong>
+                <span className="operations-stat-caption">{formatCount(operations.students.active)} active</span>
+              </span>
+            </Link>
+
+            <Link to="/admin/timetable" className="operations-stat-card">
+              <span className="operations-icon operations-icon--gold"><CalendarDays size={18} /></span>
+              <span className="operations-stat-copy">
+                <span className="operations-stat-label">Scheduled classes</span>
+                <strong>{formatCount(operations.classes)}</strong>
+                <span className="operations-stat-caption">
+                  {operations.currentTerm ? 'Current term' : 'No active term'}
+                </span>
+              </span>
+            </Link>
+
+            <Link to="/admin/lecturers" className="operations-stat-card">
+              <span className="operations-icon operations-icon--blue"><Users size={18} /></span>
+              <span className="operations-stat-copy">
+                <span className="operations-stat-label">Lecturers</span>
+                <strong>{formatCount(operations.lecturers.active)}</strong>
+                <span className="operations-stat-caption">Active accounts</span>
+              </span>
+            </Link>
+
+            <Link to="/admin/id-cards" className="operations-stat-card">
+              <span className="operations-icon operations-icon--gold"><Users size={18} /></span>
+              <span className="operations-stat-copy">
+                <span className="operations-stat-label">Staff</span>
+                <strong>{formatCount(operations.staff.active)}</strong>
+                <span className="operations-stat-caption">
+                  {formatCount(operations.staff.administrative)} administrative · {formatCount(operations.staff.support)} support
+                </span>
+              </span>
+            </Link>
+          </div>
+
+          <div className="operations-details-grid">
+            <article className="operations-detail-card attendance-detail">
+              <div className="operations-detail-heading">
+                <div>
+                  <p className="analytics-eyebrow">Attendance</p>
+                  <h3>Current-term rate</h3>
+                </div>
+                <Link to="/admin/attendance/reports" className="operations-detail-icon" aria-label="View attendance reports">
+                  <Radio size={18} />
+                </Link>
+              </div>
+              <div className="attendance-rate-row">
+                <strong>{hasAttendanceRate ? `${Number(attendanceRate).toLocaleString('en-UG', { maximumFractionDigits: 1 })}%` : '—'}</strong>
+                <span>of expected attendances</span>
+              </div>
+              <div
+                className="attendance-progress"
+                role="progressbar"
+                aria-label="Current-term attendance rate"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow={hasAttendanceRate ? Math.min(100, Math.max(0, Number(attendanceRate))) : 0}
+                aria-valuetext={hasAttendanceRate ? `${attendanceRate}%` : 'No attendance data'}
+              >
+                <span style={{ width: `${hasAttendanceRate ? Math.min(100, Math.max(0, Number(attendanceRate))) : 0}%` }} />
+              </div>
+              <p className="operations-detail-caption">
+                {hasAttendanceRate
+                  ? `${formatCount(operations.attendance.present)} of ${formatCount(operations.attendance.expected)} student attendances across ${formatCount(operations.attendance.completedSessions)} completed sessions.`
+                  : 'No completed-session attendance data for this term.'}
+              </p>
+            </article>
+
+            <article className="operations-detail-card finance-detail">
+              <div className="operations-detail-heading">
+                <div>
+                  <p className="analytics-eyebrow">Finance</p>
+                  <h3>Fees &amp; payments</h3>
+                </div>
+                <Link to="/admin/fees" className="operations-finance-link">
+                  Fees manager <ArrowRight size={14} />
+                </Link>
+              </div>
+              {financeRows.length > 0 ? (
+                <div className="finance-table-wrap">
+                  <table className="finance-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Currency</th>
+                        <th scope="col">Billed</th>
+                        <th scope="col">Received</th>
+                        <th scope="col">Due</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {financeRows.map((row) => (
+                        <tr key={row.currency}>
+                          <th scope="row">{row.currency}</th>
+                          <td>{formatFinancialAmount(row.billed)}</td>
+                          <td>{formatFinancialAmount(row.received)}</td>
+                          <td>{formatFinancialAmount(row.outstanding)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="operations-finance-empty">No fee or payment records yet.</p>
+              )}
+            </article>
+          </div>
+        </section>
 
         <section className="dashboard-analytics" aria-label="Application analytics">
           <article className="analytics-card activity-card">

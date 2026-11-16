@@ -91,6 +91,28 @@ export const verifyToken = asyncHandler(async (req, res) => {
   }
 })
 
+export const getAdminProfile = asyncHandler(async (req, res) => {
+  const result = await pool.query(`
+    SELECT au.id, au.username, au.email, au.role,
+      (
+        SELECT sm.photo_url
+        FROM staff_members sm
+        WHERE sm.admin_user_id = au.id
+          AND NULLIF(BTRIM(sm.photo_url), '') IS NOT NULL
+        ORDER BY (sm.status = 'active') DESC, sm.updated_at DESC NULLS LAST, sm.id DESC
+        LIMIT 1
+      ) AS photo_url
+    FROM admin_users au
+    WHERE au.id = $1 AND au.status = 'active'
+  `, [req.admin.id])
+
+  if (result.rows.length === 0) {
+    return res.status(404).json({ success: false, message: 'Admin profile not found.' })
+  }
+
+  res.json({ success: true, profile: result.rows[0] })
+})
+
 // Get dashboard stats
 export const getDashboardStats = asyncHandler(async (req, res) => {
   const [
@@ -100,7 +122,10 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
     adminCount,
     recentApps,
     statusStats,
-    applicationTrend
+    applicationTrend,
+    academicSummary,
+    attendanceSummary,
+    financeSummary
   ] = await Promise.all([
     pool.query('SELECT COUNT(*) FROM programmes'),
     pool.query('SELECT COUNT(*) FROM applications'),
@@ -139,8 +164,99 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
         AND a.applied_at < months.month_start + INTERVAL '1 month'
       GROUP BY months.month_start
       ORDER BY months.month_start
+    `),
+    pool.query(`
+      WITH current_term AS (
+        SELECT t.id, COALESCE(y.name || ' · ' || t.name, t.name) AS name
+        FROM academic_terms t
+        LEFT JOIN academic_years y ON y.id = t.academic_year_id
+        WHERE CURRENT_DATE BETWEEN t.start_date AND t.end_date
+        ORDER BY t.start_date DESC
+        LIMIT 1
+      )
+      SELECT
+        (SELECT name FROM current_term) AS current_term,
+        (SELECT COUNT(*)::int FROM students) AS students_total,
+        (SELECT COUNT(*)::int FROM students WHERE current_status = 'active') AS students_active,
+        (SELECT COUNT(*)::int FROM class_schedules
+          WHERE academic_term_id = (SELECT id FROM current_term)) AS classes,
+        (SELECT COUNT(*)::int FROM lecturers WHERE is_active = true) AS lecturers_active,
+        (SELECT COUNT(*)::int FROM staff_members WHERE status = 'active') AS staff_active,
+        (SELECT COUNT(*)::int FROM staff_members
+          WHERE status = 'active' AND role_type = 'administrative') AS staff_administrative,
+        (SELECT COUNT(*)::int FROM staff_members
+          WHERE status = 'active' AND role_type = 'support_staff') AS staff_support
+    `),
+    pool.query(`
+      WITH current_term AS (
+        SELECT id
+        FROM academic_terms
+        WHERE CURRENT_DATE BETWEEN start_date AND end_date
+        ORDER BY start_date DESC
+        LIMIT 1
+      ),
+      completed_sessions AS (
+        SELECT cs.id,
+          COUNT(DISTINCT ste.student_id)::int AS expected,
+          COUNT(DISTINCT ar.student_id)
+            FILTER (WHERE LOWER(ar.status) = 'present')::int AS present
+        FROM class_sessions cs
+        JOIN class_schedules sch ON sch.id = cs.schedule_id
+        LEFT JOIN course_registrations cr
+          ON cr.course_id = sch.course_id AND cr.status = 'registered'
+        LEFT JOIN student_term_enrollments ste
+          ON ste.id = cr.student_term_enrollment_id
+          AND ste.academic_term_id = sch.academic_term_id
+        LEFT JOIN attendance_records ar
+          ON ar.session_id = cs.id AND ar.student_id = ste.student_id
+        WHERE sch.academic_term_id = (SELECT id FROM current_term)
+          AND (cs.status = 'ended' OR cs.end_time IS NOT NULL)
+        GROUP BY cs.id
+      )
+      SELECT COUNT(*)::int AS completed_sessions,
+        COALESCE(SUM(expected), 0)::int AS expected_attendance,
+        COALESCE(SUM(present), 0)::int AS present_attendance,
+        ROUND(100.0 * SUM(present)::numeric / NULLIF(SUM(expected), 0), 1) AS attendance_rate
+      FROM completed_sessions
+    `),
+    pool.query(`
+      WITH invoice_totals AS (
+        SELECT i.currency,
+          SUM(i.amount) FILTER (WHERE i.status <> 'void') AS billed,
+          SUM(
+            CASE
+              WHEN i.status IN ('paid', 'void') THEN 0
+              ELSE GREATEST(i.amount - COALESCE(applied.amount_applied, 0), 0)
+            END
+          ) AS outstanding
+        FROM invoices i
+        LEFT JOIN (
+          SELECT ip.invoice_id, p.currency,
+            SUM(ip.amount_applied) AS amount_applied
+          FROM invoice_payments ip
+          JOIN payments p ON p.id = ip.payment_id
+          GROUP BY ip.invoice_id, p.currency
+        ) applied
+          ON applied.invoice_id = i.id AND applied.currency = i.currency
+        GROUP BY i.currency
+      ),
+      payments_by_currency AS (
+        SELECT currency, SUM(amount) AS received
+        FROM payments
+        GROUP BY currency
+      )
+      SELECT COALESCE(i.currency, p.currency) AS currency,
+        COALESCE(i.billed, 0) AS billed,
+        COALESCE(p.received, 0) AS received,
+        COALESCE(i.outstanding, 0) AS outstanding
+      FROM invoice_totals i
+      FULL OUTER JOIN payments_by_currency p ON p.currency = i.currency
+      ORDER BY currency
     `)
   ])
+
+  const academic = academicSummary.rows[0]
+  const attendance = attendanceSummary.rows[0]
 
   res.json({
     success: true,
@@ -152,6 +268,32 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
     },
     recentApplications: recentApps.rows,
     applicationStats: statusStats.rows,
-    applicationTrend: applicationTrend.rows
+    applicationTrend: applicationTrend.rows,
+    operations: {
+      currentTerm: academic.current_term,
+      students: {
+        total: Number(academic.students_total),
+        active: Number(academic.students_active)
+      },
+      classes: Number(academic.classes),
+      lecturers: { active: Number(academic.lecturers_active) },
+      staff: {
+        active: Number(academic.staff_active),
+        administrative: Number(academic.staff_administrative),
+        support: Number(academic.staff_support)
+      },
+      attendance: {
+        completedSessions: Number(attendance.completed_sessions),
+        expected: Number(attendance.expected_attendance),
+        present: Number(attendance.present_attendance),
+        rate: attendance.attendance_rate === null ? null : Number(attendance.attendance_rate)
+      },
+      finance: financeSummary.rows.map((row) => ({
+        currency: row.currency,
+        billed: Number(row.billed),
+        received: Number(row.received),
+        outstanding: Number(row.outstanding)
+      }))
+    }
   })
 })

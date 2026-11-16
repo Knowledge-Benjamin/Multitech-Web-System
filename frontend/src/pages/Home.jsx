@@ -58,7 +58,12 @@ export default function Home() {
 
   const { data: latestRes, isLoading: latestLoading } = useApiQuery('/articles', 'latestArticles')
   const latestArticles = (latestRes?.data || []).slice(0, 4)
-  const contactImages = latestArticles.filter((article) => article.featured_image_url)
+  const contactImages = [...latestArticles, ...heroArticles]
+    .filter((article, index, articles) => (
+      article?.featured_image_url
+      && articles.findIndex((candidate) => candidate.featured_image_url === article.featured_image_url) === index
+    ))
+    .slice(0, 5)
 
   useEffect(() => {
     if (contactImages.length < 2 || contactImagePaused) return
@@ -386,7 +391,7 @@ export default function Home() {
             <div className="home-contact-image-stack">
               {contactImages.map((article, index) => (
                 <img
-                  key={article.id}
+                  key={article.id || article.featured_image_url}
                   className={`home-contact-image${index === contactImageIndex % contactImages.length ? ' is-active' : ''}`}
                   src={article.featured_image_url}
                   alt=""

@@ -1,7 +1,20 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
-import { Calendar, CheckCircle, BookOpen } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  Calendar,
+  CheckCircle,
+  Image,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  Upload,
+  X
+} from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminProgrammes.css'
@@ -22,12 +35,25 @@ const getSuggestedLevel = (type) => {
   }
 }
 
+const formatProgrammeType = (type) => (
+  type === 'shortcourses'
+    ? 'Short courses'
+    : (type || 'Programme').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+)
+
 export default function AdminProgrammes() {
   const [activeMainTab, setActiveMainTab] = useState('programmes')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [file, setFile] = useState(null)
   const [uploadingCategory, setUploadingCategory] = useState(null)
+  const [programmeSearch, setProgrammeSearch] = useState('')
+  const [programmeTypeFilter, setProgrammeTypeFilter] = useState('all')
+  const [courseUnitSearch, setCourseUnitSearch] = useState('')
+  const [pageError, setPageError] = useState('')
+  const [pageNotice, setPageNotice] = useState('')
+  const [savingProgramme, setSavingProgramme] = useState(false)
+  const programmeFormRef = useRef(null)
   
   // Form Tabs
   const [formTab, setFormTab] = useState('basic') // basic, requirements, fees_intake
@@ -39,6 +65,7 @@ export default function AdminProgrammes() {
     description: '',
     duration: '',
     capacity: '',
+    active: true,
     requirements: '',
     career_prospects: '',
     is_supplementary: false,
@@ -54,20 +81,36 @@ export default function AdminProgrammes() {
   const [newCuModule, setNewCuModule] = useState('')
   const [cuEditId, setCuEditId] = useState(null)
 
-  const navigate = useNavigate()
-
   const token = localStorage.getItem('adminToken')
   
-  const { data: programmesData, isLoading: loadingProgrammes, refetch: fetchProgrammes } = useApiQuery('/programmes', 'adminProgrammes', {
+  const {
+    data: programmesData,
+    isLoading: loadingProgrammes,
+    isError: programmesLoadFailed,
+    error: programmesLoadError,
+    refetch: fetchProgrammes
+  } = useApiQuery('/programmes/admin/all', 'adminProgrammes', {
     queryOptions: { enabled: activeMainTab === 'programmes' || activeMainTab === 'course_units' },
     axiosOptions: { headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' } }
   })
   
-  const { data: categoriesData, isLoading: loadingCategories, refetch: fetchCategories } = useApiQuery('/programme-categories', 'adminCategories', {
+  const {
+    data: categoriesData,
+    isLoading: loadingCategories,
+    isError: categoriesLoadFailed,
+    error: categoriesLoadError,
+    refetch: fetchCategories
+  } = useApiQuery('/programme-categories', 'adminCategories', {
     queryOptions: { enabled: activeMainTab === 'categories' }
   })
   
-  const { data: cuData, isLoading: cuLoading, refetch: fetchCourseUnits } = useApiQuery('/course-units', 'adminCourseUnits', {
+  const {
+    data: cuData,
+    isLoading: cuLoading,
+    isError: cuLoadFailed,
+    error: cuLoadError,
+    refetch: fetchCourseUnits
+  } = useApiQuery('/course-units', 'adminCourseUnits', {
     queryOptions: { enabled: activeMainTab === 'course_units' },
     axiosOptions: { headers: { Authorization: `Bearer ${token}`, 'Cache-Control': 'no-cache', Pragma: 'no-cache' } }
   })
@@ -75,9 +118,22 @@ export default function AdminProgrammes() {
   const programmes = programmesData?.data || []
   const categories = categoriesData?.data || []
   const courseUnits = cuData?.data || []
+  const filteredCourseUnits = courseUnits.filter((unit) => {
+    const query = courseUnitSearch.trim().toLowerCase()
+    return !query
+      || unit.course_code?.toLowerCase().includes(query)
+      || unit.name?.toLowerCase().includes(query)
+      || unit.programme_name?.toLowerCase().includes(query)
+  })
   
-  const loading = (activeMainTab === 'programmes' && loadingProgrammes) || 
-                  (activeMainTab === 'categories' && loadingCategories)
+  const filteredProgrammes = programmes.filter((programme) => {
+    const query = programmeSearch.trim().toLowerCase()
+    const matchesSearch = !query
+      || programme.name?.toLowerCase().includes(query)
+      || programme.level?.toLowerCase().includes(query)
+      || programme.type?.toLowerCase().includes(query)
+    return matchesSearch && (programmeTypeFilter === 'all' || programme.type === programmeTypeFilter)
+  })
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -97,6 +153,20 @@ export default function AdminProgrammes() {
     }))
   }
 
+  const handleFormTabChange = (nextTab) => {
+    if (formTab === 'basic' && nextTab !== 'basic' && !programmeFormRef.current?.reportValidity()) {
+      return
+    }
+    setPageError('')
+    setFormTab(nextTab)
+  }
+
+  const invalidateProgrammeCache = () => {
+    window.__multitechInvalidateCaches?.(['programmes'])
+    window.localStorage.setItem('multitech:programmes-updated', String(Date.now()))
+    window.dispatchEvent(new CustomEvent('multitech:programmes-updated'))
+  }
+
   const handleAddCuModule = () => {
     if (newCuModule.trim()) {
       setCuModules([...cuModules, newCuModule.trim()])
@@ -110,6 +180,9 @@ export default function AdminProgrammes() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setPageError('')
+    setPageNotice('')
+    setSavingProgramme(true)
     
     const data = new FormData()
     
@@ -148,18 +221,20 @@ export default function AdminProgrammes() {
         })
       }
 
-      window.__multitechInvalidateCaches?.(['programmes'])
-      window.localStorage.setItem('multitech:programmes-updated', String(Date.now()))
-      window.dispatchEvent(new CustomEvent('multitech:programmes-updated'))
+      invalidateProgrammeCache()
       resetForm()
       fetchProgrammes()
     } catch (error) {
       console.error('Error saving programme:', error)
-      alert('Error saving programme')
+      setPageError(error.response?.data?.message || 'The programme could not be saved. Please try again.')
+    } finally {
+      setSavingProgramme(false)
     }
   }
 
   const handleEdit = (programme) => {
+    setPageError('')
+    setPageNotice('')
     setFormData({
       name: programme.name || '',
       type: programme.type || 'undergraduate',
@@ -167,6 +242,7 @@ export default function AdminProgrammes() {
       description: programme.description || '',
       duration: programme.duration || '',
       capacity: programme.capacity || '',
+      active: programme.active ?? true,
       requirements: programme.requirements || '',
       career_prospects: programme.career_prospects || '',
       is_supplementary: programme.is_supplementary || false,
@@ -183,8 +259,9 @@ export default function AdminProgrammes() {
   const resetForm = () => {
     setShowForm(false)
     setEditingId(null)
+    setPageError('')
     setFormData({
-      name: '', type: 'undergraduate', level: '', description: '', duration: '', capacity: '',
+      name: '', type: 'undergraduate', level: '', description: '', duration: '', capacity: '', active: true,
       requirements: '', career_prospects: '',
       is_supplementary: false, national_tuition_fee: '', international_tuition_fee: ''
     })
@@ -192,21 +269,21 @@ export default function AdminProgrammes() {
     setFormTab('basic')
   }
 
-  const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this programme?')) return
+  const handleDelete = async (programme) => {
+    if (!window.confirm(`Delete "${programme.name}"? This cannot be undone.`)) return
 
     const token = localStorage.getItem('adminToken')
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/programmes/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/programmes/${programme.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      window.__multitechInvalidateCaches?.(['programmes'])
-      window.localStorage.setItem('multitech:programmes-updated', String(Date.now()))
-      window.dispatchEvent(new CustomEvent('multitech:programmes-updated'))
+      invalidateProgrammeCache()
       fetchProgrammes()
+      setPageNotice('Programme deleted.')
+      setPageError('')
     } catch (error) {
       console.error('Error deleting programme:', error)
-      alert('Error deleting programme')
+      setPageError(error.response?.data?.message || 'The programme could not be deleted.')
     }
   }
 
@@ -279,11 +356,13 @@ export default function AdminProgrammes() {
           Authorization: `Bearer ${token}`
         }
       })
+      invalidateProgrammeCache()
       fetchProgrammes()
-      alert('Programme image uploaded successfully!')
+      setPageNotice('Programme image updated.')
+      setPageError('')
     } catch (error) {
       console.error('Error uploading image:', error)
-      alert('Error uploading image')
+      setPageError(error.response?.data?.message || 'The programme image could not be uploaded.')
     } finally {
       setUploadingCategory(null)
       e.target.value = null
@@ -306,10 +385,11 @@ export default function AdminProgrammes() {
         }
       })
       fetchCategories()
-      alert('Image uploaded successfully!')
+      setPageNotice('Homepage card image updated.')
+      setPageError('')
     } catch (error) {
       console.error('Error uploading image:', error)
-      alert('Failed to upload image.')
+      setPageError(error.response?.data?.message || 'The homepage card image could not be uploaded.')
     } finally {
       setUploadingCategory(null)
       e.target.value = null
@@ -320,69 +400,141 @@ export default function AdminProgrammes() {
     <div className="scope-adminprogrammes admin-layout">
       <AdminSidebar />
       <main className="admin-content">
-        <header className="content-header">
-          <h1>Manage Programmes</h1>
+        <header className="admin-programmes-header">
+          <div className="admin-programmes-heading">
+            <p className="admin-programmes-eyebrow">Academic catalogue</p>
+            <h1>
+              {showForm
+                ? `${editingId ? 'Edit' : 'Add'} programme`
+                : activeMainTab === 'programmes'
+                  ? <>Programmes <em>and courses</em></>
+                  : activeMainTab === 'course_units'
+                    ? <>Course <em>units</em></>
+                    : <>Homepage <em>cards</em></>}
+            </h1>
+            <p className="admin-programmes-subtitle">
+              {showForm
+                ? 'Keep programme information clear, complete, and ready to publish.'
+                : activeMainTab === 'programmes'
+                  ? 'Manage the programmes available across the Multitech catalogue.'
+                  : activeMainTab === 'course_units'
+                    ? 'Organise the subjects, credits, and topics that make up each programme.'
+                    : 'Refresh the imagery used in the homepage programme cards.'}
+            </p>
+          </div>
           {activeMainTab === 'programmes' && !showForm && (
-            <button onClick={() => setShowForm(true)} className="btn-primary">
-              + Add Programme
+            <button
+              type="button"
+              onClick={() => {
+                setPageError('')
+                setPageNotice('')
+                setShowForm(true)
+              }}
+              className="programme-primary-button"
+            >
+              <Plus size={17} />
+              Add programme
+            </button>
+          )}
+          {showForm && (
+            <button type="button" onClick={resetForm} className="programme-back-button">
+              <ArrowLeft size={16} />
+              Back to programmes
             </button>
           )}
         </header>
 
-        {!showForm && (
-          <div className="settings-tabs" style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', borderBottom: '1px solid var(--color-border)' }}>
-            <button
-              onClick={() => setActiveMainTab('programmes')}
-              className={`tab-btn ${activeMainTab === 'programmes' ? 'active' : ''}`}
-              style={{ padding: '0.75rem 1.5rem', background: 'none', border: 'none', borderBottom: activeMainTab === 'programmes' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeMainTab === 'programmes' ? 'var(--color-primary)' : 'var(--color-text)', cursor: 'pointer', fontWeight: activeMainTab === 'programmes' ? '600' : '400' }}
-            >
-              Programmes
-            </button>
-            <button
-              onClick={() => setActiveMainTab('course_units')}
-              className={`tab-btn ${activeMainTab === 'course_units' ? 'active' : ''}`}
-              style={{ padding: '0.75rem 1.5rem', background: 'none', border: 'none', borderBottom: activeMainTab === 'course_units' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeMainTab === 'course_units' ? 'var(--color-primary)' : 'var(--color-text)', cursor: 'pointer', fontWeight: activeMainTab === 'course_units' ? '600' : '400' }}
-            >
-              Course Units
-            </button>
-            <button
-              onClick={() => setActiveMainTab('categories')}
-              className={`tab-btn ${activeMainTab === 'categories' ? 'active' : ''}`}
-              style={{ padding: '0.75rem 1.5rem', background: 'none', border: 'none', borderBottom: activeMainTab === 'categories' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeMainTab === 'categories' ? 'var(--color-primary)' : 'var(--color-text)', cursor: 'pointer', fontWeight: activeMainTab === 'categories' ? '600' : '400' }}
-            >
-              Homepage Cards UI
-            </button>
+        {pageError && (
+          <div className="programme-feedback programme-feedback--error" role="alert">
+            <span>{pageError}</span>
+            <button type="button" onClick={() => setPageError('')} aria-label="Dismiss error"><X size={16} /></button>
           </div>
+        )}
+        {pageNotice && (
+          <div className="programme-feedback programme-feedback--success" role="status">
+            <span>{pageNotice}</span>
+            <button type="button" onClick={() => setPageNotice('')} aria-label="Dismiss notification"><X size={16} /></button>
+          </div>
+        )}
+
+        {!showForm && (
+          <nav className="settings-tabs" aria-label="Programme management sections">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveMainTab('programmes')
+                setPageError('')
+                setPageNotice('')
+              }}
+              className={`programme-tab ${activeMainTab === 'programmes' ? 'active' : ''}`}
+              aria-pressed={activeMainTab === 'programmes'}
+            >
+              Programmes {programmesData && <span>{programmes.length}</span>}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveMainTab('course_units')
+                setPageError('')
+                setPageNotice('')
+              }}
+              className={`programme-tab ${activeMainTab === 'course_units' ? 'active' : ''}`}
+              aria-pressed={activeMainTab === 'course_units'}
+            >
+              Course units {cuData && <span>{courseUnits.length}</span>}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveMainTab('categories')
+                setPageError('')
+                setPageNotice('')
+              }}
+              className={`programme-tab ${activeMainTab === 'categories' ? 'active' : ''}`}
+              aria-pressed={activeMainTab === 'categories'}
+            >
+              Homepage cards {categoriesData && <span>{categories.length}</span>}
+            </button>
+          </nav>
         )}
 
         {activeMainTab === 'programmes' ? (
           <>
             {showForm ? (
-              <div className="form-container extended-form">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                  <h2>{editingId ? 'Edit' : 'Add'} Programme</h2>
-                  <button onClick={resetForm} className="btn-secondary">Back to List</button>
+              <div className="form-container extended-form programme-form-panel">
+                <div className="programme-form-heading">
+                  <div>
+                    <p className="admin-programmes-eyebrow">{editingId ? 'Update listing' : 'New listing'}</p>
+                    <h2>{editingId ? 'Programme details' : 'Create a programme'}</h2>
+                    <p>Complete each step, then review the details before saving.</p>
+                  </div>
                 </div>
                 
-                <div className="form-tabs">
-                  <button type="button" className={formTab === 'basic' ? 'active' : ''} onClick={() => setFormTab('basic')}>Basic Info</button>
-                  <button type="button" className={formTab === 'requirements' ? 'active' : ''} onClick={() => setFormTab('requirements')}>Details & Curriculum</button>
-                  <button type="button" className={formTab === 'fees_intake' ? 'active' : ''} onClick={() => setFormTab('fees_intake')}>Intake & Fees</button>
+                <div className="form-tabs" aria-label="Programme form steps">
+                  <button type="button" className={formTab === 'basic' ? 'active' : ''} aria-pressed={formTab === 'basic'} onClick={() => handleFormTabChange('basic')}>
+                    <span>01</span> Basic information
+                  </button>
+                  <button type="button" className={formTab === 'requirements' ? 'active' : ''} aria-pressed={formTab === 'requirements'} onClick={() => handleFormTabChange('requirements')}>
+                    <span>02</span> Requirements
+                  </button>
+                  <button type="button" className={formTab === 'fees_intake' ? 'active' : ''} aria-pressed={formTab === 'fees_intake'} onClick={() => handleFormTabChange('fees_intake')}>
+                    <span>03</span> Fees &amp; intake
+                  </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="multi-tab-form">
+                <form ref={programmeFormRef} onSubmit={handleSubmit} className="multi-tab-form">
                   
                   {/* Basic Info Tab */}
                   {formTab === 'basic' && (
                     <div className="tab-pane">
                       <div className="form-row">
                         <div className="form-group">
-                          <label>Name *</label>
-                          <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+                          <label htmlFor="programme-name">Programme name *</label>
+                          <input id="programme-name" type="text" name="name" value={formData.name} onChange={handleChange} required autoComplete="off" />
                         </div>
                         <div className="form-group">
-                          <label>Type *</label>
-                          <select name="type" value={formData.type} onChange={handleChange} required>
+                          <label htmlFor="programme-type">Programme type *</label>
+                          <select id="programme-type" name="type" value={formData.type} onChange={handleChange} required>
                             <option value="undergraduate">Undergraduate</option>
                             <option value="postgraduate">Postgraduate</option>
                             <option value="diploma">Diploma</option>
@@ -394,35 +546,40 @@ export default function AdminProgrammes() {
 
                       <div className="form-row">
                         <div className="form-group">
-                          <label>Level *</label>
-                          <input type="text" name="level" value={formData.level} onChange={handleChange} placeholder="e.g., degree, masters" required />
-                          <div style={{ color: '#6b7280', fontSize: '0.85rem', marginTop: '0.35rem' }}>Suggested automatically from the selected type.</div>
+                          <label htmlFor="programme-level">Award or level *</label>
+                          <input id="programme-level" type="text" name="level" value={formData.level} onChange={handleChange} placeholder="For example, bachelor’s degree" required />
+                          <small className="programme-field-hint">Suggested from the selected programme type; you can edit it.</small>
                         </div>
                         <div className="form-group">
-                          <label>Duration</label>
-                          <input type="text" name="duration" value={formData.duration} onChange={handleChange} placeholder="e.g., 3 years" />
+                          <label htmlFor="programme-duration">Duration</label>
+                          <input id="programme-duration" type="text" name="duration" value={formData.duration} onChange={handleChange} placeholder="For example, 3 years" />
                         </div>
                       </div>
 
                       <div className="form-row">
                         <div className="form-group">
-                          <label>Capacity</label>
-                          <input type="number" name="capacity" value={formData.capacity} onChange={handleChange} placeholder="e.g. 50" min="1" />
-                        </div>
-                        <div className="form-group">
-                          <label>&nbsp;</label>
-                          <div style={{ color: '#6b7280', fontSize: '0.9rem', paddingTop: '0.45rem' }}>Leave blank to use a default value.</div>
+                          <label htmlFor="programme-capacity">Intake capacity</label>
+                          <input id="programme-capacity" type="number" name="capacity" value={formData.capacity} onChange={handleChange} placeholder="Default: 50" min="1" />
+                          <small className="programme-field-hint">Leave blank to use the default capacity of 50.</small>
                         </div>
                       </div>
 
                       <div className="form-group full-width">
-                        <label>Overview / Description</label>
-                        <textarea name="description" value={formData.description} onChange={handleChange} rows="4" placeholder="Brief overview of the programme" />
+                        <label htmlFor="programme-description">Programme overview</label>
+                        <textarea id="programme-description" name="description" value={formData.description} onChange={handleChange} rows="4" placeholder="Describe what students will learn and what makes this programme distinct." />
                       </div>
 
-                      <div className="form-group">
-                        <label>Programme Cover Image</label>
-                        <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
+                      <div className="form-group full-width">
+                        <label htmlFor="programme-cover">Programme cover image</label>
+                        <label className="programme-file-picker" htmlFor="programme-cover">
+                          <span className="programme-file-icon"><Image size={20} /></span>
+                          <span>
+                            <strong>{file?.name || 'Choose a cover image'}</strong>
+                            <small>JPG, PNG or WebP · maximum 5 MB</small>
+                          </span>
+                          <Upload size={17} />
+                        </label>
+                        <input id="programme-cover" className="programme-file-input" type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
                       </div>
                     </div>
                   )}
@@ -431,13 +588,13 @@ export default function AdminProgrammes() {
                   {formTab === 'requirements' && (
                     <div className="tab-pane">
                       <div className="form-group full-width">
-                        <label>Admission Requirements</label>
-                        <textarea name="requirements" value={formData.requirements} onChange={handleChange} rows="5" placeholder="List the admission requirements..." />
+                        <label htmlFor="programme-requirements">Admission requirements</label>
+                        <textarea id="programme-requirements" name="requirements" value={formData.requirements} onChange={handleChange} rows="5" placeholder="List the academic qualifications or other entry requirements." />
                       </div>
                       
                       <div className="form-group full-width">
-                        <label>Career Prospects</label>
-                        <textarea name="career_prospects" value={formData.career_prospects} onChange={handleChange} rows="4" placeholder="What careers does this lead to?" />
+                        <label htmlFor="programme-careers">Career prospects</label>
+                        <textarea id="programme-careers" name="career_prospects" value={formData.career_prospects} onChange={handleChange} rows="4" placeholder="Describe relevant career paths for graduates." />
                       </div>
                     </div>
                   )}
@@ -445,318 +602,443 @@ export default function AdminProgrammes() {
                   {/* Fees & Intake Tab */}
                   {formTab === 'fees_intake' && (
                     <div className="tab-pane">
-
-                      {/* Intake Info Banner */}
-                      <div style={{ background: '#e8f4fd', border: '1px solid #bee3f8', borderRadius: '8px', padding: '1.25rem 1.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-                        <Calendar size={22} style={{ color: '#0284c7', marginTop: '2px', flexShrink: 0 }} />
+                      <div className="programme-info-note">
+                        <Calendar size={20} />
                         <div>
-                          <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Intake & Application Windows are managed via Intakes</strong>
-                          <p style={{ margin: 0, fontSize: '0.9rem', color: '#555' }}>
-                            This programme's availability for applications is controlled by the intakes it is linked to.
-                            Open/close dates and application fees are set on a per-intake basis.
-                            To link this programme to an intake or adjust dates, go to{' '}
-                            <a href="/admin/intakes" style={{ color: '#0077cc', textDecoration: 'underline' }}>Manage Intakes</a>.
+                          <strong>Intake dates and application fees</strong>
+                          <p>
+                            These are managed per intake. Link this programme or adjust its application window in{' '}
+                            <Link to="/admin/intakes">Intakes <ArrowRight size={14} /></Link>.
                           </p>
                         </div>
                       </div>
 
-                      {/* Supplementary toggle — a programme-level flag */}
-                      <div className="settings-section" style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem' }}>
-                        <h3 style={{ marginTop: 0 }}>Programme Type</h3>
-                        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
-                          <input type="checkbox" name="is_supplementary" checked={formData.is_supplementary} onChange={handleChange} style={{ width: '18px', height: '18px', marginTop: '2px' }} />
+                      <div className="programme-settings-card">
+                        <h3>Programme classification</h3>
+                        <label className="programme-checkbox-row">
+                          <input type="checkbox" name="is_supplementary" checked={formData.is_supplementary} onChange={handleChange} />
                           <span>
-                            <strong>Supplementary / Short Course</strong>
-                            <small style={{ display: 'block', color: '#666', fontWeight: 'normal', marginTop: '0.2rem' }}>
-                              Students can apply for this alongside an existing programme enrolment.
-                            </small>
+                            <strong>Supplementary programme</strong>
+                            <small>Allows students to apply alongside an existing programme enrolment.</small>
                           </span>
                         </label>
                       </div>
 
-                      <div className="settings-section" style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px' }}>
-                        <h3 style={{ marginTop: 0 }}>Tuition Fees</h3>
+                      <div className="programme-settings-card">
+                        <h3>Tuition fees</h3>
                         <div className="form-row">
                           <div className="form-group">
-                            <label>National Tuition Fee (KES)</label>
-                            <input type="number" name="national_tuition_fee" value={formData.national_tuition_fee} onChange={handleChange} placeholder="e.g. 1500000" />
+                            <label htmlFor="national-tuition-fee">National tuition fee (UGX)</label>
+                            <input id="national-tuition-fee" type="number" name="national_tuition_fee" value={formData.national_tuition_fee} onChange={handleChange} min="0" step="0.01" placeholder="Enter amount in UGX" />
                           </div>
                           <div className="form-group">
-                            <label>International Tuition Fee (USD)</label>
-                            <input type="number" name="international_tuition_fee" value={formData.international_tuition_fee} onChange={handleChange} placeholder="e.g. 1500" />
+                            <label htmlFor="international-tuition-fee">International tuition fee (USD)</label>
+                            <input id="international-tuition-fee" type="number" name="international_tuition_fee" value={formData.international_tuition_fee} onChange={handleChange} min="0" step="0.01" placeholder="Enter amount in USD" />
                           </div>
                         </div>
-                        <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>Note: Functional fees and custom programme fees are managed separately and automatically added to the student's total.</p>
+                        <p className="programme-field-hint">Functional and custom programme fees are managed separately.</p>
                       </div>
+
+                      {editingId && (
+                        <div className="programme-settings-card">
+                          <h3>Catalogue visibility</h3>
+                          <label className="programme-checkbox-row">
+                            <input type="checkbox" name="active" checked={formData.active} onChange={handleChange} />
+                            <span>
+                              <strong>Published in the public catalogue</strong>
+                              <small>Turn this off to hide the programme without deleting its records.</small>
+                            </span>
+                          </label>
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  <div className="form-actions" style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #eee' }}>
-                    <button type="submit" className="btn-primary btn-large">
-                      {editingId ? 'Save Changes' : 'Create Programme'}
-                    </button>
-                    <button type="button" onClick={resetForm} className="btn-secondary">
+                  <div className="form-actions programme-form-actions">
+                    {formTab !== 'basic' && (
+                      <button
+                        type="button"
+                        className="programme-back-button"
+                        onClick={() => setFormTab(formTab === 'fees_intake' ? 'requirements' : 'basic')}
+                      >
+                        <ArrowLeft size={16} />
+                        Previous
+                      </button>
+                    )}
+                    {formTab !== 'fees_intake' ? (
+                      <button
+                        type="button"
+                        className="programme-primary-button"
+                        onClick={() => handleFormTabChange(formTab === 'basic' ? 'requirements' : 'fees_intake')}
+                      >
+                        Continue
+                        <ArrowRight size={16} />
+                      </button>
+                    ) : (
+                      <button type="submit" className="programme-primary-button" disabled={savingProgramme}>
+                        {savingProgramme ? 'Saving…' : editingId ? 'Save changes' : 'Create programme'}
+                      </button>
+                    )}
+                    <button type="button" onClick={resetForm} className="programme-cancel-button">
                       Cancel
                     </button>
                   </div>
                 </form>
               </div>
             ) : (
-              <div className="programmes-table">
-                {loading ? (
-                  <p>Loading...</p>
-                ) : programmes.length > 0 ? (
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Image</th>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {programmes.map((prog) => (
-                        <tr key={prog.id}>
-                          <td style={{ width: '120px' }}>
-                            <div style={{ position: 'relative', width: '100%', height: '60px', backgroundColor: '#f0f4f8', borderRadius: '4px', overflow: 'hidden' }}>
-                              {prog.image_url ? (
-                                <img src={prog.image_url} alt={prog.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              ) : (
-                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.75rem', color: '#999' }}>No Image</span>
-                              )}
-                              <label style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', color: 'white', opacity: 0, cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0}>
-                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', textAlign: 'center' }}>
-                                  {uploadingCategory === `prog_${prog.id}` ? '...' : 'Upload'}
-                                </span>
-                                <input 
-                                  type="file" 
-                                  accept="image/*" 
-                                  style={{ display: 'none' }}
-                                  onChange={(e) => handleProgrammeImageUpload(e, prog.id)}
-                                  disabled={uploadingCategory === `prog_${prog.id}`}
-                                />
-                              </label>
-                            </div>
-                          </td>
-                          <td>
-                            <strong>{prog.name}</strong>
-                            <div style={{ fontSize: '0.85rem', color: '#666' }}>{prog.level}</div>
-                          </td>
-                          <td style={{ textTransform: 'capitalize' }}>{prog.type}</td>
-                          <td>
-                            {prog.is_supplementary ? (
-                              <span style={{ padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
-                                Short Course
-                              </span>
-                            ) : (
-                              <span style={{ padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', backgroundColor: '#f3f4f6', color: '#374151' }}>
-                                Main Programme
-                              </span>
-                            )}
-                          </td>
-                          <td className="actions">
-                            <button onClick={() => handleEdit(prog)} className="btn-edit">
-                              Edit
-                            </button>
-                            <button onClick={() => handleDelete(prog.id)} className="btn-delete">
-                              Delete
-                            </button>
-                          </td>
+              <section className="programme-catalog-panel" aria-labelledby="programme-catalog-title">
+                <div className="programme-catalog-heading">
+                  <div>
+                    <p className="admin-programmes-eyebrow">Catalogue</p>
+                    <h2 id="programme-catalog-title">All programmes <span>{programmes.length}</span></h2>
+                    <p>Search the full catalogue, including unpublished programmes.</p>
+                  </div>
+                  <div className="programme-filters">
+                    <label className="programme-search">
+                      <Search size={17} aria-hidden="true" />
+                      <span className="programmes-sr-only">Search programmes</span>
+                      <input
+                        type="search"
+                        value={programmeSearch}
+                        onChange={(event) => setProgrammeSearch(event.target.value)}
+                        placeholder="Search by name, type, or level"
+                      />
+                      {programmeSearch && (
+                        <button type="button" onClick={() => setProgrammeSearch('')} aria-label="Clear search">
+                          <X size={15} />
+                        </button>
+                      )}
+                    </label>
+                    <label className="programme-type-filter">
+                      <span className="programmes-sr-only">Filter by programme type</span>
+                      <select value={programmeTypeFilter} onChange={(event) => setProgrammeTypeFilter(event.target.value)}>
+                        <option value="all">All types</option>
+                        <option value="undergraduate">Undergraduate</option>
+                        <option value="postgraduate">Postgraduate</option>
+                        <option value="diploma">Diploma</option>
+                        <option value="professional">Professional</option>
+                        <option value="shortcourses">Short courses</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
+                <div className="programme-results-summary" aria-live="polite">
+                  Showing {filteredProgrammes.length} of {programmes.length} programmes
+                </div>
+                {loadingProgrammes ? (
+                  <div className="programme-state" role="status"><span className="programme-spinner" /> Loading programmes…</div>
+                ) : programmesLoadFailed ? (
+                  <div className="programme-state programme-state--error" role="alert">
+                    <p>{programmesLoadError?.response?.data?.message || 'Programmes could not be loaded.'}</p>
+                    <button type="button" className="programme-secondary-button" onClick={() => fetchProgrammes()}>Try again</button>
+                  </div>
+                ) : filteredProgrammes.length > 0 ? (
+                  <div className="programmes-table">
+                    <table className="admin-programme-table">
+                      <thead>
+                        <tr>
+                          <th scope="col">Programme</th>
+                          <th scope="col">Type</th>
+                          <th scope="col">Capacity</th>
+                          <th scope="col">Status</th>
+                          <th scope="col"><span className="programmes-sr-only">Actions</span></th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {filteredProgrammes.map((prog) => (
+                          <tr key={prog.id}>
+                            <td>
+                              <div className="programme-identity">
+                                <div className="programme-thumb">
+                                  {prog.image_url ? (
+                                    <img src={prog.image_url} alt="" loading="lazy" />
+                                  ) : (
+                                    <Image size={20} aria-hidden="true" />
+                                  )}
+                                  <label className="programme-image-upload" htmlFor={`programme-image-${prog.id}`} title={`Upload an image for ${prog.name}`}>
+                                    <Upload size={15} />
+                                    <span>{uploadingCategory === `prog_${prog.id}` ? 'Uploading…' : 'Change image'}</span>
+                                    <input
+                                      id={`programme-image-${prog.id}`}
+                                      className="programme-file-input"
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(event) => handleProgrammeImageUpload(event, prog.id)}
+                                      disabled={uploadingCategory === `prog_${prog.id}`}
+                                    />
+                                  </label>
+                                </div>
+                                <div className="programme-identity-copy">
+                                  <strong>{prog.name}</strong>
+                                  <span>{prog.level || 'Level not set'}{prog.duration ? ` · ${prog.duration}` : ''}</span>
+                                  {prog.is_supplementary && <small className="programme-supplementary-pill">Supplementary</small>}
+                                </div>
+                              </div>
+                            </td>
+                            <td><span className="programme-type-pill">{formatProgrammeType(prog.type)}</span></td>
+                            <td className="programme-capacity">{prog.capacity ?? '—'}</td>
+                            <td>
+                              <span className={`programme-status-pill ${prog.active ? 'is-active' : 'is-inactive'}`}>
+                                <i />
+                                {prog.active ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="programme-row-actions">
+                                <button type="button" onClick={() => handleEdit(prog)} className="programme-edit-button">
+                                  <Pencil size={14} /> Edit
+                                </button>
+                                <button type="button" onClick={() => handleDelete(prog)} className="programme-delete-button">
+                                  <Trash2 size={14} /> Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : programmes.length > 0 ? (
+                  <div className="programme-state">
+                    <Search size={23} />
+                    <p>No programmes match these filters.</p>
+                    <button type="button" className="programme-secondary-button" onClick={() => {
+                      setProgrammeSearch('')
+                      setProgrammeTypeFilter('all')
+                    }}>Clear filters</button>
+                  </div>
                 ) : (
-                  <p className="empty-state">No programmes yet. Create one to get started!</p>
+                  <div className="programme-state">
+                    <BookOpen size={24} />
+                    <p>No programmes have been added yet.</p>
+                    <button type="button" className="programme-secondary-button" onClick={() => setShowForm(true)}>Create a programme</button>
+                  </div>
                 )}
-              </div>
+              </section>
             )}
           </>
         ) : activeMainTab === 'course_units' ? (
-          <div style={{ maxWidth: '900px' }}>
-            <h2 style={{ marginBottom: '1.5rem', color: '#1e1b4b' }}>Course Units Management</h2>
-            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>Add individual course units (subjects) that belong to a programme. These are what lecturers teach, exams are created for, and students are registered in.</p>
+          <div className="course-units-admin">
+            <section className="course-unit-form-panel">
+              <div className="programme-section-heading">
+                <div>
+                  <p className="admin-programmes-eyebrow">Curriculum</p>
+                  <h2>{cuEditId ? 'Edit course unit' : 'Add a course unit'}</h2>
+                  <p>Attach a subject to a programme and set its study year, semester, and credit value.</p>
+                </div>
+              </div>
 
-            {cuError && <div style={{ background: '#fee2e2', color: '#991b1b', padding: '12px 16px', borderRadius: '8px', marginBottom: '1rem' }}>{cuError}</div>}
-            {cuSuccess && <div style={{ background: '#d1fae5', color: '#065f46', padding: '12px 16px', borderRadius: '8px', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={16} /> {cuSuccess}</div>}
+              {cuError && <div className="programme-feedback programme-feedback--error" role="alert">{cuError}</div>}
+              {cuSuccess && <div className="programme-feedback programme-feedback--success" role="status"><CheckCircle size={16} /> {cuSuccess}</div>}
 
-            <form onSubmit={handleCUSubmit} style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', marginBottom: '2rem' }}>
-              <h3 style={{ marginTop: 0, color: '#1e1b4b' }}>{cuEditId ? 'Edit Course Unit' : 'Add New Course Unit'}</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Programme *</label>
+              <form onSubmit={handleCUSubmit} className="course-unit-form">
+              <div className="course-unit-form-grid">
+                <div className="course-unit-form-wide">
+                  <label htmlFor="course-unit-programme">Programme *</label>
                   <select
+                    id="course-unit-programme"
                     value={cuForm.programme_id}
                     onChange={e => setCuForm({ ...cuForm, programme_id: e.target.value })}
                     required
-                    style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}
                   >
                     <option value="">-- Select Programme --</option>
-                    {programmes.map(p => (
+                    {programmes.filter((programme) => programme.active).map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Course Code *</label>
+                  <label htmlFor="course-unit-code">Course code *</label>
                   <input
+                    id="course-unit-code"
                     type="text"
                     value={cuForm.course_code}
                     onChange={e => setCuForm({ ...cuForm, course_code: e.target.value.toUpperCase() })}
                     placeholder="e.g. CS101"
                     required
-                    style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Credits</label>
-                  <input type="number" min="1" max="10" value={cuForm.credits} onChange={e => setCuForm({ ...cuForm, credits: +e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+                  <label htmlFor="course-unit-credits">Credits</label>
+                  <input id="course-unit-credits" type="number" min="1" max="10" value={cuForm.credits} onChange={e => setCuForm({ ...cuForm, credits: +e.target.value })} />
                 </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Course Name *</label>
+                <div className="course-unit-form-wide">
+                  <label htmlFor="course-unit-name">Course name *</label>
                   <input
+                    id="course-unit-name"
                     type="text"
                     value={cuForm.name}
                     onChange={e => setCuForm({ ...cuForm, name: e.target.value })}
                     placeholder="e.g. Introduction to Computer Science"
                     required
-                    style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Year of Study</label>
-                  <select value={cuForm.target_year} onChange={e => setCuForm({ ...cuForm, target_year: +e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}>
+                  <label htmlFor="course-unit-year">Year of study</label>
+                  <select id="course-unit-year" value={cuForm.target_year} onChange={e => setCuForm({ ...cuForm, target_year: +e.target.value })}>
                     {[1,2,3,4].map(y => <option key={y} value={y}>Year {y}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Semester</label>
-                  <select value={cuForm.target_semester} onChange={e => setCuForm({ ...cuForm, target_semester: +e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}>
+                  <label htmlFor="course-unit-semester">Semester</label>
+                  <select id="course-unit-semester" value={cuForm.target_semester} onChange={e => setCuForm({ ...cuForm, target_semester: +e.target.value })}>
                     <option value={1}>Semester 1</option>
                     <option value={2}>Semester 2</option>
                   </select>
                 </div>
                 
-                <div style={{ gridColumn: '1 / -1', marginTop: '1rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#374151', marginBottom: '10px' }}>Modules / Topics Outline (Optional)</label>
-                  <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: '12px' }}>List the syllabus topics covered in this course unit. These will be visible to students and act as a guide for lecturers.</p>
+                <div className="course-unit-topics course-unit-form-wide">
+                  <label htmlFor="course-unit-topic">Topics outline <span>(optional)</span></label>
+                  <p>List the syllabus topics covered in this course unit. These will be visible to students and act as a guide for lecturers.</p>
                   
-                  <div className="add-item-row" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <div className="course-unit-topic-entry">
                     <input 
+                      id="course-unit-topic"
                       type="text" 
                       value={newCuModule} 
                       onChange={(e) => setNewCuModule(e.target.value)} 
                       placeholder="e.g. Module 1: Introduction to Programming" 
                       onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleAddCuModule(); } }} 
-                      style={{ flex: 1, padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem' }} 
                     />
-                    <button type="button" onClick={handleAddCuModule} className="btn-secondary" style={{ padding: '0 20px', borderRadius: '8px' }}>Add Topic</button>
+                    <button type="button" onClick={handleAddCuModule} className="programme-secondary-button">Add topic</button>
                   </div>
                   
                   {cuModules.length > 0 && (
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    <ul className="course-unit-topic-list">
                       {cuModules.map((item, index) => (
-                        <li key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', border: '1px solid #e5e7eb', marginBottom: '8px', borderRadius: '8px', background: '#f9fafb' }}>
-                          <span style={{ fontSize: '0.9rem', color: '#374151' }}>{index + 1}. {item}</span>
-                          <button type="button" onClick={() => handleRemoveCuModule(index)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold' }}>&times;</button>
+                        <li key={index}>
+                          <span>{index + 1}. {item}</span>
+                          <button type="button" onClick={() => handleRemoveCuModule(index)} aria-label={`Remove topic ${index + 1}`}><X size={15} /></button>
                         </li>
                       ))}
                     </ul>
                   )}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                <button type="submit" className="btn-primary">{cuEditId ? 'Update Unit' : 'Create Unit'}</button>
-                {cuEditId && <button type="button" className="btn-secondary" onClick={() => { setCuEditId(null); setCuForm({ programme_id: '', course_code: '', name: '', credits: 3, target_year: 1, target_semester: 1 }); setCuModules([]); }}>Cancel Edit</button>}
+              <div className="course-unit-form-actions">
+                <button type="submit" className="programme-primary-button">{cuEditId ? 'Update unit' : 'Create unit'}</button>
+                {cuEditId && <button type="button" className="programme-back-button" onClick={() => { setCuEditId(null); setCuForm({ programme_id: '', course_code: '', name: '', credits: 3, target_year: 1, target_semester: 1 }); setCuModules([]); }}>Cancel edit</button>}
               </div>
-            </form>
+              </form>
+            </section>
 
-            {cuLoading ? (
-              <p>Loading course units...</p>
-            ) : courseUnits.length > 0 ? (
-              <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
-                <thead style={{ background: '#f8fafc' }}>
-                  <tr>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.8rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Code</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.8rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.8rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Programme</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Yr/Sem</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Credits</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.8rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {courseUnits.map((unit, i) => (
-                    <tr key={unit.id} style={{ borderTop: '1px solid #f1f5f9', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
-                      <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontWeight: 700, color: '#6366f1', fontSize: '0.95rem' }}>{unit.course_code}</td>
-                      <td style={{ padding: '12px 16px', color: '#1e293b' }}>
-                        {unit.name}
-                        {unit.modules && unit.modules.length > 0 && (
-                          <span style={{ marginLeft: '8px', fontSize: '0.7rem', background: '#dcfce7', color: '#166534', padding: '2px 6px', borderRadius: '12px' }}>
-                            {unit.modules.length} Modules
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '0.875rem' }}>{unit.programme_name}</td>
-                      <td style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>Y{unit.target_year} S{unit.target_semester}</td>
-                      <td style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>{unit.credits}</td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                        <button onClick={() => handleCUEdit(unit)} style={{ background: '#e0e7ff', color: '#4338ca', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, marginRight: '8px', fontSize: '0.8rem' }}>Edit</button>
-                        <button onClick={() => handleCUDelete(unit.id)} style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}>Delete</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '12px', color: '#9ca3af' }}>
-                <BookOpen size={40} style={{ color: '#9ca3af', marginBottom: '0.5rem' }} />
-                <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>No course units yet</p>
-                <p style={{ fontSize: '0.875rem' }}>Use the form above to add course units to your programmes.</p>
+            <section className="course-unit-list-panel" aria-labelledby="course-unit-list-title">
+              <div className="programme-section-heading course-unit-list-heading">
+                <div>
+                  <p className="admin-programmes-eyebrow">Curriculum</p>
+                  <h2 id="course-unit-list-title">Course unit library <span>{filteredCourseUnits.length}</span></h2>
+                  <p>Review and update units already assigned to programmes.</p>
+                </div>
+                <label className="programme-search course-unit-search">
+                  <Search size={17} aria-hidden="true" />
+                  <span className="programmes-sr-only">Search course units</span>
+                  <input type="search" value={courseUnitSearch} onChange={(event) => setCourseUnitSearch(event.target.value)} placeholder="Search units or programmes" />
+                  {courseUnitSearch && <button type="button" onClick={() => setCourseUnitSearch('')} aria-label="Clear search"><X size={15} /></button>}
+                </label>
               </div>
-            )}
+              {cuLoading ? (
+                <div className="programme-state" role="status"><span className="programme-spinner" /> Loading course units…</div>
+              ) : cuLoadFailed ? (
+                <div className="programme-state programme-state--error" role="alert">
+                  <p>{cuLoadError?.response?.data?.message || 'Course units could not be loaded.'}</p>
+                  <button type="button" className="programme-secondary-button" onClick={() => fetchCourseUnits()}>Try again</button>
+                </div>
+              ) : filteredCourseUnits.length > 0 ? (
+                <div className="programmes-table course-units-table">
+                  <table className="admin-programme-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Code</th>
+                        <th scope="col">Course unit</th>
+                        <th scope="col">Programme</th>
+                        <th scope="col">Year / term</th>
+                        <th scope="col">Credits</th>
+                        <th scope="col"><span className="programmes-sr-only">Actions</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredCourseUnits.map((unit) => (
+                        <tr key={unit.id}>
+                          <td><span className="course-unit-code">{unit.course_code}</span></td>
+                          <td>
+                            <strong>{unit.name}</strong>
+                            {unit.modules?.length > 0 && <span className="course-unit-module-count">{unit.modules.length} topics</span>}
+                          </td>
+                          <td>{unit.programme_name}</td>
+                          <td>Year {unit.target_year}, semester {unit.target_semester}</td>
+                          <td>{unit.credits}</td>
+                          <td>
+                            <div className="programme-row-actions">
+                              <button type="button" onClick={() => handleCUEdit(unit)} className="programme-edit-button"><Pencil size={14} /> Edit</button>
+                              <button type="button" onClick={() => handleCUDelete(unit.id)} className="programme-delete-button"><Trash2 size={14} /> Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : courseUnits.length > 0 ? (
+                <div className="programme-state"><Search size={23} /><p>No course units match your search.</p></div>
+              ) : (
+                <div className="programme-state">
+                  <BookOpen size={24} />
+                  <p>No course units yet. Add one using the form above.</p>
+                </div>
+              )}
+            </section>
           </div>
         ) : (
           <div className="categories-ui">
-            <h2>Homepage Cards Configuration</h2>
-            <p style={{ marginBottom: '2rem', color: 'var(--color-text-light)' }}>Manage the dynamic images that appear on the 4 programme cards on the public homepage.</p>
+            <section className="homepage-cards-panel" aria-labelledby="homepage-cards-title">
+              <div className="programme-section-heading">
+                <div>
+                  <p className="admin-programmes-eyebrow">Public homepage</p>
+                  <h2 id="homepage-cards-title">Homepage card imagery</h2>
+                  <p>Manage the images shown on the programme cards across the public homepage.</p>
+                </div>
+              </div>
             
-            {loading ? (
-              <p>Loading categories...</p>
+            {loadingCategories ? (
+              <div className="programme-state" role="status"><span className="programme-spinner" /> Loading homepage cards…</div>
+            ) : categoriesLoadFailed ? (
+              <div className="programme-state programme-state--error" role="alert">
+                <p>{categoriesLoadError?.response?.data?.message || 'Homepage cards could not be loaded.'}</p>
+                <button type="button" className="programme-secondary-button" onClick={() => fetchCategories()}>Try again</button>
+              </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+              <div className="homepage-card-grid">
                 {categories.map(cat => (
-                  <div key={cat.id} style={{ border: '1px solid var(--color-border)', borderRadius: '12px', overflow: 'hidden', backgroundColor: 'white' }}>
-                    <div style={{ height: '200px', backgroundColor: '#f0f4f8', position: 'relative' }}>
+                  <article key={cat.id} className="homepage-card">
+                    <div className="homepage-card-image">
                       {cat.image_url ? (
-                        <img src={cat.image_url} alt={cat.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={cat.image_url} alt={`${cat.title} programme card`} />
                       ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text-light)' }}>
-                          No Image Uploaded
+                        <div className="homepage-card-empty">
+                          <Image size={24} />
+                          <span>No image uploaded</span>
                         </div>
                       )}
                     </div>
-                    <div style={{ padding: '1.5rem' }}>
-                      <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.2rem', color: 'var(--color-secondary)' }}>{cat.title}</h3>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <label className="btn-secondary" style={{ cursor: 'pointer', padding: '0.5rem 1rem', display: 'inline-block', opacity: uploadingCategory === cat.id ? 0.5 : 1 }}>
-                          {uploadingCategory === cat.id ? 'Uploading...' : 'Replace Image'}
-                          <input 
+                    <div className="homepage-card-content">
+                      <h3>{cat.title}</h3>
+                      <label className="programme-secondary-button homepage-card-upload">
+                        <Upload size={15} />
+                        {uploadingCategory === cat.id ? 'Uploading…' : cat.image_url ? 'Replace image' : 'Upload image'}
+                        <input
                             type="file" 
                             accept="image/*" 
-                            style={{ display: 'none' }}
+                            className="programme-file-input"
                             onChange={(e) => handleImageUpload(e, cat.id)}
                             disabled={uploadingCategory === cat.id}
                           />
-                        </label>
-                      </div>
+                      </label>
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
             )}
+            </section>
           </div>
         )}
       </main>

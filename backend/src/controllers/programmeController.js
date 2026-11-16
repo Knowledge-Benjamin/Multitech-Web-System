@@ -84,6 +84,11 @@ export const getProgrammes = asyncHandler(async (req, res) => {
   res.json({ success: true, data: result.rows })
 })
 
+export const getAdminProgrammes = asyncHandler(async (req, res) => {
+  const result = await pool.query('SELECT * FROM programmes ORDER BY name ASC')
+  res.json({ success: true, data: result.rows })
+})
+
 // Get single programme
 export const getProgrammeById = asyncHandler(async (req, res) => {
   const { id } = req.params

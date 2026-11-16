@@ -1,265 +1,1070 @@
-/* AdminProgrammes.css */
-
-.content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-3xl);
+.scope-adminprogrammes {
+  --programme-ink: #1b2942;
+  --programme-muted: #68758a;
+  --programme-blue: #1d57ad;
+  --programme-blue-dark: #17488f;
+  --programme-line: #e4e9f1;
+  --programme-surface: #fff;
+  --programme-canvas: #f5f7fb;
+  --programme-gold: #b98d35;
+  color: var(--programme-ink);
 }
 
-.content-header h1 {
+.scope-adminprogrammes .admin-content {
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2.8rem);
+}
+
+.scope-adminprogrammes .admin-content h1,
+.scope-adminprogrammes .admin-content h2,
+.scope-adminprogrammes .admin-content h3 {
+  color: var(--programme-ink);
+  font-family: var(--font-family-display);
+  letter-spacing: -0.035em;
+}
+
+.scope-adminprogrammes .admin-content h1 {
   margin: 0;
-  color: var(--color-primary);
-  font-size: var(--font-size-3xl);
-}
-
-.btn-primary {
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: var(--font-weight-semibold);
-  transition: all var(--transition-fast);
-}
-
-.btn-primary:hover {
-  background: var(--color-secondary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-secondary {
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--color-border);
-  color: var(--color-text-primary);
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: var(--font-weight-semibold);
-  transition: all var(--transition-fast);
-}
-
-.btn-secondary:hover {
-  background: var(--color-text-secondary);
-  color: white;
-}
-
-.form-container {
-  background: white;
-  border-radius: 12px;
-  padding: var(--spacing-2xl);
-  margin-bottom: var(--spacing-2xl);
-  box-shadow: var(--shadow-sm);
-}
-
-.form-container h2 {
-  margin: 0 0 var(--spacing-2xl) 0;
-  color: var(--color-primary);
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--spacing-lg);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.form-group.full-width {
-  grid-column: 1 / -1;
-}
-
-.form-group label {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-size: var(--font-size-base);
-  font-family: inherit;
-  transition: border-color var(--transition-fast);
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
-}
-
-.form-actions {
-  display: flex;
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-lg);
-}
-
-.form-actions button {
-  flex: 1;
-}
-
-.programmes-table {
-  background: white;
-  border-radius: 12px;
-  padding: var(--spacing-2xl);
-  box-shadow: var(--shadow-sm);
-  overflow-x: auto;
-}
-
-.programmes-table table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.programmes-table th {
-  background: var(--color-bg-light);
-  padding: var(--spacing-md);
-  text-align: left;
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  border-bottom: 2px solid var(--color-border);
-}
-
-.programmes-table td {
-  padding: var(--spacing-md);
-  border-bottom: 1px solid var(--color-border);
-  font-size: var(--font-size-sm);
-}
-
-.programmes-table tbody tr:hover {
-  background: rgba(0, 82, 204, 0.05);
-}
-
-.actions {
-  display: flex;
-  gap: var(--spacing-md);
-}
-
-.btn-edit {
-  padding: 4px 12px;
-  background: var(--color-accent-blue);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-size-xs);
-  transition: all var(--transition-fast);
-}
-
-.btn-edit:hover {
-  background: var(--color-primary);
-}
-
-.btn-delete {
-  padding: 4px 12px;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-size-xs);
-  transition: all var(--transition-fast);
-}
-
-.btn-delete:hover {
-  background: #dc2626;
-}
-
-.empty-state {
-  text-align: center;
-  padding: var(--spacing-3xl);
-  color: var(--color-text-secondary);
-}
-
-@media (max-width: 768px) {
-  .content-header {
-    flex-direction: column;
-    gap: var(--spacing-lg);
-    align-items: flex-start;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .programmes-table {
-    padding: var(--spacing-lg);
-  }
-}
-
-/* Extended Form Styles */
-.extended-form {
-  max-width: 900px !important;
-}
-
-.form-tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-  border-bottom: 2px solid #eee;
-}
-
-.form-tabs button {
-  background: none;
-  border: none;
-  padding: 0.8rem 1.5rem;
-  font-size: 1rem;
+  font-size: clamp(2rem, 3.4vw, 3rem);
   font-weight: 500;
-  color: #666;
+  line-height: 1.08;
+}
+
+.scope-adminprogrammes .admin-content h1 em {
+  color: var(--programme-blue);
+  font-family: var(--font-family-editorial);
+  font-weight: 400;
+}
+
+.admin-programmes-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin: 0 auto 1.8rem;
+  max-width: 1440px;
+}
+
+.admin-programmes-heading {
+  max-width: 720px;
+}
+
+.admin-programmes-eyebrow {
+  margin: 0 0 0.6rem;
+  color: var(--programme-blue);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.admin-programmes-subtitle {
+  max-width: 620px;
+  margin: 0.8rem 0 0;
+  color: var(--programme-muted);
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+
+.scope-adminprogrammes .programme-primary-button,
+.scope-adminprogrammes .programme-secondary-button,
+.scope-adminprogrammes .programme-back-button,
+.scope-adminprogrammes .programme-cancel-button,
+.scope-adminprogrammes .programme-edit-button,
+.scope-adminprogrammes .programme-delete-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 0.7rem;
   cursor: pointer;
-  position: relative;
-  transition: color 0.2s;
+  font: 600 0.85rem/1.2 var(--font-family-sans);
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
-.form-tabs button.active {
-  color: var(--color-primary);
+.scope-adminprogrammes .programme-primary-button {
+  padding: 0.7rem 1rem;
+  background: var(--programme-blue);
+  color: #fff;
 }
 
-.form-tabs button.active::after {
-  content: '';
+.scope-adminprogrammes .programme-primary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--programme-blue-dark);
+}
+
+.scope-adminprogrammes .programme-primary-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.scope-adminprogrammes .programme-secondary-button {
+  padding: 0.65rem 0.9rem;
+  border-color: var(--programme-line);
+  background: #fff;
+  color: var(--programme-ink);
+}
+
+.scope-adminprogrammes .programme-secondary-button:hover,
+.scope-adminprogrammes .programme-back-button:hover,
+.scope-adminprogrammes .programme-cancel-button:hover {
+  border-color: #bdcce1;
+  background: #f7f9fc;
+}
+
+.scope-adminprogrammes .programme-back-button,
+.scope-adminprogrammes .programme-cancel-button {
+  padding: 0.65rem 0.85rem;
+  border-color: var(--programme-line);
+  background: transparent;
+  color: var(--programme-muted);
+}
+
+.scope-adminprogrammes .settings-tabs {
+  display: flex;
+  gap: 0.35rem;
+  max-width: 1440px;
+  margin: 0 auto 1.25rem;
+  padding: 0.35rem;
+  overflow-x: auto;
+  border: 1px solid var(--programme-line);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.scope-adminprogrammes .programme-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 42px;
+  padding: 0.65rem 0.9rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: transparent;
+  color: var(--programme-muted);
+  cursor: pointer;
+  font: 600 0.85rem/1 var(--font-family-sans);
+  white-space: nowrap;
+}
+
+.scope-adminprogrammes .programme-tab.active {
+  background: #edf3fc;
+  color: var(--programme-blue);
+}
+
+.scope-adminprogrammes .programme-tab span,
+.scope-adminprogrammes .programme-catalog-heading h2 span,
+.scope-adminprogrammes .course-unit-list-heading h2 span {
+  display: inline-grid;
+  min-width: 1.55rem;
+  height: 1.55rem;
+  place-items: center;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #fff;
+  color: inherit;
+  font: 600 0.72rem/1 var(--font-family-sans);
+}
+
+.scope-adminprogrammes .programme-catalog-panel,
+.scope-adminprogrammes .programme-form-panel,
+.scope-adminprogrammes .course-unit-form-panel,
+.scope-adminprogrammes .course-unit-list-panel,
+.scope-adminprogrammes .homepage-cards-panel {
+  max-width: 1440px;
+  margin: 0 auto 1.3rem;
+  padding: clamp(1.1rem, 2.4vw, 1.8rem);
+  border: 1px solid var(--programme-line);
+  border-radius: 1.15rem;
+  background: var(--programme-surface);
+  box-shadow: 0 12px 34px rgba(27, 41, 66, 0.045);
+}
+
+.scope-adminprogrammes .programme-catalog-heading,
+.scope-adminprogrammes .programme-section-heading,
+.scope-adminprogrammes .programme-form-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.scope-adminprogrammes .programme-catalog-heading h2,
+.scope-adminprogrammes .programme-section-heading h2,
+.scope-adminprogrammes .programme-form-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  font-size: clamp(1.35rem, 2.2vw, 1.7rem);
+  font-weight: 550;
+  line-height: 1.2;
+}
+
+.scope-adminprogrammes .programme-catalog-heading p:not(.admin-programmes-eyebrow),
+.scope-adminprogrammes .programme-section-heading p:not(.admin-programmes-eyebrow),
+.scope-adminprogrammes .programme-form-heading p:not(.admin-programmes-eyebrow) {
+  margin: 0.5rem 0 0;
+  color: var(--programme-muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.scope-adminprogrammes .programme-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: min(100%, 560px);
+}
+
+.scope-adminprogrammes .programme-search,
+.scope-adminprogrammes .programme-type-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--programme-line);
+  border-radius: 0.7rem;
+  background: #fff;
+  color: #78859a;
+}
+
+.scope-adminprogrammes .programme-search {
+  flex: 1 1 280px;
+}
+
+.scope-adminprogrammes .programme-search input,
+.scope-adminprogrammes .programme-type-filter select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  border: 0 !important;
+  outline: 0;
+  background: transparent;
+  box-shadow: none !important;
+  color: var(--programme-ink);
+  font: 400 0.84rem/1.3 var(--font-family-sans);
+}
+
+.scope-adminprogrammes .programme-search input::placeholder {
+  color: #8a95a7;
+}
+
+.scope-adminprogrammes .programme-search button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--programme-muted);
+  cursor: pointer;
+}
+
+.scope-adminprogrammes .programme-type-filter {
+  flex: 0 0 165px;
+}
+
+.programmes-sr-only {
   position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.scope-adminprogrammes .programme-results-summary {
+  margin: 1.25rem 0 0.65rem;
+  color: var(--programme-muted);
+  font-size: 0.78rem;
+}
+
+.scope-adminprogrammes .programmes-table {
+  width: 100%;
+  margin-top: 0.5rem;
+  overflow-x: auto;
+  border: 1px solid var(--programme-line);
+  border-radius: 0.85rem;
+}
+
+.scope-adminprogrammes .admin-programme-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.scope-adminprogrammes .admin-programme-table th {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--programme-line);
+  background: #f7f9fc;
+  color: #637087;
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scope-adminprogrammes .admin-programme-table td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid #edf0f5;
+  color: #536178;
+  font-size: 0.82rem;
+  vertical-align: middle;
+}
+
+.scope-adminprogrammes .admin-programme-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.scope-adminprogrammes .admin-programme-table tbody tr:hover {
+  background: #fafbfd;
+}
+
+.scope-adminprogrammes .programme-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 250px;
+}
+
+.scope-adminprogrammes .programme-thumb {
+  position: relative;
+  display: grid;
+  flex: 0 0 58px;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 0.7rem;
+  background: #edf2f8;
+  color: #8391a6;
+}
+
+.scope-adminprogrammes .programme-thumb > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scope-adminprogrammes .programme-image-upload {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 24px;
+  background: rgba(19, 34, 57, 0.84);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0;
+}
+
+.scope-adminprogrammes .programme-image-upload span {
+  max-width: 0;
+  overflow: hidden;
+  font-size: 0.62rem;
+  transition: max-width 160ms ease;
+  white-space: nowrap;
+}
+
+.scope-adminprogrammes .programme-image-upload:hover span,
+.scope-adminprogrammes .programme-image-upload:focus-within span {
+  max-width: 90px;
+}
+
+.scope-adminprogrammes .programme-identity-copy {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.scope-adminprogrammes .programme-identity-copy strong {
+  color: var(--programme-ink);
+  font-size: 0.87rem;
+  font-weight: 650;
+}
+
+.scope-adminprogrammes .programme-identity-copy > span {
+  color: var(--programme-muted);
+  font-size: 0.75rem;
+}
+
+.scope-adminprogrammes .programme-supplementary-pill,
+.scope-adminprogrammes .programme-type-pill,
+.scope-adminprogrammes .course-unit-module-count {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: #f7f1e4;
+  color: #876824;
+  font-size: 0.66rem;
+  font-weight: 650;
+}
+
+.scope-adminprogrammes .programme-type-pill {
+  background: #edf3fc;
+  color: #345f9d;
+}
+
+.scope-adminprogrammes .programme-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #68758a;
+  font-size: 0.77rem;
+  font-weight: 600;
+}
+
+.scope-adminprogrammes .programme-status-pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #9aa5b5;
+}
+
+.scope-adminprogrammes .programme-status-pill.is-active i {
+  background: #21865b;
+}
+
+.scope-adminprogrammes .programme-status-pill.is-active {
+  color: #23734f;
+}
+
+.scope-adminprogrammes .programme-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.scope-adminprogrammes .programme-edit-button,
+.scope-adminprogrammes .programme-delete-button {
+  min-height: 34px;
+  padding: 0.45rem 0.6rem;
+  border-color: var(--programme-line);
+  background: #fff;
+  color: #536178;
+  font-size: 0.75rem;
+}
+
+.scope-adminprogrammes .programme-edit-button:hover {
+  border-color: #c5d6ef;
+  background: #f2f6fc;
+  color: var(--programme-blue);
+}
+
+.scope-adminprogrammes .programme-delete-button {
+  color: #a64c4c;
+}
+
+.scope-adminprogrammes .programme-delete-button:hover {
+  border-color: #efd4d4;
+  background: #fff7f7;
+  color: #a33333;
+}
+
+.scope-adminprogrammes .programme-state {
+  display: flex;
+  min-height: 170px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 2rem;
+  color: var(--programme-muted);
+  text-align: center;
+}
+
+.scope-adminprogrammes .programme-state p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.scope-adminprogrammes .programme-state--error {
+  color: #9d4444;
+}
+
+.scope-adminprogrammes .programme-spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #dfe7f1;
+  border-top-color: var(--programme-blue);
+  border-radius: 50%;
+  animation: programme-spin 700ms linear infinite;
+}
+
+@keyframes programme-spin {
+  to { transform: rotate(360deg); }
+}
+
+.scope-adminprogrammes .programme-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  max-width: 1440px;
+  margin: 0 auto 0.8rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid;
+  border-radius: 0.75rem;
+  font-size: 0.84rem;
+}
+
+.scope-adminprogrammes .programme-feedback--error {
+  border-color: #f0d2d2;
+  background: #fff8f8;
+  color: #9d4141;
+}
+
+.scope-adminprogrammes .programme-feedback--success {
+  border-color: #cce8d9;
+  background: #f4fbf7;
+  color: #27754d;
+}
+
+.scope-adminprogrammes .programme-feedback > button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+}
+
+.scope-adminprogrammes .programme-form-panel {
+  max-width: 1040px;
+}
+
+.scope-adminprogrammes .programme-form-heading {
+  margin-bottom: 1.4rem;
+}
+
+.scope-adminprogrammes .form-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--programme-line);
+}
+
+.scope-adminprogrammes .form-tabs button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 46px;
+  padding: 0.6rem 0.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--programme-muted);
+  cursor: pointer;
+  font: 600 0.82rem/1.2 var(--font-family-sans);
+  white-space: nowrap;
+}
+
+.scope-adminprogrammes .form-tabs button span {
+  color: #99a4b4;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+}
+
+.scope-adminprogrammes .form-tabs button.active {
+  color: var(--programme-blue);
+}
+
+.scope-adminprogrammes .form-tabs button.active::after {
+  position: absolute;
+  right: 0.7rem;
+  bottom: -1px;
+  left: 0.7rem;
   height: 2px;
-  background-color: var(--color-primary);
+  background: var(--programme-blue);
+  content: '';
 }
 
-.tab-pane {
-  animation: fadeIn 0.3s ease;
+.scope-adminprogrammes .multi-tab-form,
+.scope-adminprogrammes .course-unit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
+.scope-adminprogrammes .tab-pane {
+  display: grid;
+  gap: 1.1rem;
+  animation: programme-enter 180ms ease both;
+}
+
+@keyframes programme-enter {
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.curriculum-builder input:focus {
-  outline: none;
-  border-color: var(--color-accent-blue) !important;
+.scope-adminprogrammes .form-row,
+.scope-adminprogrammes .course-unit-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
 
-.checkbox-align {
+.scope-adminprogrammes .form-group,
+.scope-adminprogrammes .course-unit-form-grid > div:not(.course-unit-topics) {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.scope-adminprogrammes .form-group label,
+.scope-adminprogrammes .course-unit-form-grid label {
+  color: #35445c;
+  font-size: 0.79rem;
+  font-weight: 650;
+}
+
+.scope-adminprogrammes .form-group input:not([type="checkbox"]):not([type="radio"]),
+.scope-adminprogrammes .form-group select,
+.scope-adminprogrammes .form-group textarea,
+.scope-adminprogrammes .course-unit-form-grid input,
+.scope-adminprogrammes .course-unit-form-grid select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #dce3ed;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: var(--programme-ink);
+  font: 400 0.86rem/1.45 var(--font-family-sans);
+}
+
+.scope-adminprogrammes .form-group textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.scope-adminprogrammes .form-group input:focus,
+.scope-adminprogrammes .form-group select:focus,
+.scope-adminprogrammes .form-group textarea:focus,
+.scope-adminprogrammes .course-unit-form-grid input:focus,
+.scope-adminprogrammes .course-unit-form-grid select:focus {
+  border-color: #4b7fca;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(29, 87, 173, 0.12);
+}
+
+.scope-adminprogrammes .form-group.full-width,
+.scope-adminprogrammes .course-unit-form-wide {
+  grid-column: 1 / -1;
+}
+
+.scope-adminprogrammes .programme-field-hint {
+  color: var(--programme-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.scope-adminprogrammes .programme-file-picker {
   display: flex;
   align-items: center;
-  margin-top: 1.5rem;
+  gap: 0.8rem;
+  min-height: 74px;
+  padding: 0.8rem 1rem;
+  border: 1px dashed #cbd6e5;
+  border-radius: 0.75rem;
+  background: #fafbfd;
+  color: var(--programme-muted);
+  cursor: pointer;
+}
+
+.scope-adminprogrammes .programme-file-picker > span:nth-child(2) {
+  display: grid;
+  flex: 1;
+  gap: 0.25rem;
+}
+
+.scope-adminprogrammes .programme-file-picker strong {
+  color: var(--programme-ink);
+  font-size: 0.83rem;
+}
+
+.scope-adminprogrammes .programme-file-picker small {
+  font-size: 0.72rem;
+}
+
+.scope-adminprogrammes .programme-file-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 0.65rem;
+  background: #edf3fc;
+  color: var(--programme-blue);
+}
+
+.scope-adminprogrammes .programme-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.scope-adminprogrammes .programme-info-note {
+  display: flex;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid #dce7f5;
+  border-radius: 0.75rem;
+  background: #f5f8fd;
+  color: var(--programme-blue);
+}
+
+.scope-adminprogrammes .programme-info-note > div {
+  color: var(--programme-ink);
+}
+
+.scope-adminprogrammes .programme-info-note strong {
+  font-size: 0.84rem;
+}
+
+.scope-adminprogrammes .programme-info-note p {
+  margin: 0.3rem 0 0;
+  color: var(--programme-muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.scope-adminprogrammes .programme-info-note a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--programme-blue);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.scope-adminprogrammes .programme-settings-card {
+  padding: 1rem;
+  border: 1px solid var(--programme-line);
+  border-radius: 0.8rem;
+}
+
+.scope-adminprogrammes .programme-settings-card h3 {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-family-sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.scope-adminprogrammes .programme-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  cursor: pointer;
+}
+
+.scope-adminprogrammes .programme-checkbox-row input {
+  margin-top: 0.2rem;
+  accent-color: var(--programme-blue);
+}
+
+.scope-adminprogrammes .programme-checkbox-row span {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.scope-adminprogrammes .programme-checkbox-row strong {
+  color: var(--programme-ink);
+  font-size: 0.82rem;
+}
+
+.scope-adminprogrammes .programme-checkbox-row small {
+  color: var(--programme-muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.scope-adminprogrammes .form-actions,
+.scope-adminprogrammes .course-unit-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #edf0f5;
+}
+
+.scope-adminprogrammes .programme-form-actions .programme-primary-button {
+  margin-left: auto;
+}
+
+.scope-adminprogrammes .course-unit-admin {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.scope-adminprogrammes .course-unit-form-grid {
+  align-items: start;
+}
+
+.scope-adminprogrammes .course-unit-topics {
+  margin-top: 0.4rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid #edf0f5;
+}
+
+.scope-adminprogrammes .course-unit-topics label span {
+  color: var(--programme-muted);
+  font-weight: 400;
+}
+
+.scope-adminprogrammes .course-unit-topics > p {
+  margin: 0.4rem 0 0.8rem;
+  color: var(--programme-muted);
+  font-size: 0.77rem;
+  line-height: 1.55;
+}
+
+.scope-adminprogrammes .course-unit-topic-entry {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.scope-adminprogrammes .course-unit-topic-entry input {
+  flex: 1;
+}
+
+.scope-adminprogrammes .course-unit-topic-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scope-adminprogrammes .course-unit-topic-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--programme-line);
+  border-radius: 0.65rem;
+  background: #fafbfd;
+  color: #46546b;
+  font-size: 0.8rem;
+}
+
+.scope-adminprogrammes .course-unit-topic-list button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #a64c4c;
+  cursor: pointer;
+}
+
+.scope-adminprogrammes .course-unit-list-panel {
+  padding-bottom: 0.8rem;
+}
+
+.scope-adminprogrammes .course-unit-search {
+  flex: 0 1 330px;
+}
+
+.scope-adminprogrammes .course-unit-code {
+  color: var(--programme-blue);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.scope-adminprogrammes .course-unit-module-count {
+  margin: 0.35rem 0 0 0.45rem;
+  background: #eef5f1;
+  color: #347653;
+  vertical-align: middle;
+}
+
+.scope-adminprogrammes .homepage-cards-panel {
+  max-width: 1440px;
+}
+
+.scope-adminprogrammes .homepage-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+  gap: 1rem;
+  margin-top: 1.4rem;
+}
+
+.scope-adminprogrammes .homepage-card {
+  overflow: hidden;
+  border: 1px solid var(--programme-line);
+  border-radius: 0.9rem;
+  background: #fff;
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.scope-adminprogrammes .homepage-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(27, 41, 66, 0.08);
+}
+
+.scope-adminprogrammes .homepage-card-image {
+  display: grid;
+  height: 190px;
+  place-items: center;
+  overflow: hidden;
+  background: #edf2f8;
+}
+
+.scope-adminprogrammes .homepage-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scope-adminprogrammes .homepage-card-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  color: #8793a6;
+  font-size: 0.78rem;
+}
+
+.scope-adminprogrammes .homepage-card-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 1rem;
+}
+
+.scope-adminprogrammes .homepage-card-content h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.scope-adminprogrammes .homepage-card-upload {
+  position: relative;
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.74rem;
+}
+
+.scope-adminprogrammes :focus-visible {
+  outline: 3px solid rgba(29, 87, 173, 0.38);
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .scope-adminprogrammes .programme-catalog-heading,
+  .scope-adminprogrammes .programme-section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .scope-adminprogrammes .programme-filters {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .scope-adminprogrammes .admin-content {
+    padding: 1.15rem 0.9rem 2rem;
+  }
+
+  .admin-programmes-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .scope-adminprogrammes .admin-programmes-header > button {
+    width: 100%;
+  }
+
+  .scope-adminprogrammes .programme-catalog-panel,
+  .scope-adminprogrammes .programme-form-panel,
+  .scope-adminprogrammes .course-unit-form-panel,
+  .scope-adminprogrammes .course-unit-list-panel,
+  .scope-adminprogrammes .homepage-cards-panel {
+    padding: 1rem;
+    border-radius: 0.9rem;
+  }
+
+  .scope-adminprogrammes .programme-filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .scope-adminprogrammes .programme-type-filter {
+    flex-basis: auto;
+  }
+
+  .scope-adminprogrammes .form-row,
+  .scope-adminprogrammes .course-unit-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scope-adminprogrammes .course-unit-form-wide {
+    grid-column: auto;
+  }
+
+  .scope-adminprogrammes .homepage-card-content {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .scope-adminprogrammes .homepage-card-upload {
+    width: 100%;
+  }
+
+  .scope-adminprogrammes .programme-form-actions {
+    flex-wrap: wrap;
+  }
+
+  .scope-adminprogrammes .programme-form-actions .programme-primary-button {
+    order: 0;
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scope-adminprogrammes *,
+  .scope-adminprogrammes *::before,
+  .scope-adminprogrammes *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -15,6 +15,7 @@ const upload = multer({
 
 // Public routes
 router.get('/', programmeController.getProgrammes)
+router.get('/admin/all', authMiddleware, adminOnly, programmeController.getAdminProgrammes)
 router.get('/:id', programmeController.getProgrammeById)
 
 // Admin routes (protected)

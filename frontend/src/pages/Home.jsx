@@ -278,11 +278,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Multitech Reasons Section (dynamic carousel) */}
+      {/* Why Multitech Reasons */}
       <section className="reasons-section fade-in-section">
         <div className="reasons-header">
           <div className="container">
-            <h2 className="section-title">Why Multitech Business School?</h2>
+            <span className="reasons-eyebrow">The Multitech difference</span>
+            <h2 className="section-title reasons-heading">
+              Why Multitech <em>Business School?</em>
+            </h2>
             <p className="about-intro">Built for ambitious students seeking practical business education.</p>
           </div>
         </div>

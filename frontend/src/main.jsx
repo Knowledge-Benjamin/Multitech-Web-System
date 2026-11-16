@@ -4,6 +4,7 @@ import App from './App'
 import axios from 'axios'
 import './styles/global.css'
 import './styles/mobile.css'
+import './styles/portal.css'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 

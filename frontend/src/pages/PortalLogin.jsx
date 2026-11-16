@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom'
 import axios from 'axios'
-import { GraduationCap, BookOpen, Eye, EyeOff, ArrowLeft, Shield, AlertCircle, Loader2 } from 'lucide-react'
+import { GraduationCap, BookOpen, Eye, EyeOff, ArrowLeft, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react'
 import './StudentLogin.css'
 
 const API = import.meta.env.VITE_API_URL
@@ -104,175 +104,187 @@ export default function PortalLogin({ defaultTab }) {
   }
 
   return (
-    <div className="student-login-wrapper">
-      <Link to="/" className="student-login-back">
+    <main className="auth-screen auth-screen-portal">
+      <Link to="/" className="auth-back-link">
         <ArrowLeft size={16} />
-        Back to Website
+        <span>Back to website</span>
       </Link>
 
-      <div className="student-login-card">
-        <div className="portal-brand-header">
-          <img src="/logo_asset.png" alt="Multitech Business School" className="portal-brand-logo" />
-          <div className="portal-header-titles">
-            <h2>Academic Portal</h2>
-            <p>
-              {activeTab === 'student'
-                ? 'Sign in to access your student records, coursework, and timetable'
-                : 'Sign in to access faculty allocations, attendance, and grades'}
-            </p>
+      <div className="auth-layout">
+        <section className="auth-intro" aria-label="Multitech academic portal">
+          <div className="auth-brand-lockup">
+            <img src="/logo_asset.png" alt="" className="auth-brand-logo" />
+            <span>Multitech<br />Business School</span>
           </div>
-        </div>
 
-        {/* Tab Switcher */}
-        <div className="portal-tab-switch" role="tablist" aria-label="Portal Selection">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'student'}
-            className={`portal-tab-btn ${activeTab === 'student' ? 'active' : ''}`}
-            onClick={() => handleTabSwitch('student')}
-          >
-            <GraduationCap size={18} />
-            <span>Student Portal</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'lecturer'}
-            className={`portal-tab-btn ${activeTab === 'lecturer' ? 'active' : ''}`}
-            onClick={() => handleTabSwitch('lecturer')}
-          >
-            <BookOpen size={18} />
-            <span>Faculty Portal</span>
-          </button>
-        </div>
-
-        {error && (
-          <div className="student-login-error" role="alert">
-            <AlertCircle size={18} style={{ flexShrink: 0 }} />
-            <span>{error}</span>
+          <p className="auth-eyebrow">Academic portal</p>
+          <h1>Everything you need to move <em>forward.</em></h1>
+          <p className="auth-intro-copy">
+            A secure place to follow your studies, stay informed, and keep your academic life in order.
+          </p>
+          <div className="auth-assurance">
+            <ShieldCheck size={18} aria-hidden="true" />
+            <span>Private access for students and faculty</span>
           </div>
-        )}
+        </section>
 
-        {/* Student Login Form */}
-        {activeTab === 'student' && (
-          <form onSubmit={handleStudentSubmit} className="student-login-form">
-            <div className="student-login-group">
-              <label htmlFor="student-id">Student Number or Email</label>
-              <input
-                type="text"
-                id="student-id"
-                className="student-login-input"
-                value={studentIdentifier}
-                onChange={(e) => setStudentIdentifier(e.target.value)}
-                placeholder="e.g. MBS/2026/0001 or email@domain.com"
-                required
-                autoComplete="username"
-              />
-            </div>
+        <section className="auth-card" aria-labelledby="portal-login-title">
+          <div className="auth-card-heading">
+            <span className="auth-card-eyebrow">Welcome back</span>
+            <h2 id="portal-login-title">Sign in to your portal</h2>
+            <p>Choose your account type, then enter your credentials.</p>
+          </div>
 
-            <div className="student-login-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label htmlFor="student-password">Password</label>
-                <span style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.6)' }}>Reference Number</span>
-              </div>
-              <div className="portal-input-password-wrapper">
-                <input
-                  type={showStudentPassword ? 'text' : 'password'}
-                  id="student-password"
-                  className="student-login-input"
-                  value={studentPassword}
-                  onChange={(e) => setStudentPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  className="portal-password-toggle"
-                  onClick={() => setShowStudentPassword(!showStudentPassword)}
-                  aria-label={showStudentPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showStudentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            <button type="submit" className="student-login-btn" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 size={18} className="btn-spinner" />
-                  <span>Authenticating...</span>
-                </>
-              ) : (
-                <span>Sign In to Student Portal</span>
-              )}
+          <div className="portal-tab-switch" role="tablist" aria-label="Choose portal">
+            <button
+              type="button"
+              role="tab"
+              id="student-tab"
+              aria-controls="student-login-panel"
+              aria-selected={activeTab === 'student'}
+              className={`portal-tab-btn ${activeTab === 'student' ? 'active' : ''}`}
+              onClick={() => handleTabSwitch('student')}
+            >
+              <GraduationCap size={18} aria-hidden="true" />
+              <span>Student</span>
             </button>
-
-            <div className="student-login-footer">
-              <Link to="/apply">Prospective student? Submit an application</Link>
-            </div>
-          </form>
-        )}
-
-        {/* Lecturer Login Form */}
-        {activeTab === 'lecturer' && (
-          <form onSubmit={handleLecturerSubmit} className="student-login-form">
-            <div className="student-login-group">
-              <label htmlFor="lecturer-email">Faculty Email Address</label>
-              <input
-                type="email"
-                id="lecturer-email"
-                className="student-login-input"
-                value={lecturerEmail}
-                onChange={(e) => setLecturerEmail(e.target.value)}
-                placeholder="e.g. lecturer@multitech.ac.ug"
-                required
-                autoComplete="email"
-              />
-            </div>
-
-            <div className="student-login-group">
-              <label htmlFor="lecturer-password">Password</label>
-              <div className="portal-input-password-wrapper">
-                <input
-                  type={showLecturerPassword ? 'text' : 'password'}
-                  id="lecturer-password"
-                  className="student-login-input"
-                  value={lecturerPassword}
-                  onChange={(e) => setLecturerPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  className="portal-password-toggle"
-                  onClick={() => setShowLecturerPassword(!showLecturerPassword)}
-                  aria-label={showLecturerPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showLecturerPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            <button type="submit" className="student-login-btn" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 size={18} className="btn-spinner" />
-                  <span>Authenticating...</span>
-                </>
-              ) : (
-                <span>Sign In to Faculty Portal</span>
-              )}
+            <button
+              type="button"
+              role="tab"
+              id="faculty-tab"
+              aria-controls="faculty-login-panel"
+              aria-selected={activeTab === 'lecturer'}
+              className={`portal-tab-btn ${activeTab === 'lecturer' ? 'active' : ''}`}
+              onClick={() => handleTabSwitch('lecturer')}
+            >
+              <BookOpen size={18} aria-hidden="true" />
+              <span>Faculty</span>
             </button>
+          </div>
 
-            <div className="student-login-footer">
-              <Link to="/contact">Faculty member needing assistance? Contact ICT Support</Link>
+          {error && (
+            <div className="auth-error" role="alert">
+              <AlertCircle size={18} aria-hidden="true" />
+              <span>{error}</span>
             </div>
-          </form>
-        )}
+          )}
+
+          {activeTab === 'student' ? (
+            <form
+              id="student-login-panel"
+              role="tabpanel"
+              aria-labelledby="student-tab"
+              onSubmit={handleStudentSubmit}
+              className="auth-form"
+            >
+              <div className="auth-field">
+                <label htmlFor="student-id">Student number or email</label>
+                <input
+                  type="text"
+                  id="student-id"
+                  className="auth-input"
+                  value={studentIdentifier}
+                  onChange={(e) => setStudentIdentifier(e.target.value)}
+                  placeholder="e.g. MBS/2026/0001 or name@example.com"
+                  required
+                  autoComplete="username"
+                />
+              </div>
+
+              <div className="auth-field">
+                <div className="auth-label-row">
+                  <label htmlFor="student-password">Password</label>
+                  <span>New applicants: use your reference number</span>
+                </div>
+                <div className="auth-password-wrap">
+                  <input
+                    type={showStudentPassword ? 'text' : 'password'}
+                    id="student-password"
+                    className="auth-input"
+                    value={studentPassword}
+                    onChange={(e) => setStudentPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="auth-password-toggle"
+                    onClick={() => setShowStudentPassword(!showStudentPassword)}
+                    aria-label={showStudentPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showStudentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" className="auth-submit" disabled={loading}>
+                {loading ? <Loader2 size={18} className="auth-spinner" aria-hidden="true" /> : null}
+                <span>{loading ? 'Signing in…' : 'Sign in to student portal'}</span>
+              </button>
+              <p className="auth-form-footer">
+                New to Multitech? <Link to="/apply">Start an application</Link>
+              </p>
+            </form>
+          ) : (
+            <form
+              id="faculty-login-panel"
+              role="tabpanel"
+              aria-labelledby="faculty-tab"
+              onSubmit={handleLecturerSubmit}
+              className="auth-form"
+            >
+              <div className="auth-field">
+                <label htmlFor="lecturer-email">Faculty email address</label>
+                <input
+                  type="email"
+                  id="lecturer-email"
+                  className="auth-input"
+                  value={lecturerEmail}
+                  onChange={(e) => setLecturerEmail(e.target.value)}
+                  placeholder="name@multitech.ac.ug"
+                  required
+                  autoComplete="username"
+                />
+              </div>
+
+              <div className="auth-field">
+                <label htmlFor="lecturer-password">Password</label>
+                <div className="auth-password-wrap">
+                  <input
+                    type={showLecturerPassword ? 'text' : 'password'}
+                    id="lecturer-password"
+                    className="auth-input"
+                    value={lecturerPassword}
+                    onChange={(e) => setLecturerPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="auth-password-toggle"
+                    onClick={() => setShowLecturerPassword(!showLecturerPassword)}
+                    aria-label={showLecturerPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showLecturerPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" className="auth-submit" disabled={loading}>
+                {loading ? <Loader2 size={18} className="auth-spinner" aria-hidden="true" /> : null}
+                <span>{loading ? 'Signing in…' : 'Sign in to faculty portal'}</span>
+              </button>
+              <p className="auth-form-footer">
+                Need assistance? <Link to="/contact">Contact ICT support</Link>
+              </p>
+            </form>
+          )}
+
+          <p className="auth-privacy-note">Your sign-in is protected by Multitech Business School.</p>
+        </section>
       </div>
-    </div>
+    </main>
   )
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowUpRight } from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
@@ -223,7 +224,10 @@ export default function Home() {
       {/* Programmes Overview */}
       <section className="programmes-section fade-in-section" ref={programmesRef}>
         <div className="container">
-          <h2 className="section-title">Our Programmes</h2>
+          <div className="home-section-heading home-section-heading--center">
+            <span className="home-section-eyebrow">Study at Multitech</span>
+            <h2 className="section-title home-section-title">Our <em>Programmes</em></h2>
+          </div>
           <div className="programmes-grid">
             {loadingCategories ? (
               <p>Loading programmes...</p>
@@ -244,35 +248,46 @@ export default function Home() {
       </section>
 
       {/* Our Campuses */}
-      <section className="campuses-section fade-in-section" style={{ background: '#f8f9fa', padding: '4rem 0' }}>
+      <section className="campuses-section fade-in-section">
         <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '2rem', color: '#1a1a1a', fontSize: '2.5rem' }}>Our Campuses</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+          <div className="home-section-heading home-section-heading--center">
+            <span className="home-section-eyebrow">A place to grow</span>
+            <h2 className="section-title home-section-title">Our <em>Campuses</em></h2>
+          </div>
+          <div className="campuses-grid">
             {campusesLoading ? (
-              <p style={{ textAlign: 'center', width: '100%' }}>Loading campuses...</p>
+              <p className="campuses-empty">Loading campuses...</p>
             ) : campuses.length > 0 ? (
-              campuses.map(campus => (
-                <div key={campus.id} style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s ease' }}>
+              campuses.map((campus, index) => (
+                <article key={campus.id} className="home-campus-card">
                   {campus.featured_image_url && (
-                    <img 
-                      src={campus.featured_image_url} 
-                      alt={campus.name} 
-                      style={{ width: '100%', height: '200px', objectFit: 'cover' }}
-                    />
+                    <div className="home-campus-image-wrap">
+                      <img
+                        src={campus.featured_image_url}
+                        alt={campus.name}
+                        className="home-campus-image"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
                   )}
-                  <div style={{ padding: '1.5rem' }}>
-                    <h3 style={{ margin: '0 0 0.5rem 0', color: '#003366', fontSize: '1.4rem' }}>{campus.name}</h3>
-                    <p style={{ color: '#666', fontSize: '0.95rem', marginBottom: '1.5rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  <div className="home-campus-content">
+                    <span className="home-campus-index" aria-hidden="true">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <h3>{campus.name}</h3>
+                    <p>
                       {campus.description || 'Discover our state-of-the-art facilities and vibrant student community at this campus.'}
                     </p>
-                    <Link to={`/campuses/${campus.slug}`} className="button button-secondary" style={{ width: '100%', textAlign: 'center' }}>
-                      Explore Campus
+                    <Link to={`/campuses/${campus.slug}`} className="home-campus-link">
+                      <span>Explore campus</span>
+                      <ArrowUpRight className="home-campus-link-arrow" size={17} aria-hidden="true" />
                     </Link>
                   </div>
-                </div>
+                </article>
               ))
             ) : (
-              <p style={{ textAlign: 'center', width: '100%', color: '#666' }}>No campuses available.</p>
+              <p className="campuses-empty">No campuses available.</p>
             )}
           </div>
         </div>
@@ -314,8 +329,8 @@ export default function Home() {
       <section className="latest-articles-section fade-in-section">
         <div className="latest-articles-container">
           <div className="latest-articles-copy">
-            <span className="section-label">Latest News & Articles</span>
-            <h2 className="section-title">Stay up to date</h2>
+            <span className="home-section-eyebrow">Latest news &amp; articles</span>
+            <h2 className="section-title home-section-title">Stay up to <em>date</em></h2>
           </div>
 
           {latestLoading ? (
@@ -342,8 +357,8 @@ export default function Home() {
       <section className="home-contact-section fade-in-section">
         <div className="container home-contact-inner">
           <div className="home-contact-copy">
-            <span className="section-label">Contact Us</span>
-            <h2 className="section-title">Have a question? Reach out to our team.</h2>
+            <span className="home-section-eyebrow">Contact us</span>
+            <h2 className="section-title home-section-title">Have a question? <em>Reach out</em> to our team.</h2>
             <p>Send us your inquiry and our admissions team will reply as soon as possible.</p>
           </div>
           <ContactForm pageUrl="/" />

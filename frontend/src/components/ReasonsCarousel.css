@@ -42,7 +42,7 @@
   margin: 0 auto;
   padding: 0;
   color: #102b4e;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-family-display);
   font-size: clamp(2.6rem, 6vw, 5.25rem);
   font-weight: 300;
   letter-spacing: -0.075em;
@@ -55,7 +55,7 @@
 
 .reasons-heading em {
   color: #0052cc;
-  font-family: "Iowan Old Style", "Baskerville", "Palatino Linotype", Georgia, serif;
+  font-family: var(--font-family-editorial);
   font-size: 0.86em;
   font-weight: 400;
   letter-spacing: -0.055em;
@@ -139,7 +139,7 @@
 
 .reason-index {
   color: rgba(0, 82, 204, 0.16);
-  font-family: "Iowan Old Style", "Baskerville", "Palatino Linotype", Georgia, serif;
+  font-family: var(--font-family-editorial);
   font-size: 3.9rem;
   font-style: italic;
   font-weight: 300;
@@ -174,7 +174,7 @@
 .reason-title {
   margin: 1.45rem 0 1rem;
   color: #122a47;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-family-display);
   font-size: clamp(1.4rem, 2vw, 1.8rem);
   font-weight: 560;
   letter-spacing: -0.055em;
@@ -183,7 +183,7 @@
 
 .reason-title em {
   color: #0052cc;
-  font-family: "Iowan Old Style", "Baskerville", "Palatino Linotype", Georgia, serif;
+  font-family: var(--font-family-editorial);
   font-size: 1.04em;
   font-weight: 400;
   letter-spacing: -0.045em;

@@ -38,6 +38,8 @@
   
   /* Typography */
   --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-family-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-family-editorial: 'Iowan Old Style', 'Baskerville', 'Palatino Linotype', Georgia, serif;
   --font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   
   --font-size-xs: 0.75rem;
@@ -128,9 +130,16 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-display);
   line-height: 1.2;
   color: var(--color-secondary);
   letter-spacing: -0.02em; /* Tighter tracking for modern feel */
+}
+
+h1 em, h2 em, h3 em, h4 em, h5 em, h6 em {
+  font-family: var(--font-family-editorial);
+  font-weight: var(--font-weight-normal);
+  letter-spacing: -0.04em;
 }
 
 h1 {

@@ -3,7 +3,7 @@
   min-height: 100vh;
   padding: 2rem;
   color: var(--color-text);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-family-sans);
 }
 
 .dashboard-header {

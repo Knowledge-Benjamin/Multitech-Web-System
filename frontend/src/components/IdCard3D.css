@@ -254,7 +254,7 @@
 }
 
 .card-institution-name {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-family-display);
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.065em;

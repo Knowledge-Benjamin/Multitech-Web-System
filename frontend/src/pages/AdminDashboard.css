@@ -391,3 +391,425 @@ a.stat-card:hover {
     gap: 1rem;
   }
 }
+
+.scope-admindashboard .dashboard-hero {
+  min-height: 170px;
+  padding: clamp(1.6rem, 3vw, 2.35rem);
+  border-color: #e3e9f2;
+  border-radius: 1.1rem;
+  background: linear-gradient(112deg, #fff 0%, #f8faff 72%, #f2f6fc 100%);
+  box-shadow: 0 8px 26px rgba(25, 45, 80, 0.045);
+}
+
+.scope-admindashboard .hero-content h1 {
+  font-size: clamp(1.9rem, 3.2vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+}
+
+.scope-admindashboard .hero-content p {
+  color: #68758a;
+  font-size: 0.92rem;
+}
+
+.scope-admindashboard .hero-badge {
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.45rem;
+  background: #edf3fc;
+  color: #3a5f94;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+}
+
+.scope-admindashboard .hero-badge-dot {
+  width: 5px;
+  height: 5px;
+  background: #3474bd;
+  box-shadow: none;
+}
+
+.scope-admindashboard .hero-decoration {
+  width: 270px;
+  height: 270px;
+  background: radial-gradient(circle, rgba(89, 143, 221, 0.12), rgba(160, 190, 233, 0.04) 55%, transparent 72%);
+}
+
+.scope-admindashboard .stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.scope-admindashboard .stat-card {
+  min-width: 0;
+  padding: 1.2rem;
+  align-items: center;
+  gap: 0.9rem;
+  border-color: #e5eaf1;
+  border-radius: 0.95rem;
+  box-shadow: 0 5px 18px rgba(25, 45, 80, 0.04);
+}
+
+.scope-admindashboard a.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.scope-admindashboard .stat-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
+}
+
+.scope-admindashboard .stat-content h3 {
+  margin-bottom: 0.35rem;
+  font-size: 0.73rem;
+}
+
+.scope-admindashboard .stat-number {
+  font-size: 1.65rem;
+}
+
+.scope-admindashboard .stat-value-row {
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+}
+
+.scope-admindashboard .stat-caption {
+  color: #8792a4;
+  font-size: 0.74rem;
+  font-weight: 500;
+}
+
+.scope-admindashboard .dashboard-analytics {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.9fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.scope-admindashboard .analytics-card {
+  min-width: 0;
+  padding: 1.35rem 1.4rem 1.1rem;
+  border: 1px solid #e5eaf1;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(25, 45, 80, 0.04);
+}
+
+.scope-admindashboard .analytics-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.15rem;
+  margin-bottom: 0.55rem;
+}
+
+.scope-admindashboard .analytics-eyebrow {
+  margin: 0 0 0.25rem;
+  color: #78859a;
+  font-size: 0.66rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.scope-admindashboard .analytics-heading h2 {
+  margin: 0;
+  color: #1b2942;
+  font-family: var(--font-family-display);
+  font-size: 1.18rem;
+  font-weight: 550;
+  letter-spacing: -0.035em;
+}
+
+.scope-admindashboard .analytics-period {
+  flex: 0 0 auto;
+  padding: 0.38rem 0.55rem;
+  border: 1px solid #e8edf4;
+  border-radius: 0.5rem;
+  color: #718097;
+  font-size: 0.7rem;
+  font-weight: 550;
+}
+
+.scope-admindashboard .activity-chart {
+  width: 100%;
+  height: 238px;
+}
+
+.scope-admindashboard .status-chart-layout {
+  display: grid;
+  grid-template-columns: minmax(135px, 0.95fr) minmax(115px, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 238px;
+}
+
+.scope-admindashboard .status-donut {
+  position: relative;
+  width: 100%;
+  height: 220px;
+}
+
+.scope-admindashboard .donut-total {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.scope-admindashboard .donut-total strong {
+  color: #1b2942;
+  font-family: var(--font-family-display);
+  font-size: 1.55rem;
+  font-weight: 550;
+  letter-spacing: -0.05em;
+}
+
+.scope-admindashboard .donut-total span {
+  margin-top: 0.1rem;
+  color: #8792a4;
+  font-size: 0.68rem;
+}
+
+.scope-admindashboard .status-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-height: 220px;
+  margin: 0;
+  padding: 0 0.2rem 0 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.scope-admindashboard .status-legend li,
+.scope-admindashboard .legend-name {
+  display: flex;
+  align-items: center;
+}
+
+.scope-admindashboard .status-legend li {
+  justify-content: space-between;
+  gap: 0.4rem;
+  color: #59677e;
+  font-size: 0.74rem;
+}
+
+.scope-admindashboard .legend-name {
+  min-width: 0;
+  gap: 0.45rem;
+}
+
+.scope-admindashboard .legend-name i {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+}
+
+.scope-admindashboard .status-legend strong {
+  color: #263650;
+  font-size: 0.76rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.scope-admindashboard .analytics-empty {
+  display: grid;
+  min-height: 238px;
+  place-items: center;
+  padding: 1rem;
+  color: #8792a4;
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+.scope-admindashboard .recent-section {
+  padding: 1.35rem 1.4rem 1.1rem;
+  border-color: #e5eaf1;
+  border-radius: 1rem;
+  box-shadow: 0 6px 20px rgba(25, 45, 80, 0.04);
+}
+
+.scope-admindashboard .section-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+}
+
+.scope-admindashboard .section-header h2 {
+  font-size: 1.18rem;
+  font-weight: 550;
+  letter-spacing: -0.035em;
+}
+
+.scope-admindashboard .modern-table th {
+  padding: 0.8rem 0.9rem;
+}
+
+.scope-admindashboard .modern-table td {
+  padding: 0.9rem;
+}
+
+.scope-admindashboard .programme-name {
+  color: #4a5870;
+  font-size: 0.86rem;
+}
+
+.scope-admindashboard .status-pill {
+  padding: 0.32rem 0.58rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.69rem;
+  font-weight: 650;
+}
+
+.scope-admindashboard .status-pending {
+  border-color: #eee3ce;
+  background: #faf5ea;
+  color: #8d6a2d;
+}
+
+.scope-admindashboard .status-submitted {
+  border-color: #d7e4f4;
+  background: #eef4fb;
+  color: #3d6caa;
+}
+
+.scope-admindashboard .status-under_review,
+.scope-admindashboard .status-reviewing {
+  border-color: #eee3ce;
+  background: #faf5ea;
+  color: #8d6a2d;
+}
+
+.scope-admindashboard .status-accepted,
+.scope-admindashboard .status-admitted {
+  border-color: #d5e8dc;
+  background: #edf6f0;
+  color: #347454;
+}
+
+.scope-admindashboard .status-offered {
+  border-color: #d7e4f4;
+  background: #eef4fb;
+  color: #3d6caa;
+}
+
+.scope-admindashboard .status-rejected {
+  border-color: #f0dada;
+  background: #fbefef;
+  color: #a44f4f;
+}
+
+.scope-admindashboard .dashboard-error {
+  display: flex;
+  min-height: 52vh;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.scope-admindashboard .dashboard-error h1 {
+  margin: 0 0 0.7rem;
+  color: #1b2942;
+  font-size: 1.8rem;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+}
+
+.scope-admindashboard .dashboard-error p {
+  margin: 0 0 1.25rem;
+  color: #68758a;
+  line-height: 1.6;
+}
+
+.scope-admindashboard .dashboard-retry-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.68rem 0.9rem;
+  border: 1px solid #d5dfec;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #285d9f;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.scope-admindashboard .dashboard-retry-button:hover {
+  border-color: #b7c9e0;
+  background: #f7faff;
+}
+
+@media (max-width: 1100px) {
+  .scope-admindashboard .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scope-admindashboard .dashboard-analytics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scope-admindashboard .status-chart-layout {
+    grid-template-columns: minmax(160px, 0.65fr) minmax(160px, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .scope-admindashboard .stats-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.7rem;
+  }
+
+  .scope-admindashboard .stat-card {
+    padding: 1rem;
+  }
+
+  .scope-admindashboard .dashboard-analytics,
+  .scope-admindashboard .recent-section {
+    margin-bottom: 0.9rem;
+  }
+
+  .scope-admindashboard .analytics-card,
+  .scope-admindashboard .recent-section {
+    padding: 1rem;
+  }
+
+  .scope-admindashboard .activity-chart {
+    height: 210px;
+  }
+
+  .scope-admindashboard .status-chart-layout {
+    grid-template-columns: minmax(120px, 0.8fr) minmax(110px, 1fr);
+    gap: 0.1rem;
+  }
+
+  .scope-admindashboard .status-donut {
+    height: 190px;
+  }
+
+  .scope-admindashboard .status-legend {
+    gap: 0.45rem;
+  }
+
+  .scope-admindashboard .status-legend li {
+    font-size: 0.68rem;
+  }
+
+  .scope-admindashboard .section-header {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .scope-admindashboard .applicant-info {
+    gap: 0.6rem;
+  }
+}

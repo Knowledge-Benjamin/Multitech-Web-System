@@ -204,6 +204,174 @@ body.admin-page .admin-content table tbody tr:hover {
   background: #f8faff;
 }
 
+body.admin-page .admin-content .content-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid #e5eaf1;
+}
+
+body.admin-page .admin-content .content-header h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 2.8vw, 2.25rem);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+}
+
+body.admin-page .scope-adminapplications .applications-container,
+body.admin-page .scope-adminapplications .detail-card,
+body.admin-page .scope-adminfees .fee-table-container,
+body.admin-page .scope-adminintakes .admin-intakes-container {
+  border: 1px solid #e5eaf1;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(25, 45, 80, 0.045);
+}
+
+body.admin-page .scope-adminapplications .inbox-controls {
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  border: 1px solid #e5eaf1;
+  border-radius: 0.9rem;
+  box-shadow: 0 4px 14px rgba(25, 45, 80, 0.035);
+}
+
+body.admin-page .scope-adminapplications .filter-btn {
+  border-color: #e4e9f1;
+  border-radius: 0.6rem;
+  color: #64728a;
+}
+
+body.admin-page .scope-adminapplications .filter-btn.active {
+  border-color: #245da7;
+  background: #245da7;
+  color: #fff;
+}
+
+body.admin-page .scope-adminapplications .filter-btn:not(.active):hover {
+  border-color: #ccd9e9;
+  background: #f7faff;
+  color: #2e4e78;
+}
+
+body.admin-page .scope-adminapplications .applications-container table,
+body.admin-page .scope-adminfees .fee-table-container table,
+body.admin-page .scope-adminintakes .admin-intakes-container table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+body.admin-page .scope-adminapplications .applications-container thead th,
+body.admin-page .scope-adminfees .fee-table-container thead th,
+body.admin-page .scope-adminintakes .admin-intakes-container thead th {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #e7ebf2;
+  background: #f7f9fc;
+  color: #69778d;
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+body.admin-page .scope-adminapplications .applications-container tbody td,
+body.admin-page .scope-adminfees .fee-table-container tbody td,
+body.admin-page .scope-adminintakes .admin-intakes-container tbody td {
+  border-bottom-color: #edf0f5;
+}
+
+body.admin-page .scope-adminapplications .applications-container tbody tr:last-child td,
+body.admin-page .scope-adminfees .fee-table-container tbody tr:last-child td,
+body.admin-page .scope-adminintakes .admin-intakes-container tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+body.admin-page .scope-adminapplications .applications-container tbody tr:hover,
+body.admin-page .scope-adminfees .fee-table-container tbody tr:hover,
+body.admin-page .scope-adminintakes .admin-intakes-container tbody tr:hover {
+  background: #f8faff;
+}
+
+body.admin-page .scope-adminapplications .status-badge {
+  padding: 0.3rem 0.58rem;
+  border: 1px solid #e3e9f1;
+  border-radius: 999px;
+  background: #f5f7fb;
+  color: #53627a;
+  font-size: 0.68rem;
+  font-weight: 650;
+}
+
+body.admin-page .scope-adminapplications .status-badge.status-pending,
+body.admin-page .scope-adminapplications .status-badge.status-under_review,
+body.admin-page .scope-adminapplications .status-badge.status-reviewing {
+  border-color: #eee3ce;
+  background: #faf5ea;
+  color: #8d6a2d;
+}
+
+body.admin-page .scope-adminapplications .status-badge.status-accepted,
+body.admin-page .scope-adminapplications .status-badge.status-admitted {
+  border-color: #d5e8dc;
+  background: #edf6f0;
+  color: #347454;
+}
+
+body.admin-page .scope-adminapplications .status-badge.status-rejected {
+  border-color: #f0dada;
+  background: #fbefef;
+  color: #a44f4f;
+}
+
+body.admin-page .scope-adminapplications .status-badge.status-submitted,
+body.admin-page .scope-adminapplications .status-badge.status-offered {
+  border-color: #d7e4f4;
+  background: #eef4fb;
+  color: #3d6caa;
+}
+
+body.admin-page .scope-adminintakes .status-badge.status-open {
+  border-color: #d5e8dc;
+  background: #edf6f0;
+  color: #347454;
+}
+
+body.admin-page .scope-adminintakes .status-badge.status-upcoming {
+  border-color: #d7e4f4;
+  background: #eef4fb;
+  color: #3d6caa;
+}
+
+body.admin-page .scope-adminintakes .status-badge.status-closed {
+  border-color: #e3e9f1;
+  background: #f5f7fb;
+  color: #68758a;
+}
+
+body.admin-page .scope-adminfees .fee-table-container {
+  padding: clamp(1rem, 2.2vw, 1.75rem);
+}
+
+body.admin-page .scope-adminintakes .admin-intakes-container {
+  padding: 0;
+  overflow: hidden;
+}
+
+body.admin-page .admin-content .modal-overlay {
+  background: rgba(18, 30, 51, 0.42);
+  backdrop-filter: blur(4px);
+}
+
+body.admin-page .admin-content .modal-content {
+  border: 1px solid #e4e9f1;
+  border-radius: 1rem;
+  box-shadow: 0 24px 70px rgba(20, 35, 60, 0.2);
+}
+
 body.admin-page .scope-adminattendancereports .admin-content {
   background: #0b1120 !important;
 }
@@ -492,6 +660,10 @@ body.admin-page .admin-main .registry-filter-bar {
     width: 100%;
     min-height: calc(100vh - 3.65rem);
     padding: 1.25rem 1rem 2rem;
+  }
+
+  body.admin-page .admin-content .content-header {
+    align-items: flex-start;
   }
 
   body.admin-page .admin-main {

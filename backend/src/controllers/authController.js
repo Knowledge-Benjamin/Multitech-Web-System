@@ -93,32 +93,65 @@ export const verifyToken = asyncHandler(async (req, res) => {
 
 // Get dashboard stats
 export const getDashboardStats = asyncHandler(async (req, res) => {
-  const programmeCount = await pool.query('SELECT COUNT(*) FROM programmes')
-  const applicationCount = await pool.query('SELECT COUNT(*) FROM applications')
-  const announcementCount = await pool.query('SELECT COUNT(*) FROM announcements')
-  const adminCount = await pool.query('SELECT COUNT(*) FROM admin_users')
-
-  // Get recent applications
-  const recentApps = await pool.query(
-    'SELECT * FROM applications ORDER BY applied_at DESC LIMIT 5'
-  )
-
-  // Get application stats by status
-  const statusStats = await pool.query(`
-    SELECT status, COUNT(*) as count 
-    FROM applications 
-    GROUP BY status
-  `)
+  const [
+    programmeCount,
+    applicationCount,
+    announcementCount,
+    adminCount,
+    recentApps,
+    statusStats,
+    applicationTrend
+  ] = await Promise.all([
+    pool.query('SELECT COUNT(*) FROM programmes'),
+    pool.query('SELECT COUNT(*) FROM applications'),
+    pool.query('SELECT COUNT(*) FROM announcements'),
+    pool.query('SELECT COUNT(*) FROM admin_users'),
+    pool.query(`
+      SELECT a.id, a.first_name, a.last_name, a.email, a.status, a.applied_at,
+        (
+          SELECT p.name
+          FROM application_choices ac
+          JOIN programme_intakes pi ON pi.id = ac.programme_intake_id
+          JOIN programmes p ON p.id = pi.programme_id
+          WHERE ac.application_id = a.id
+          ORDER BY ac.preference_order
+          LIMIT 1
+        ) AS programme_name
+      FROM applications a
+      ORDER BY a.applied_at DESC
+      LIMIT 5
+    `),
+    pool.query(`
+      SELECT status, COUNT(*)::int AS count
+      FROM applications
+      GROUP BY status
+    `),
+    pool.query(`
+      SELECT TO_CHAR(months.month_start, 'YYYY-MM') AS month,
+        COUNT(a.id)::int AS count
+      FROM generate_series(
+        date_trunc('month', CURRENT_DATE) - INTERVAL '11 months',
+        date_trunc('month', CURRENT_DATE),
+        INTERVAL '1 month'
+      ) AS months(month_start)
+      LEFT JOIN applications a
+        ON a.applied_at >= months.month_start
+        AND a.applied_at < months.month_start + INTERVAL '1 month'
+      GROUP BY months.month_start
+      ORDER BY months.month_start
+    `)
+  ])
 
   res.json({
     success: true,
     stats: {
-      programmes: parseInt(programmeCount.rows[0].count),
-      applications: parseInt(applicationCount.rows[0].count),
-      announcements: parseInt(announcementCount.rows[0].count),
-      admins: parseInt(adminCount.rows[0].count)
+      programmes: Number(programmeCount.rows[0].count),
+      applications: Number(applicationCount.rows[0].count),
+      announcements: Number(announcementCount.rows[0].count),
+      admins: Number(adminCount.rows[0].count)
     },
     recentApplications: recentApps.rows,
-    applicationStats: statusStats.rows
+    applicationStats: statusStats.rows,
+    applicationTrend: applicationTrend.rows
   })
 })

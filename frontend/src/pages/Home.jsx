@@ -20,6 +20,8 @@ export default function Home() {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [scrollSnaps, setScrollSnaps] = useState([])
   const [programmesInView, setProgrammesInView] = useState(false)
+  const [contactImageIndex, setContactImageIndex] = useState(0)
+  const [contactImagePaused, setContactImagePaused] = useState(false)
   const programmesRef = useRef(null)
 
   useEffect(() => {
@@ -56,6 +58,17 @@ export default function Home() {
 
   const { data: latestRes, isLoading: latestLoading } = useApiQuery('/articles', 'latestArticles')
   const latestArticles = (latestRes?.data || []).slice(0, 4)
+  const contactImages = latestArticles.filter((article) => article.featured_image_url)
+
+  useEffect(() => {
+    if (contactImages.length < 2 || contactImagePaused) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const timer = setInterval(() => {
+      setContactImageIndex((current) => (current + 1) % contactImages.length)
+    }, 6500)
+    return () => clearInterval(timer)
+  }, [contactImages.length, contactImagePaused])
 
   const { data: campusesRes, isLoading: campusesLoading } = useApiQuery('/campuses', 'campuses')
   const campuses = campusesRes?.data || []
@@ -356,12 +369,38 @@ export default function Home() {
 
       <section className="home-contact-section fade-in-section">
         <div className="container home-contact-inner">
-          <div className="home-contact-copy">
-            <span className="home-section-eyebrow">Contact us</span>
-            <h2 className="section-title home-section-title">Have a question? <em>Reach out</em> to our team.</h2>
-            <p>Send us your inquiry and our admissions team will reply as soon as possible.</p>
+          <div className="home-contact-form-column">
+            <div className="home-contact-copy">
+              <span className="home-section-eyebrow">Contact us</span>
+              <h2 className="section-title home-section-title">Have a question? <em>Reach out</em> to our team.</h2>
+              <p>Send us a message. We’ll be glad to help.</p>
+            </div>
+            <ContactForm pageUrl="/" />
           </div>
-          <ContactForm pageUrl="/" />
+          <div
+            className="home-contact-image-panel"
+            aria-hidden="true"
+            onMouseEnter={() => setContactImagePaused(true)}
+            onMouseLeave={() => setContactImagePaused(false)}
+          >
+            <div className="home-contact-image-stack">
+              {contactImages.map((article, index) => (
+                <img
+                  key={article.id}
+                  className={`home-contact-image${index === contactImageIndex % contactImages.length ? ' is-active' : ''}`}
+                  src={article.featured_image_url}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+              ))}
+            </div>
+            <div className="home-contact-image-wash" />
+            <div className="home-contact-image-caption">
+              <span>Multitech Business School</span>
+              <p>Let’s start a conversation.</p>
+            </div>
+          </div>
         </div>
       </section>
     </div>

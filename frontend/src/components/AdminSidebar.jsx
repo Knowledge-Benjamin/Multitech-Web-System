@@ -97,7 +97,7 @@ export default function AdminSidebar() {
           aria-label="Close navigation menu"
         />
       )}
-      <aside className={`admin-sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
+      <aside className={`admin-sidebar admin-sidebar--admin ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
         <button
           type="button"
           className="scope-adminsidebar sidebar-toggle"
@@ -109,10 +109,13 @@ export default function AdminSidebar() {
         </button>
 
         <div className="sidebar-header">
-          <div className="avatar">{isCollapsed ? 'AD' : admin.username?.charAt(0).toUpperCase()}</div>
-          <div className="header-info">
-            <h2>ADMIN</h2>
-            <p className="sidebar-text">{admin.username}</p>
+          <img src="/logo_asset.png" alt="Multitech Business School" className="sidebar-logo" />
+          <div className="sidebar-account">
+            <div className="avatar">{isCollapsed ? 'AD' : admin.username?.charAt(0).toUpperCase() || 'A'}</div>
+            <div className="header-info">
+              <h2>Admin portal</h2>
+              <p className="sidebar-text">{admin.username || 'Administrator'}</p>
+            </div>
           </div>
         </div>
 

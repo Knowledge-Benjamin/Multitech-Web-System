@@ -1,96 +1,1014 @@
-.admin-intakes-container {
-  padding: 20px;
+.scope-adminintakes {
+  --intake-ink: #1b2942;
+  --intake-muted: #68758a;
+  --intake-blue: #1d57ad;
+  --intake-blue-dark: #17488f;
+  --intake-line: #e4e9f1;
+  --intake-green: #28714e;
+  color: var(--intake-ink);
 }
 
-.header-actions {
+.scope-adminintakes .admin-content {
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2.8rem);
+}
+
+.scope-adminintakes .admin-content h1,
+.scope-adminintakes .admin-content h2,
+.scope-adminintakes .admin-content h3 {
+  color: var(--intake-ink);
+  font-family: var(--font-family-display);
+  letter-spacing: -0.035em;
+}
+
+.admin-intakes-header {
   display: flex;
+  max-width: 1440px;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  gap: 1.5rem;
+  margin: 0 auto 1.65rem;
 }
 
-.admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+.admin-intakes-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  font-weight: 500;
+  line-height: 1.08;
 }
 
-.admin-table th, .admin-table td {
-  padding: 15px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
+.admin-intakes-header h1 em {
+  color: var(--intake-blue);
+  font-family: var(--font-family-editorial);
+  font-weight: 400;
 }
 
-.admin-table th {
-  background: #f8f9fa;
-  font-weight: 600;
-  color: #333;
-}
-
-.status-badge {
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: bold;
+.intakes-eyebrow {
+  margin: 0 0 0.55rem;
+  color: var(--intake-blue);
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
   text-transform: uppercase;
 }
 
-.status-badge.active {
-  background: #e8f5e9;
-  color: #2e7d32;
+.intakes-subtitle {
+  max-width: 670px;
+  margin: 0.75rem 0 0;
+  color: var(--intake-muted);
+  font-size: 0.94rem;
+  line-height: 1.65;
 }
 
-.status-badge.archived {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
+.scope-adminintakes .intakes-primary-button,
+.scope-adminintakes .intakes-secondary-button,
+.scope-adminintakes .intakes-edit-button {
+  display: inline-flex;
+  min-height: 42px;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 0.7rem;
+  cursor: pointer;
+  font: 600 0.82rem/1.2 var(--font-family-sans);
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
-.modal-content.large {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
+.scope-adminintakes .intakes-primary-button {
+  background: var(--intake-blue);
+  color: #fff;
 }
 
-.programmes-list {
+.scope-adminintakes .intakes-primary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--intake-blue-dark);
+}
+
+.scope-adminintakes .intakes-secondary-button,
+.scope-adminintakes .intakes-edit-button {
+  border-color: var(--intake-line);
+  background: #fff;
+  color: var(--intake-ink);
+}
+
+.scope-adminintakes .intakes-secondary-button:hover:not(:disabled),
+.scope-adminintakes .intakes-edit-button:hover {
+  border-color: #bdcce1;
+  background: #f7f9fc;
+  color: var(--intake-blue);
+}
+
+.scope-adminintakes button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.scope-adminintakes .intakes-feedback {
+  display: flex;
+  max-width: 1440px;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0 auto 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid;
+  border-radius: 0.75rem;
+  font-size: 0.83rem;
+}
+
+.scope-adminintakes .intakes-feedback span {
+  flex: 1;
+}
+
+.scope-adminintakes .intakes-feedback > button {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 15px;
-  margin-bottom: 20px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 4px;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
 }
 
-.programme-checkbox {
+.scope-adminintakes .intakes-feedback--error {
+  border-color: #f0d2d2;
+  background: #fff8f8;
+  color: #9d4141;
+}
+
+.scope-adminintakes .intakes-feedback--success {
+  border-color: #cce8d9;
+  background: #f4fbf7;
+  color: #27754d;
+}
+
+.scope-adminintakes .intakes-overview,
+.scope-adminintakes .intakes-catalog {
+  max-width: 1440px;
+  margin: 0 auto 1.15rem;
+}
+
+.scope-adminintakes .intakes-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(130px, 0.7fr)) minmax(190px, 1fr);
+  gap: 0.75rem;
+}
+
+.scope-adminintakes .intakes-overview-card,
+.scope-adminintakes .intakes-overview-note {
+  display: flex;
+  min-height: 92px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid var(--intake-line);
+  border-radius: 0.85rem;
+  background: #fff;
+  color: var(--intake-muted);
+}
+
+.scope-adminintakes .intakes-overview-card {
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+
+.scope-adminintakes .intakes-overview-card:hover {
+  transform: translateY(-1px);
+  border-color: #c5d6ef;
+}
+
+.scope-adminintakes .intakes-overview-card.is-selected {
+  border-color: #c7d8f0;
+  background: #f4f8fd;
+  color: var(--intake-blue);
+}
+
+.scope-adminintakes .intakes-overview-card span,
+.scope-adminintakes .intakes-overview-note span {
+  font-size: 0.77rem;
+  font-weight: 550;
+}
+
+.scope-adminintakes .intakes-overview-card strong {
+  color: var(--intake-ink);
+  font-family: var(--font-family-display);
+  font-size: 1.75rem;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+}
+
+.scope-adminintakes .intakes-overview-note {
+  justify-content: flex-start;
+  background: linear-gradient(120deg, #fff, #f8fafd);
+  color: var(--intake-blue);
+}
+
+.scope-adminintakes .intakes-overview-note span {
+  color: var(--intake-muted);
+}
+
+.scope-adminintakes .intakes-catalog {
+  overflow: hidden;
+  border: 1px solid var(--intake-line);
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(27, 41, 66, 0.045);
+}
+
+.scope-adminintakes .intakes-catalog-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--intake-line);
+}
+
+.scope-adminintakes .intakes-catalog-heading h2 {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 14px;
+  gap: 0.65rem;
+  margin: 0;
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
+  font-weight: 550;
+  line-height: 1.2;
 }
 
-.modal-actions {
+.scope-adminintakes .intakes-catalog-heading h2 span {
+  display: inline-grid;
+  min-width: 1.55rem;
+  height: 1.55rem;
+  place-items: center;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #f1f5fb;
+  color: var(--intake-blue);
+  font: 600 0.72rem/1 var(--font-family-sans);
+}
+
+.scope-adminintakes .intakes-tools {
+  display: flex;
+  width: min(100%, 520px);
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.scope-adminintakes .intakes-search,
+.scope-adminintakes .intakes-status-select {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--intake-line);
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #78859a;
+}
+
+.scope-adminintakes .intakes-search {
+  flex: 1 1 260px;
+}
+
+.scope-adminintakes .intakes-search input,
+.scope-adminintakes .intakes-status-select select {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  border: 0 !important;
+  outline: 0;
+  background: transparent;
+  box-shadow: none !important;
+  color: var(--intake-ink);
+  font: 400 0.8rem/1.3 var(--font-family-sans);
+}
+
+.scope-adminintakes .intakes-search input::placeholder {
+  color: #8a95a7;
+}
+
+.scope-adminintakes .intakes-search > button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--intake-muted);
+  cursor: pointer;
+}
+
+.scope-adminintakes .intakes-status-select {
+  flex: 0 0 145px;
+}
+
+.intakes-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.scope-adminintakes .intakes-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.scope-adminintakes .intakes-table {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.scope-adminintakes .intakes-table th {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--intake-line);
+  background: #f7f9fc;
+  color: #637087;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scope-adminintakes .intakes-table td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid #edf0f5;
+  color: #536178;
+  font-size: 0.8rem;
+  vertical-align: middle;
+}
+
+.scope-adminintakes .intakes-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.scope-adminintakes .intakes-table tbody tr:hover {
+  background: #fafbfd;
+}
+
+.scope-adminintakes .intakes-name {
+  display: block;
+  color: var(--intake-ink);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.scope-adminintakes .intakes-intl-fee {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--intake-muted);
+  font-size: 0.7rem;
+}
+
+.scope-adminintakes .intakes-date-range {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  color: #43536a;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.scope-adminintakes .intakes-date-range > span {
+  color: #9ba6b5;
+}
+
+.scope-adminintakes .intakes-local-fee {
+  color: var(--intake-ink);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.scope-adminintakes .intakes-status {
+  display: inline-flex;
+  min-height: 25px;
+  align-items: center;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid #dfe5ed;
+  border-radius: 999px;
+  background: #f6f8fb;
+  color: #5f6c80;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.scope-adminintakes .intakes-status--open {
+  border-color: #d3e8dc;
+  background: #f2faf5;
+  color: var(--intake-green);
+}
+
+.scope-adminintakes .intakes-status--upcoming {
+  border-color: #d9e4f2;
+  background: #f3f7fc;
+  color: #46658f;
+}
+
+.scope-adminintakes .intakes-status--closed {
+  border-color: #e3e6eb;
+  background: #f5f6f8;
+  color: #717d8d;
+}
+
+.scope-adminintakes .intakes-programme-count {
+  color: var(--intake-ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.scope-adminintakes .intakes-programme-label {
+  margin-left: 0.3rem;
+  color: var(--intake-muted);
+  font-size: 0.72rem;
+}
+
+.scope-adminintakes .intakes-edit-button {
+  min-height: 34px;
+  padding: 0.45rem 0.6rem;
+  color: var(--intake-blue);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.scope-adminintakes .intakes-state {
+  display: flex;
+  min-height: 210px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 2rem;
+  color: var(--intake-muted);
+  text-align: center;
+}
+
+.scope-adminintakes .intakes-state p {
+  max-width: 450px;
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.scope-adminintakes .intakes-state--error {
+  color: #9d4444;
+}
+
+.scope-adminintakes .intakes-empty-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 0.9rem;
+  background: #f1f5fb;
+  color: var(--intake-blue);
+}
+
+.scope-adminintakes .intakes-empty-state h3 {
+  margin: 0.2rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 550;
+}
+
+.scope-adminintakes .intakes-spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #dfe7f1;
+  border-top-color: var(--intake-blue);
+  border-radius: 50%;
+  animation: intakes-spin 700ms linear infinite;
+}
+
+.scope-adminintakes .intakes-state .intakes-spinner,
+.scope-adminintakes .intakes-programmes-loading .intakes-spinner {
+  display: inline-block;
+}
+
+@keyframes intakes-spin {
+  to { transform: rotate(360deg); }
+}
+
+.scope-adminintakes .intakes-modal-backdrop {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.65rem, 2vw, 1.5rem);
+  overflow-y: auto;
+  background: rgba(15, 27, 47, 0.44);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.scope-adminintakes .intakes-modal {
+  width: min(100%, 860px);
+  max-height: min(92vh, 960px);
+  overflow-y: auto;
+  border: 1px solid rgba(228, 233, 241, 0.9);
+  border-radius: 1.1rem;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(18, 33, 56, 0.24);
+  animation: intakes-modal-enter 180ms ease both;
+}
+
+@keyframes intakes-modal-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.scope-adminintakes .intakes-modal-header {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.3rem clamp(1rem, 3vw, 1.6rem);
+  border-bottom: 1px solid var(--intake-line);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+}
+
+.scope-adminintakes .intakes-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 550;
+  line-height: 1.2;
+}
+
+.scope-adminintakes .intakes-modal-header > div > p:last-child {
+  margin: 0.45rem 0 0;
+  color: var(--intake-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.scope-adminintakes .intakes-modal-close {
+  display: grid;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--intake-line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--intake-muted);
+  cursor: pointer;
+}
+
+.scope-adminintakes .intakes-form {
+  display: grid;
+  gap: 1.2rem;
+  padding: 1.2rem clamp(1rem, 3vw, 1.6rem) 1.5rem;
+}
+
+.scope-adminintakes .intakes-form > .intakes-feedback {
+  margin: 0;
+}
+
+.scope-adminintakes .intakes-form-section {
+  display: grid;
+  gap: 0.9rem;
+  padding-bottom: 1.15rem;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.scope-adminintakes .intakes-form-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.scope-adminintakes .intakes-form-section-heading > span:first-child {
+  display: grid;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 0.55rem;
+  background: #edf3fc;
+  color: var(--intake-blue);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.scope-adminintakes .intakes-form-section-heading > div {
+  flex: 1;
+}
+
+.scope-adminintakes .intakes-form-section-heading h3 {
+  margin: 0;
+  font-family: var(--font-family-sans);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.scope-adminintakes .intakes-form-section-heading p {
+  margin: 0.2rem 0 0;
+  color: var(--intake-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.scope-adminintakes .intakes-selected-count {
+  align-self: center;
+  color: var(--intake-blue);
+  font-size: 0.74rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.scope-adminintakes .intakes-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  padding-left: 2.35rem;
+}
+
+.scope-adminintakes .intakes-form-field {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 0.4rem;
+}
+
+.scope-adminintakes .intakes-form-field--wide {
+  grid-column: 1 / -1;
+}
+
+.scope-adminintakes .intakes-form-field > label {
+  color: #35445c;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.scope-adminintakes .intakes-form-field > label span {
+  color: #a64c4c;
+}
+
+.scope-adminintakes .intakes-form-field input,
+.scope-adminintakes .intakes-form-field select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #dce3ed;
+  border-radius: 0.62rem;
+  background: #fff;
+  color: var(--intake-ink);
+  font: 400 0.8rem/1.4 var(--font-family-sans);
+}
+
+.scope-adminintakes .intakes-form-field input:focus,
+.scope-adminintakes .intakes-form-field select:focus {
+  border-color: #4b7fca;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(29, 87, 173, 0.12);
+}
+
+.scope-adminintakes .intakes-form-field > small {
+  color: var(--intake-muted);
+  font-size: 0.7rem;
+}
+
+.scope-adminintakes .intakes-currency-field {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid #dce3ed;
+  border-radius: 0.62rem;
+  background: #fff;
+}
+
+.scope-adminintakes .intakes-currency-field:focus-within {
+  border-color: #4b7fca;
+  box-shadow: 0 0 0 3px rgba(29, 87, 173, 0.12);
+}
+
+.scope-adminintakes .intakes-currency-field > span {
+  display: grid;
+  align-self: stretch;
+  place-items: center;
+  padding: 0 0.7rem;
+  border-right: 1px solid #e8ecf2;
+  background: #f7f9fc;
+  color: #64728a;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.scope-adminintakes .intakes-currency-field input {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.scope-adminintakes .intakes-currency-field input:focus {
+  border: 0;
+  box-shadow: none;
+}
+
+.scope-adminintakes .intakes-programme-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-left: 2.35rem;
+}
+
+.scope-adminintakes .intakes-programme-search {
+  flex: 1 1 280px;
+  min-height: 40px;
+}
+
+.scope-adminintakes .intakes-programme-search input {
+  min-height: 36px;
+}
+
+.scope-adminintakes .intakes-text-button {
+  padding: 0.45rem 0.35rem;
+  border: 0;
+  background: transparent;
+  color: var(--intake-blue);
+  cursor: pointer;
+  font: 650 0.72rem/1.2 var(--font-family-sans);
+}
+
+.scope-adminintakes .intakes-text-button:hover {
+  color: var(--intake-blue-dark);
+  text-decoration: underline;
+}
+
+.scope-adminintakes .intakes-programme-list {
+  display: grid;
+  max-height: 245px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  overflow-y: auto;
+  padding: 0.15rem 0 0.15rem 2.35rem;
+}
+
+.scope-adminintakes .intakes-programme-option {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem;
+  border: 1px solid var(--intake-line);
+  border-radius: 0.65rem;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.scope-adminintakes .intakes-programme-option:hover {
+  border-color: #c5d6ef;
+  background: #fafcff;
+}
+
+.scope-adminintakes .intakes-programme-option.is-selected {
+  border-color: #c5d6ef;
+  background: #f3f7fc;
+}
+
+.scope-adminintakes .intakes-programme-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+}
+
+.scope-adminintakes .intakes-programme-check {
+  display: grid;
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  border: 1px solid #cbd4e1;
+  border-radius: 0.35rem;
+  background: #fff;
+  color: transparent;
+}
+
+.scope-adminintakes .intakes-programme-option.is-selected .intakes-programme-check {
+  border-color: var(--intake-blue);
+  background: var(--intake-blue);
+  color: #fff;
+}
+
+.scope-adminintakes .intakes-programme-option input:focus-visible + .intakes-programme-check {
+  outline: 3px solid rgba(29, 87, 173, 0.35);
+  outline-offset: 2px;
+}
+
+.scope-adminintakes .intakes-programme-option-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.scope-adminintakes .intakes-programme-option-copy strong {
+  color: #34435a;
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.scope-adminintakes .intakes-programme-option-copy small {
+  color: var(--intake-muted);
+  font-size: 0.67rem;
+}
+
+.scope-adminintakes .intakes-no-programmes,
+.scope-adminintakes .intakes-programmes-loading {
+  margin: 0;
+  padding: 0.75rem 0 0.75rem 2.35rem;
+  color: var(--intake-muted);
+  font-size: 0.78rem;
+}
+
+.scope-adminintakes .intakes-programmes-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.scope-adminintakes .intakes-programmes-loading .intakes-spinner {
+  width: 18px;
+  height: 18px;
+}
+
+.scope-adminintakes .intakes-modal-actions {
+  position: sticky;
+  bottom: 0;
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 0.55rem;
+  margin: 0 -0.1rem -0.15rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--intake-line);
+  background: #fff;
+}
+
+.scope-adminintakes :focus-visible {
+  outline: 3px solid rgba(29, 87, 173, 0.38);
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .scope-adminintakes .intakes-catalog-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .scope-adminintakes .intakes-tools {
+    width: 100%;
+  }
+
+  .scope-adminintakes .intakes-overview {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .scope-adminintakes .intakes-overview-note {
+    grid-column: 1 / -1;
+    min-height: 60px;
+  }
+}
+
+@media (max-width: 620px) {
+  .scope-adminintakes .admin-content {
+    padding: 1.15rem 0.9rem 2rem;
+  }
+
+  .admin-intakes-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .admin-intakes-header > .intakes-primary-button {
+    width: 100%;
+  }
+
+  .scope-adminintakes .intakes-overview {
+    gap: 0.5rem;
+  }
+
+  .scope-adminintakes .intakes-overview-card {
+    min-height: 78px;
+    align-items: flex-start;
+    flex-direction: column-reverse;
+    gap: 0.25rem;
+    padding: 0.7rem;
+  }
+
+  .scope-adminintakes .intakes-overview-card strong {
+    font-size: 1.4rem;
+  }
+
+  .scope-adminintakes .intakes-overview-card span {
+    font-size: 0.67rem;
+  }
+
+  .scope-adminintakes .intakes-catalog-heading {
+    padding: 1rem;
+  }
+
+  .scope-adminintakes .intakes-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .scope-adminintakes .intakes-status-select {
+    flex-basis: auto;
+  }
+
+  .scope-adminintakes .intakes-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding-left: 0;
+  }
+
+  .scope-adminintakes .intakes-form-field--wide {
+    grid-column: auto;
+  }
+
+  .scope-adminintakes .intakes-programme-tools {
+    align-items: stretch;
+    flex-direction: column;
+    padding-left: 0;
+  }
+
+  .scope-adminintakes .intakes-programme-tools > div {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  .scope-adminintakes .intakes-programme-list {
+    grid-template-columns: minmax(0, 1fr);
+    padding-left: 0;
+  }
+
+  .scope-adminintakes .intakes-no-programmes,
+  .scope-adminintakes .intakes-programmes-loading {
+    padding-left: 0;
+  }
+
+  .scope-adminintakes .intakes-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 400px) {
+  .scope-adminintakes .intakes-overview {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .scope-adminintakes .intakes-overview-note {
+    grid-column: 1 / -1;
+  }
+
+  .scope-adminintakes .intakes-selected-count {
+    font-size: 0.68rem;
+  }
+
+  .scope-adminintakes .intakes-modal-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scope-adminintakes *,
+  .scope-adminintakes *::before,
+  .scope-adminintakes *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

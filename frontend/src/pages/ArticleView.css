@@ -83,6 +83,9 @@
   font-weight: 350;
   line-height: 1.7;
   text-wrap: pretty;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
 }
 
 .article-story-date {
@@ -126,6 +129,9 @@
 .article-story-content p {
   margin: 0 0 1.5rem;
   white-space: pre-line;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
 }
 
 .article-story-content p:first-child {

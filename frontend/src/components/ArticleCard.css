@@ -182,6 +182,9 @@
   font-size: 0.95rem;
   font-weight: 350;
   line-height: 1.7;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
 }
@@ -250,6 +253,9 @@
   font-size: 0.87rem;
   font-weight: 350;
   line-height: 1.6;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }

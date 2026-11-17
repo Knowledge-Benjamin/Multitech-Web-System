@@ -64,6 +64,9 @@
   font-size: clamp(0.98rem, 1.4vw, 1.1rem);
   font-weight: 350;
   line-height: 1.75;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
 }
 
 .articles-heading-note {

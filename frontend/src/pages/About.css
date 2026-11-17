@@ -257,6 +257,9 @@
   color: #536579;
   font-size: 1rem;
   line-height: 1.85;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
 }
 
 .about-story-copy.is-collapsed {
@@ -468,6 +471,9 @@
   color: #536579;
   font-size: 0.98rem;
   line-height: 1.8;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
 }
 
 .about-staff-grid {
@@ -529,6 +535,9 @@
   color: #69798a;
   font-size: 0.86rem;
   line-height: 1.65;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
 }
 
 .about-details-empty {

@@ -24,8 +24,34 @@ const generateReferenceNumber = async (client) => {
 // Get all applications (admin)
 export const getApplications = asyncHandler(async (req, res) => {
   const { status, intake_id, search } = req.query
+  const requestedPage = Number.parseInt(req.query.page, 10)
+  const requestedLimit = Number.parseInt(req.query.limit, 10)
+  const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1
+  const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
+    ? Math.min(requestedLimit, 100)
+    : 10
 
-  let query = `
+  const filters = []
+  const filterParams = []
+  let filterIndex = 1
+
+  if (status) {
+    filters.push(`a.status = $${filterIndex++}`)
+    filterParams.push(status)
+  }
+  if (intake_id) {
+    filters.push(`a.intake_id = $${filterIndex++}`)
+    filterParams.push(intake_id)
+  }
+  if (search) {
+    filters.push(`(a.first_name ILIKE $${filterIndex} OR a.last_name ILIKE $${filterIndex} OR a.email ILIKE $${filterIndex} OR a.reference_number ILIKE $${filterIndex})`)
+    filterParams.push(`%${search}%`)
+    filterIndex++
+  }
+
+  const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : ''
+  const offset = (page - 1) * limit
+  const query = `
     SELECT a.*, i.name AS intake_name, s.student_number, s.id AS student_id,
       (SELECT json_agg(json_build_object(
          'id', ac.id,
@@ -46,22 +72,34 @@ export const getApplications = asyncHandler(async (req, res) => {
     FROM applications a
     LEFT JOIN intakes i ON a.intake_id = i.id
     LEFT JOIN students s ON s.application_id = a.id
-    WHERE 1=1
+    ${whereClause}
+    ORDER BY a.applied_at DESC, a.id DESC
+    LIMIT $${filterIndex} OFFSET $${filterIndex + 1}
   `
-  const params = []
-  let idx = 1
+  const countQuery = `
+    SELECT COUNT(*) AS total
+    FROM applications a
+    ${whereClause}
+  `
+  const [result, countResult] = await Promise.all([
+    pool.query(query, [...filterParams, limit, offset]),
+    pool.query(countQuery, filterParams)
+  ])
+  const total = Number(countResult.rows[0].total)
+  const totalPages = Math.ceil(total / limit)
 
-  if (status) { query += ` AND a.status = $${idx++}`; params.push(status) }
-  if (intake_id) { query += ` AND a.intake_id = $${idx++}`; params.push(intake_id) }
-  if (search) {
-    query += ` AND (a.first_name ILIKE $${idx} OR a.last_name ILIKE $${idx} OR a.email ILIKE $${idx} OR a.reference_number ILIKE $${idx})`
-    params.push(`%${search}%`); idx++
-  }
-
-  query += ' ORDER BY a.applied_at DESC'
-
-  const result = await pool.query(query, params)
-  res.json({ success: true, data: result.rows })
+  res.json({
+    success: true,
+    data: result.rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1
+    }
+  })
 })
 
 // Get single application by ID or reference_number

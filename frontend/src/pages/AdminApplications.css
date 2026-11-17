@@ -1,335 +1,1309 @@
-.content-header {
-  margin-bottom: var(--spacing-2xl);
+.scope-adminapplications {
+  --applications-ink: #1b2942;
+  --applications-muted: #68758a;
+  --applications-blue: #1d57ad;
+  --applications-blue-dark: #17488f;
+  --applications-line: #e4e9f1;
+  --applications-surface: #fff;
+  --applications-green: #28714e;
+  --applications-red: #a64c4c;
+  color: var(--applications-ink);
 }
 
-.content-header h1 {
-  margin: 0;
-  color: var(--color-primary);
+.scope-adminapplications .admin-content {
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2.8rem);
 }
 
-/* Inbox Controls */
-.inbox-controls {
+.scope-adminapplications .admin-content h1,
+.scope-adminapplications .admin-content h2,
+.scope-adminapplications .admin-content h3,
+.scope-adminapplications .admin-content h4 {
+  color: var(--applications-ink);
+  font-family: var(--font-family-display);
+  letter-spacing: -0.035em;
+}
+
+.applications-header {
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
+  gap: 1.5rem;
+  max-width: 1440px;
+  margin: 0 auto 1.65rem;
+}
+
+.applications-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  font-weight: 500;
+  line-height: 1.08;
+}
+
+.applications-header h1 em {
+  color: var(--applications-blue);
+  font-family: var(--font-family-editorial);
+  font-weight: 400;
+}
+
+.applications-eyebrow {
+  margin: 0 0 0.55rem;
+  color: var(--applications-blue);
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.applications-subtitle {
+  max-width: 650px;
+  margin: 0.75rem 0 0;
+  color: var(--applications-muted);
+  font-size: 0.94rem;
+  line-height: 1.65;
+}
+
+.scope-adminapplications .applications-primary-button,
+.scope-adminapplications .applications-secondary-button,
+.scope-adminapplications .applications-back-button,
+.scope-adminapplications .applications-danger-button,
+.scope-adminapplications .applications-review-button {
+  display: inline-flex;
   align-items: center;
-  background: white;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 2rem;
-}
-
-.filter-buttons {
-  display: flex;
+  justify-content: center;
   gap: 0.5rem;
-}
-
-.filter-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border);
-  background: white;
-  border-radius: 4px;
+  min-height: 42px;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 0.7rem;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s;
+  font: 600 0.82rem/1.2 var(--font-family-sans);
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
-.filter-btn:hover {
-  background: #f8f9fa;
+.scope-adminapplications .applications-primary-button {
+  background: var(--applications-blue);
+  color: #fff;
 }
 
-.filter-btn.active {
-  background: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
+.scope-adminapplications .applications-primary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--applications-blue-dark);
 }
 
-.search-form {
+.scope-adminapplications .applications-secondary-button,
+.scope-adminapplications .applications-back-button {
+  border-color: var(--applications-line);
+  background: #fff;
+  color: var(--applications-ink);
+}
+
+.scope-adminapplications .applications-secondary-button:hover:not(:disabled),
+.scope-adminapplications .applications-back-button:hover {
+  border-color: #bdcce1;
+  background: #f7f9fc;
+}
+
+.scope-adminapplications .applications-danger-button {
+  border-color: #efd4d4;
+  background: #fff8f8;
+  color: var(--applications-red);
+}
+
+.scope-adminapplications .applications-danger-button:hover:not(:disabled) {
+  border-color: #e5bcbc;
+  background: #fff0f0;
+}
+
+.scope-adminapplications button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.scope-adminapplications .applications-feedback {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.65rem;
+  max-width: 1440px;
+  margin: 0 auto 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid;
+  border-radius: 0.75rem;
+  font-size: 0.83rem;
 }
 
-.search-form input {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  width: 300px;
+.scope-adminapplications .applications-feedback span {
+  flex: 1;
 }
 
-.search-form input:focus {
-  outline: none;
-  border-color: var(--color-primary);
+.scope-adminapplications .applications-feedback > button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
 }
 
-/* Inbox Table */
-.applications-container {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: var(--shadow-sm);
+.scope-adminapplications .applications-feedback--error {
+  border-color: #f0d2d2;
+  background: #fff8f8;
+  color: #9d4141;
 }
 
-.table-responsive {
+.scope-adminapplications .applications-feedback--success {
+  border-color: #cce8d9;
+  background: #f4fbf7;
+  color: #27754d;
+}
+
+.scope-adminapplications .applications-container,
+.scope-adminapplications .application-detail-view {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.scope-adminapplications .applications-container {
+  overflow: hidden;
+  border: 1px solid var(--applications-line);
+  border-radius: 1.1rem;
+  background: var(--applications-surface);
+  box-shadow: 0 12px 34px rgba(27, 41, 66, 0.045);
+}
+
+.scope-adminapplications .inbox-controls {
+  display: grid;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid var(--applications-line);
+  background: #fff;
+}
+
+.scope-adminapplications .filter-buttons {
+  display: flex;
+  gap: 0.3rem;
+  overflow-x: auto;
+  padding: 0.2rem;
+}
+
+.scope-adminapplications .filter-btn {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0.55rem 0.8rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: transparent;
+  color: var(--applications-muted);
+  cursor: pointer;
+  font: 600 0.78rem/1.2 var(--font-family-sans);
+  text-transform: capitalize;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.scope-adminapplications .filter-btn:hover {
+  background: #f4f6fa;
+  color: var(--applications-ink);
+}
+
+.scope-adminapplications .filter-btn.active {
+  background: #edf3fc;
+  color: var(--applications-blue);
+}
+
+.scope-adminapplications .search-form {
+  display: flex;
+  gap: 0.6rem;
+  width: min(100%, 560px);
+}
+
+.scope-adminapplications .applications-search {
+  display: flex;
+  flex: 1 1 300px;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--applications-line);
+  border-radius: 0.7rem;
+  background: #fff;
+  color: #78859a;
+}
+
+.scope-adminapplications .applications-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  border: 0 !important;
+  outline: 0;
+  background: transparent;
+  box-shadow: none !important;
+  color: var(--applications-ink);
+  font: 400 0.83rem/1.3 var(--font-family-sans);
+}
+
+.scope-adminapplications .applications-search input::placeholder {
+  color: #8a95a7;
+}
+
+.scope-adminapplications .applications-search > button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--applications-muted);
+  cursor: pointer;
+}
+
+.applications-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.scope-adminapplications .table-responsive {
+  width: 100%;
   overflow-x: auto;
 }
 
-.inbox-table {
+.scope-adminapplications .inbox-table {
   width: 100%;
+  min-width: 800px;
   border-collapse: collapse;
-}
-
-.inbox-table th {
-  background: #f8f9fa;
-  padding: 1rem;
   text-align: left;
-  border-bottom: 2px solid #eee;
-  color: #555;
-  font-weight: 600;
-  font-size: 0.95rem;
 }
 
-.inbox-table td {
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
-  vertical-align: top;
+.scope-adminapplications .inbox-table th {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--applications-line);
+  background: #f7f9fc;
+  color: #637087;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.inbox-table tr:hover {
-  background: #fafafa;
+.scope-adminapplications .inbox-table td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid #edf0f5;
+  color: #536178;
+  font-size: 0.81rem;
+  vertical-align: middle;
 }
 
-.ref-cell {
-  font-family: monospace;
-  color: var(--color-primary);
-  font-weight: 500;
+.scope-adminapplications .inbox-table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
-.text-muted {
-  color: #777;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
+.scope-adminapplications .inbox-table tbody tr:hover {
+  background: #fafbfd;
 }
 
-/* Detail View */
-.application-detail-view {
+.scope-adminapplications .applications-pagination {
   display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.detail-header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-}
-
-.detail-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
-}
-
-.detail-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.detail-card {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.detail-card h2 {
-  color: var(--color-primary);
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #eee;
-  font-size: 1.25rem;
-}
-
-.detail-card h3 {
-  color: var(--color-secondary);
-  margin-top: 0;
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
-}
-
-.card-header {
-  display: flex;
   justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--applications-line);
+  background: #fff;
 }
 
-.card-header h2 {
+.scope-adminapplications .applications-pagination > p {
   margin: 0;
-  border: none;
-  padding: 0;
+  color: var(--applications-muted);
+  font-size: 0.76rem;
 }
 
-/* Profile Grid */
-.profile-grid {
+.scope-adminapplications .applications-pagination > p strong {
+  color: var(--applications-ink);
+  font-weight: 650;
+}
+
+.scope-adminapplications .applications-pagination-controls {
   display: flex;
-  gap: 2rem;
+  align-items: center;
+  gap: 0.55rem;
 }
 
-.profile-photo {
-  width: 150px;
-  height: 150px;
-  border-radius: 8px;
+.scope-adminapplications .applications-pagination-controls > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--applications-muted);
+  font-size: 0.73rem;
+}
+
+.scope-adminapplications .applications-pagination-controls select {
+  min-height: 34px;
+  padding: 0.35rem 1.5rem 0.35rem 0.55rem;
+  border: 1px solid var(--applications-line);
+  border-radius: 0.55rem;
+  background: #fff;
+  color: var(--applications-ink);
+  font: 600 0.74rem/1 var(--font-family-sans);
+}
+
+.scope-adminapplications .applications-page-count {
+  padding: 0 0.35rem;
+  color: var(--applications-muted);
+  font-size: 0.73rem;
+  white-space: nowrap;
+}
+
+.scope-adminapplications .applications-page-button {
+  display: inline-flex;
+  min-height: 35px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--applications-line);
+  border-radius: 0.55rem;
+  background: #fff;
+  color: #536178;
+  cursor: pointer;
+  font: 600 0.73rem/1 var(--font-family-sans);
+  white-space: nowrap;
+}
+
+.scope-adminapplications .applications-page-button:hover:not(:disabled) {
+  border-color: #c5d6ef;
+  background: #f2f6fc;
+  color: var(--applications-blue);
+}
+
+.scope-adminapplications .applications-page-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.scope-adminapplications .ref-cell {
+  display: inline-flex;
+  color: var(--applications-blue);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.scope-adminapplications .application-submitted-date,
+.scope-adminapplications .application-submitted-time {
+  display: block;
+  white-space: nowrap;
+}
+
+.scope-adminapplications .application-submitted-date {
+  color: #3c4a60;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.scope-adminapplications .application-submitted-time {
+  margin-top: 0.2rem;
+  color: var(--applications-muted);
+  font-size: 0.7rem;
+}
+
+.scope-adminapplications .applicant-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 220px;
+}
+
+.scope-adminapplications .applicant-avatar {
+  display: grid;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid #dfe7f1;
+  border-radius: 50%;
+  background: #f1f5fb;
+  color: #456a9f;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.scope-adminapplications .applicant-cell > span:last-child {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.scope-adminapplications .applicant-cell strong {
+  color: var(--applications-ink);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.scope-adminapplications .text-muted {
+  display: block;
+  color: var(--applications-muted);
+  font-size: 0.73rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.scope-adminapplications .student-number {
+  display: inline-flex;
+  margin: 0.4rem 0 0 2.65rem;
+  color: var(--applications-green);
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.scope-adminapplications .applications-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 25px;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid #dfe5ed;
+  border-radius: 999px;
+  background: #f6f8fb;
+  color: #5f6c80;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  line-height: 1;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.scope-adminapplications .applications-status--paid,
+.scope-adminapplications .applications-status--admitted,
+.scope-adminapplications .applications-status--enrolled,
+.scope-adminapplications .applications-status--offered,
+.scope-adminapplications .applications-status--accepted {
+  border-color: #d3e8dc;
+  background: #f2faf5;
+  color: #28714e;
+}
+
+.scope-adminapplications .applications-status--rejected {
+  border-color: #efd4d4;
+  background: #fff7f7;
+  color: #a64c4c;
+}
+
+.scope-adminapplications .applications-status--reviewing,
+.scope-adminapplications .applications-status--under_review {
+  border-color: #eee2c9;
+  background: #fbf8f0;
+  color: #896a28;
+}
+
+.scope-adminapplications .applications-status--pending,
+.scope-adminapplications .applications-status--submitted,
+.scope-adminapplications .applications-status--bypassed {
+  border-color: #d9e4f2;
+  background: #f3f7fc;
+  color: #46658f;
+}
+
+.scope-adminapplications .applications-review-button {
+  min-height: 34px;
+  padding: 0.45rem 0.6rem;
+  border-color: var(--applications-line);
+  background: #fff;
+  color: var(--applications-blue);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.scope-adminapplications .applications-review-button:hover {
+  border-color: #c5d6ef;
+  background: #f2f6fc;
+}
+
+.scope-adminapplications .applications-state {
+  display: flex;
+  min-height: 210px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 2rem;
+  color: var(--applications-muted);
+  text-align: center;
+}
+
+.scope-adminapplications .applications-state p {
+  max-width: 440px;
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.scope-adminapplications .applications-state--error {
+  color: #9d4444;
+}
+
+.scope-adminapplications .applications-empty-state h2 {
+  margin: 0.2rem 0 0;
+  font-size: 1.18rem;
+  font-weight: 550;
+}
+
+.scope-adminapplications .applications-empty-icon {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  border-radius: 1rem;
+  background: #f1f5fb;
+  color: var(--applications-blue);
+}
+
+.scope-adminapplications .applications-spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #dfe7f1;
+  border-top-color: var(--applications-blue);
+  border-radius: 50%;
+  animation: applications-spin 700ms linear infinite;
+}
+
+@keyframes applications-spin {
+  to { transform: rotate(360deg); }
+}
+
+.scope-adminapplications .applications-back-button {
+  white-space: nowrap;
+}
+
+.scope-adminapplications .application-detail-view {
+  display: grid;
+  gap: 1rem;
+}
+
+.scope-adminapplications .detail-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--applications-line);
+  border-radius: 0.85rem;
+  background: #fff;
+}
+
+.scope-adminapplications .detail-summary > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.scope-adminapplications .detail-submitted-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--applications-muted);
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.scope-adminapplications .detail-submitted-date svg {
+  color: var(--applications-blue);
+}
+
+.scope-adminapplications .detail-reference {
+  color: var(--applications-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.scope-adminapplications .detail-refreshing {
+  color: var(--applications-muted);
+  font-size: 0.75rem;
+}
+
+.scope-adminapplications .detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.85fr);
+  align-items: start;
+  gap: 1rem;
+}
+
+.scope-adminapplications .detail-main,
+.scope-adminapplications .detail-sidebar {
+  display: grid;
+  min-width: 0;
+  gap: 1rem;
+}
+
+.scope-adminapplications .detail-sidebar {
+  position: sticky;
+  top: 1rem;
+}
+
+.scope-adminapplications .detail-card {
+  min-width: 0;
+  padding: clamp(1rem, 2vw, 1.45rem);
+  border: 1px solid var(--applications-line);
+  border-radius: 0.95rem;
+  background: var(--applications-surface);
+  box-shadow: 0 8px 26px rgba(27, 41, 66, 0.035);
+}
+
+.scope-adminapplications .detail-card h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 550;
+  line-height: 1.25;
+}
+
+.scope-adminapplications .detail-card h3 {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.scope-adminapplications .card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.scope-adminapplications .profile-grid {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 1.1rem;
+}
+
+.scope-adminapplications .profile-photo {
+  display: grid;
+  width: 132px;
+  height: 156px;
+  place-items: center;
   overflow: hidden;
-  background: #f0f0f0;
-  border: 1px solid #ddd;
+  border: 1px solid var(--applications-line);
+  border-radius: 0.8rem;
+  background: #f1f4f8;
 }
 
-.profile-photo img {
+.scope-adminapplications .profile-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.photo-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #999;
-  font-size: 0.9rem;
-}
-
-.profile-info p {
-  margin-bottom: 0.5rem;
-}
-
-/* Info Grid */
-.info-grid {
+.scope-adminapplications .photo-placeholder {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
+  justify-items: center;
+  gap: 0.45rem;
+  color: #8491a4;
+  font-size: 0.72rem;
 }
 
-.info-grid .label {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 0.25rem;
+.scope-adminapplications .profile-info h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.18rem;
+  font-weight: 550;
+}
+
+.scope-adminapplications .profile-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem 1rem;
+  margin: 1rem 0 0;
+}
+
+.scope-adminapplications .profile-facts > div {
+  min-width: 0;
+}
+
+.scope-adminapplications .profile-facts dt,
+.scope-adminapplications .info-grid .label {
+  margin: 0 0 0.25rem;
+  color: var(--applications-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.info-grid p:not(.label) {
-  font-weight: 500;
-  color: var(--color-text);
+.scope-adminapplications .profile-facts dd {
+  margin: 0;
+  color: #3c4a60;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
-/* Academic Table */
-.academic-table {
-  width: 100%;
-  border-collapse: collapse;
+.scope-adminapplications .info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
 
-.academic-table th, .academic-table td {
-  padding: 0.75rem;
-  border: 1px solid #eee;
-  text-align: left;
+.scope-adminapplications .info-grid > div {
+  min-width: 0;
 }
 
-.academic-table th {
-  background: #f8f9fa;
-  font-weight: 600;
-  color: #555;
-}
-
-/* Sidebar Docs */
-.doc-list {
-  list-style: none;
-  padding: 0;
+.scope-adminapplications .info-grid p {
   margin: 0;
 }
 
-.doc-list li {
-  margin-bottom: 1rem;
+.scope-adminapplications .info-grid p:not(.label) {
+  color: #3c4a60;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
-.doc-list a {
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-  border: 1px solid #eee;
-  border-radius: 6px;
+.scope-adminapplications .academic-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--applications-line);
+  border-radius: 0.7rem;
+}
+
+.scope-adminapplications .academic-table {
+  width: 100%;
+  min-width: 540px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.scope-adminapplications .academic-table th {
+  background: #f7f9fc;
+  color: #637087;
+  font-size: 0.67rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.scope-adminapplications .academic-table th,
+.scope-adminapplications .academic-table td {
+  padding: 0.72rem 0.8rem;
+  border-bottom: 1px solid #edf0f5;
+  font-size: 0.78rem;
+}
+
+.scope-adminapplications .academic-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.scope-adminapplications .detail-empty {
+  margin: 0;
+  color: var(--applications-muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.scope-adminapplications .docs-card .text-muted {
+  margin: -0.35rem 0 0.9rem;
+  line-height: 1.55;
+}
+
+.scope-adminapplications .drive-link {
+  width: 100%;
+  margin-bottom: 1.15rem;
+}
+
+.scope-adminapplications .docs-card h4 {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-family-sans);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.scope-adminapplications .doc-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scope-adminapplications .doc-list li {
+  min-width: 0;
+}
+
+.scope-adminapplications .doc-list a {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.15rem 0.55rem;
+  padding: 0.65rem;
+  border: 1px solid var(--applications-line);
+  border-radius: 0.7rem;
+  background: #fafbfd;
+  color: var(--applications-ink);
   text-decoration: none;
-  color: var(--color-text);
-  transition: background 0.2s;
-  background: #fafafa;
+  transition: background-color 150ms ease, border-color 150ms ease;
 }
 
-.doc-list a:hover {
-  background: #f0f4f8;
-  border-color: var(--color-accent-blue);
+.scope-adminapplications .doc-list a:hover {
+  border-color: #c5d6ef;
+  background: #f4f7fc;
 }
 
-.doc-name {
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-  word-break: break-all;
+.scope-adminapplications .doc-icon {
+  display: grid;
+  grid-row: span 2;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 0.55rem;
+  background: #edf3fc;
+  color: var(--applications-blue);
 }
 
-.doc-type {
-  font-size: 0.8rem;
-  color: #666;
-}
-
-/* Badges */
-.status-badge {
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
+.scope-adminapplications .doc-name {
+  min-width: 0;
+  color: #34435a;
+  font-size: 0.76rem;
   font-weight: 600;
-  display: inline-block;
+  overflow-wrap: anywhere;
 }
 
-.status-submitted, .status-pending { background-color: #e3f2fd; color: #1976d2; border: 1px solid #90caf9; }
-.status-under_review, .status-reviewing { background-color: #fff3e0; color: #f57c00; border: 1px solid #ffcc80; }
-.status-accepted, .status-admitted { background-color: #e8f5e9; color: #388e3c; border: 1px solid #a5d6a7; }
-.status-rejected { background-color: #ffebee; color: #d32f2f; border: 1px solid #ef9a9a; }
+.scope-adminapplications .doc-type {
+  color: var(--applications-muted);
+  font-size: 0.67rem;
+}
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .detail-grid {
+.scope-adminapplications .doc-empty {
+  padding: 0.65rem 0;
+  color: var(--applications-muted);
+  font-size: 0.78rem;
+}
+
+.scope-adminapplications .status-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin: 0 0 0.85rem;
+  color: var(--applications-muted);
+  font-size: 0.76rem;
+}
+
+.scope-adminapplications .decision-actions {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.scope-adminapplications .decision-actions > button,
+.scope-adminapplications .admission-callout > button {
+  width: 100%;
+}
+
+.scope-adminapplications .payment-verified {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+  color: var(--applications-green);
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.scope-adminapplications .admission-callout {
+  display: grid;
+  gap: 0.65rem;
+  margin-bottom: 0.9rem;
+  padding: 0.9rem;
+  border: 1px solid;
+  border-radius: 0.75rem;
+}
+
+.scope-adminapplications .admission-callout--success {
+  border-color: #d3e8dc;
+  background: #f4faf6;
+  color: var(--applications-green);
+}
+
+.scope-adminapplications .admission-callout--offer {
+  border-color: #d9e4f2;
+  background: #f4f8fd;
+  color: #355b8e;
+}
+
+.scope-adminapplications .admission-callout-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.scope-adminapplications .admission-callout-number,
+.scope-adminapplications .admission-callout-copy {
+  color: #526179;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.scope-adminapplications .admission-callout-number code {
+  padding: 0.2rem 0.4rem;
+  border: 1px solid #d3e8dc;
+  border-radius: 0.35rem;
+  background: #fff;
+  color: var(--applications-green);
+  font-weight: 700;
+}
+
+.scope-adminapplications .admission-callout-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.scope-adminapplications .fee-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0 0 0.9rem;
+  padding: 0.7rem;
+  border: 1px solid #eee2c9;
+  border-radius: 0.7rem;
+  background: #fbf8f0;
+  color: #806429;
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.scope-adminapplications .fee-warning svg {
+  flex: 0 0 auto;
+  margin-top: 0.08rem;
+}
+
+.scope-adminapplications .reviewer-notes {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.scope-adminapplications .reviewer-notes label {
+  color: #35445c;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.scope-adminapplications .reviewer-notes label span {
+  color: var(--applications-muted);
+  font-weight: 400;
+}
+
+.scope-adminapplications .reviewer-notes textarea {
+  width: 100%;
+  min-height: 82px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #dce3ed;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: var(--applications-ink);
+  font: 400 0.8rem/1.5 var(--font-family-sans);
+  resize: vertical;
+}
+
+.scope-adminapplications .reviewer-notes textarea:focus {
+  border-color: #4b7fca;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(29, 87, 173, 0.12);
+}
+
+.scope-adminapplications .programme-choice {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.6rem;
+  padding: 0.8rem;
+  border: 1px solid var(--applications-line);
+  border-radius: 0.75rem;
+  background: #fafbfd;
+}
+
+.scope-adminapplications .programme-choice--offered,
+.scope-adminapplications .programme-choice--enrolled {
+  border-color: #d3e8dc;
+  background: #f6fbf8;
+}
+
+.scope-adminapplications .programme-choice-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.scope-adminapplications .programme-choice-heading h4 {
+  margin: 0.2rem 0 0;
+  font-family: var(--font-family-sans);
+  font-size: 0.82rem;
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+.scope-adminapplications .programme-choice-heading p {
+  margin: 0.2rem 0 0;
+  color: var(--applications-muted);
+  font-size: 0.72rem;
+}
+
+.scope-adminapplications .choice-preference {
+  color: var(--applications-muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.scope-adminapplications .choice-reviewer-notes,
+.scope-adminapplications .choice-status-note {
+  margin: 0;
+  color: var(--applications-muted);
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.scope-adminapplications .choice-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.scope-adminapplications .applications-modal-backdrop {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 27, 47, 0.42);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.scope-adminapplications .applications-confirmation-modal {
+  position: relative;
+  width: min(100%, 440px);
+  padding: 1.6rem;
+  border: 1px solid rgba(228, 233, 241, 0.9);
+  border-radius: 1.1rem;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(18, 33, 56, 0.24);
+  animation: applications-modal-enter 180ms ease both;
+}
+
+@keyframes applications-modal-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.scope-adminapplications .applications-modal-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #f4f6f9;
+  color: var(--applications-muted);
+  cursor: pointer;
+}
+
+.scope-adminapplications .applications-modal-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  margin-bottom: 1rem;
+  border-radius: 0.85rem;
+}
+
+.scope-adminapplications .applications-modal-icon.is-danger {
+  background: #fff0f0;
+  color: var(--applications-red);
+}
+
+.scope-adminapplications .applications-modal-icon.is-admit {
+  background: #edf5ef;
+  color: var(--applications-green);
+}
+
+.scope-adminapplications .applications-confirmation-modal h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 550;
+  line-height: 1.25;
+}
+
+.scope-adminapplications .applications-confirmation-modal > p:not(.applications-eyebrow) {
+  margin: 0.65rem 0 1.2rem;
+  color: var(--applications-muted);
+  font-size: 0.83rem;
+  line-height: 1.6;
+}
+
+.scope-adminapplications .applications-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  padding-top: 1rem;
+  border-top: 1px solid #edf0f5;
+}
+
+.scope-adminapplications :focus-visible {
+  outline: 3px solid rgba(29, 87, 173, 0.38);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1020px) {
+  .scope-adminapplications .detail-grid {
     grid-template-columns: 1fr;
   }
+
+  .scope-adminapplications .detail-sidebar {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .scope-adminapplications .detail-sidebar > .status-card:last-child {
+    grid-column: 1 / -1;
+  }
 }
 
-@media (max-width: 768px) {
-  .inbox-controls {
+@media (max-width: 700px) {
+  .scope-adminapplications .admin-content {
+    padding: 1.15rem 0.9rem 2rem;
+  }
+
+  .applications-header {
+    align-items: flex-start;
     flex-direction: column;
-    align-items: stretch;
     gap: 1rem;
+    margin-bottom: 1.2rem;
   }
-  
-  .filter-buttons {
-    flex-wrap: wrap;
-  }
-  
-  .search-form {
-    flex-direction: column;
-  }
-  
-  .search-form input {
+
+  .applications-header > .applications-back-button {
     width: 100%;
   }
 
-  .profile-grid {
+  .scope-adminapplications .inbox-controls {
+    padding: 0.85rem;
+  }
+
+  .scope-adminapplications .applications-pagination {
+    align-items: flex-start;
     flex-direction: column;
   }
 
-  .info-grid {
+  .scope-adminapplications .applications-pagination-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .scope-adminapplications .applications-page-count {
+    margin-left: auto;
+  }
+
+  .scope-adminapplications .filter-buttons {
+    margin: 0 -0.2rem;
+  }
+
+  .scope-adminapplications .search-form {
+    width: 100%;
+  }
+
+  .scope-adminapplications .search-form > .applications-primary-button {
+    min-width: 78px;
+  }
+
+  .scope-adminapplications .detail-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .scope-adminapplications .detail-summary > .applications-danger-button {
+    width: 100%;
+  }
+
+  .scope-adminapplications .profile-grid {
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 0.8rem;
+  }
+
+  .scope-adminapplications .profile-photo {
+    width: 92px;
+    height: 112px;
+  }
+
+  .scope-adminapplications .profile-facts,
+  .scope-adminapplications .info-grid {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .scope-adminapplications .detail-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .scope-adminapplications .detail-sidebar > .status-card:last-child {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 430px) {
+  .scope-adminapplications .search-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .scope-adminapplications .search-form > .applications-primary-button {
+    width: 100%;
+  }
+
+  .scope-adminapplications .admission-callout-actions,
+  .scope-adminapplications .choice-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .scope-adminapplications .applications-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .scope-adminapplications .applications-modal-actions button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scope-adminapplications *,
+  .scope-adminapplications *::before,
+  .scope-adminapplications *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

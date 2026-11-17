@@ -1,25 +1,59 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { FileText, CheckCircle, AlertCircle } from 'lucide-react'
+import {
+  AlertCircle,
+  ArrowLeft,
+  CalendarDays,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  FolderOpen,
+  Search,
+  Trash2,
+  UserRound,
+  X
+} from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
 import './AdminApplications.css'
 
+const formatSubmissionDate = (value, options = { dateStyle: 'medium', timeStyle: 'short' }) => {
+  if (!value) return '—'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('en-UG', options).format(date)
+}
+
 export default function AdminApplications() {
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('pending')
   const [searchQuery, setSearchQuery] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
   const [selectedApp, setSelectedApp] = useState(null)
   const [adminNotes, setAdminNotes] = useState('')
   const [admitting, setAdmitting] = useState(false)
   const [downloadingLetter, setDownloadingLetter] = useState(false)
+  const [refreshingDetails, setRefreshingDetails] = useState(false)
+  const [pageError, setPageError] = useState('')
+  const [pageNotice, setPageNotice] = useState('')
+  const [confirmation, setConfirmation] = useState(null)
+  const [confirmingAction, setConfirmingAction] = useState(false)
 
   const token = localStorage.getItem('adminToken')
   const queryParams = {}
   if (statusFilter !== 'all') queryParams.status = statusFilter
   if (appliedSearch) queryParams.search = appliedSearch
+  queryParams.page = currentPage
+  queryParams.limit = pageSize
 
-  const { data: applicationsData, isLoading: loading, refetch: fetchApplications } = useApiQuery('/applications', 'adminApps', {
+  const {
+    data: applicationsData,
+    isLoading: loading,
+    isError: applicationsLoadFailed,
+    error: applicationsLoadError,
+    refetch: fetchApplications
+  } = useApiQuery('/applications', 'adminApps', {
     axiosOptions: { 
       headers: { Authorization: `Bearer ${token}` },
       params: queryParams
@@ -27,9 +61,16 @@ export default function AdminApplications() {
   })
 
   const applications = applicationsData?.data || []
+  const pagination = applicationsData?.pagination
+  const totalPages = Math.max(pagination?.totalPages || 1, 1)
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages)
+  }, [currentPage, totalPages])
 
   const handleSearchSubmit = (e) => {
     e.preventDefault()
+    setCurrentPage(1)
     setAppliedSearch(searchQuery)
   }
 
@@ -43,10 +84,11 @@ export default function AdminApplications() {
       )
       setSelectedApp(prev => ({ ...prev, payment_status: newStatus }))
       fetchApplications()
-      alert('Payment status updated')
+      setPageNotice('Payment status updated.')
+      setPageError('')
     } catch (error) {
       console.error('Error updating payment status:', error)
-      alert('Error updating payment status')
+      setPageError(error.response?.data?.message || 'Payment status could not be updated.')
     }
   }
 
@@ -58,9 +100,10 @@ export default function AdminApplications() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      alert('Payment reminder sent successfully')
+      setPageNotice('Payment reminder sent successfully.')
+      setPageError('')
     } catch (error) {
-      alert(error.response?.data?.message || 'Error sending payment reminder')
+      setPageError(error.response?.data?.message || 'The payment reminder could not be sent.')
     }
   }
 
@@ -79,16 +122,18 @@ export default function AdminApplications() {
       )
       setSelectedApp(refreshed.data.data)
       fetchApplications()
-      alert(`Choice ${newStatus === 'offered' ? 'offered' : 'rejected'} successfully`)
+      setPageNotice(`Choice ${newStatus === 'offered' ? 'offered' : 'rejected'} successfully.`)
+      setPageError('')
     } catch (error) {
-      alert(error.response?.data?.message || 'Error evaluating choice')
+      setPageError(error.response?.data?.message || 'The programme choice could not be updated.')
     }
   }
 
   const handleAdmitStudent = async (appId) => {
-    if (!confirm('Admit and enroll this student into the university ERP? This will generate their official student number, create their academic ledger, and initialize Year 1 Semester 1 enrollment.')) {
-      return
-    }
+    setConfirmation({ type: 'admit', appId })
+  }
+
+  const admitStudent = async (appId) => {
     const token = localStorage.getItem('adminToken')
     try {
       setAdmitting(true)
@@ -97,7 +142,8 @@ export default function AdminApplications() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      alert(res.data.message || 'Student admitted successfully!')
+      setPageNotice(res.data.message || 'Student admitted successfully.')
+      setPageError('')
       // Refresh application details
       const refreshed = await axios.get(
         `${import.meta.env.VITE_API_URL}/applications/${appId}`,
@@ -106,7 +152,7 @@ export default function AdminApplications() {
       setSelectedApp(refreshed.data.data)
       fetchApplications()
     } catch (err) {
-      alert(err.response?.data?.message || 'Error admitting student')
+      setPageError(err.response?.data?.message || 'The student could not be admitted.')
     } finally {
       setAdmitting(false)
     }
@@ -133,15 +179,17 @@ export default function AdminApplications() {
       link.remove()
       window.URL.revokeObjectURL(url)
     } catch (err) {
-      alert(err.response?.data?.message || 'Error downloading admission letter')
+      setPageError(err.response?.data?.message || 'The admission letter could not be downloaded.')
     } finally {
       setDownloadingLetter(false)
     }
   }
 
   const handleDelete = async (appId) => {
-    if (!confirm('Are you sure you want to delete this application? This cannot be undone.')) return
+    setConfirmation({ type: 'delete', appId })
+  }
 
+  const deleteApplication = async (appId) => {
     const token = localStorage.getItem('adminToken')
     try {
       await axios.delete(`${import.meta.env.VITE_API_URL}/applications/${appId}`, {
@@ -151,15 +199,32 @@ export default function AdminApplications() {
       if (selectedApp && selectedApp.id === appId) {
         setSelectedApp(null)
       }
+      setPageNotice('Application deleted.')
+      setPageError('')
     } catch (error) {
       console.error('Error deleting application:', error)
-      alert('Error deleting application')
+      setPageError(error.response?.data?.message || 'The application could not be deleted.')
     }
+  }
+
+  const confirmPendingAction = async () => {
+    if (!confirmation) return
+    setConfirmingAction(true)
+    if (confirmation.type === 'admit') {
+      await admitStudent(confirmation.appId)
+    } else {
+      await deleteApplication(confirmation.appId)
+    }
+    setConfirmation(null)
+    setConfirmingAction(false)
   }
 
   const viewDetails = async (app) => {
     setSelectedApp(app)
     setAdminNotes(app.admin_notes || '')
+    setPageError('')
+    setPageNotice('')
+    setRefreshingDetails(true)
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/applications/${app.id}`,
@@ -170,85 +235,162 @@ export default function AdminApplications() {
       }
     } catch (err) {
       console.error('Error refreshing application details:', err)
+      setPageError(err.response?.data?.message || 'The latest application details could not be loaded.')
+    } finally {
+      setRefreshingDetails(false)
     }
   }
+
+  useEffect(() => {
+    if (!confirmation) return undefined
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && !confirmingAction) setConfirmation(null)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [confirmation, confirmingAction])
 
   return (
     <div className="scope-adminapplications admin-layout">
       <AdminSidebar />
       <main className="admin-content">
-        <header className="content-header">
-          <h1>Applications Inbox</h1>
+        <header className="applications-header">
+          <div>
+            <p className="applications-eyebrow">Admissions</p>
+            <h1>{selectedApp ? 'Application review' : <>Applications <em>inbox</em></>}</h1>
+            <p className="applications-subtitle">
+              {selectedApp
+                ? `Review applicant details and programme choices for ${selectedApp.reference_number}.`
+                : 'Review applications, verify payment, and move each applicant through admissions.'}
+            </p>
+          </div>
+          {selectedApp && (
+            <button type="button" onClick={() => setSelectedApp(null)} className="applications-back-button">
+              <ArrowLeft size={16} /> Back to inbox
+            </button>
+          )}
         </header>
+
+        {pageError && (
+          <div className="applications-feedback applications-feedback--error" role="alert">
+            <AlertCircle size={17} />
+            <span>{pageError}</span>
+            <button type="button" onClick={() => setPageError('')} aria-label="Dismiss error"><X size={16} /></button>
+          </div>
+        )}
+        {pageNotice && (
+          <div className="applications-feedback applications-feedback--success" role="status">
+            <CheckCircle size={17} />
+            <span>{pageNotice}</span>
+            <button type="button" onClick={() => setPageNotice('')} aria-label="Dismiss notification"><X size={16} /></button>
+          </div>
+        )}
 
         {!selectedApp ? (
           <div className="applications-container">
             <div className="inbox-controls">
-              <div className="filter-buttons">
-                {['all', 'pending', 'offered', 'admitted', 'rejected'].map(status => (
+              <div className="filter-buttons" role="group" aria-label="Filter applications by status">
+                {['pending', 'offered', 'admitted', 'rejected', 'all'].map(status => (
                   <button
+                    type="button"
                     key={status}
-                    onClick={() => setStatusFilter(status)}
+                    onClick={() => {
+                      setStatusFilter(status)
+                      setCurrentPage(1)
+                    }}
                     className={`filter-btn ${statusFilter === status ? 'active' : ''}`}
+                    aria-pressed={statusFilter === status}
                   >
-                    {status === 'all' ? 'All Applications' : status.charAt(0).toUpperCase() + status.slice(1)}
+                    {status === 'all' ? 'All applications' : status.replace(/_/g, ' ')}
                   </button>
                 ))}
               </div>
               
               <form onSubmit={handleSearchSubmit} className="search-form">
+                <label className="applications-search">
+                  <Search size={17} aria-hidden="true" />
+                  <span className="applications-sr-only">Search applications</span>
                 <input 
-                  type="text" 
-                  placeholder="Search by name, email, or ref number..." 
+                  type="search"
+                  placeholder="Name, email, or reference number"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <button type="submit" className="button button-primary">Search</button>
+                {searchQuery && (
+                  <button type="button" onClick={() => { setSearchQuery(''); setAppliedSearch(''); setCurrentPage(1) }} aria-label="Clear search">
+                    <X size={15} />
+                  </button>
+                )}
+                </label>
+                <button type="submit" className="applications-primary-button">Search</button>
               </form>
             </div>
 
             {loading ? (
-              <div className="loading-state">Loading applications...</div>
+              <div className="applications-state" role="status"><span className="applications-spinner" /> Loading applications…</div>
+            ) : applicationsLoadFailed ? (
+              <div className="applications-state applications-state--error" role="alert">
+                <AlertCircle size={24} />
+                <p>{applicationsLoadError?.response?.data?.message || 'Applications could not be loaded.'}</p>
+                <button type="button" className="applications-secondary-button" onClick={() => fetchApplications()}>Try again</button>
+              </div>
             ) : applications.length > 0 ? (
+              <>
               <div className="table-responsive">
                 <table className="inbox-table">
                   <thead>
                     <tr>
-                      <th>Reference No.</th>
-                      <th>Applicant Name</th>
-                      <th>Intake</th>
-                      <th>Payment</th>
-                      <th>Status</th>
-                      <th>Action</th>
+                      <th scope="col">Reference</th>
+                      <th scope="col">Applicant</th>
+                      <th scope="col">Submitted</th>
+                      <th scope="col">Intake</th>
+                      <th scope="col">Payment</th>
+                      <th scope="col">Application status</th>
+                      <th scope="col"><span className="applications-sr-only">Actions</span></th>
                     </tr>
                   </thead>
                   <tbody>
                     {applications.map(app => (
                       <tr key={app.id}>
-                        <td className="ref-cell">{app.reference_number}</td>
+                        <td><span className="ref-cell">{app.reference_number}</span></td>
                         <td>
-                          <strong>{app.first_name} {app.last_name}</strong>
-                          <div className="text-muted">{app.email}</div>
+                          <div className="applicant-cell">
+                            <span className="applicant-avatar" aria-hidden="true">
+                              {(app.first_name?.[0] || '')}{(app.last_name?.[0] || '')}
+                            </span>
+                            <span>
+                              <strong>{app.first_name} {app.last_name}</strong>
+                              <span className="text-muted">{app.email}</span>
+                            </span>
+                          </div>
                           {app.student_number && (
-                            <div style={{ fontSize: '0.78rem', color: '#166534', fontWeight: 600, marginTop: '2px' }}>
-                              No: {app.student_number}
-                            </div>
+                            <span className="student-number">Student no. {app.student_number}</span>
+                          )}
+                        </td>
+                        <td>
+                          <time className="application-submitted-date" dateTime={app.applied_at || undefined}>
+                            {formatSubmissionDate(app.applied_at, { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </time>
+                          {app.applied_at && (
+                            <span className="application-submitted-time">
+                              {formatSubmissionDate(app.applied_at, { hour: 'numeric', minute: '2-digit' })}
+                            </span>
                           )}
                         </td>
                         <td>{app.intake_name || '—'}</td>
                         <td>
-                          <span className={`status-badge status-${app.payment_status || 'pending'}`}>
-                            {(app.payment_status || 'pending').toUpperCase()}
+                          <span className={`applications-status applications-status--${app.payment_status || 'pending'}`}>
+                            {app.payment_status || 'pending'}
                           </span>
                         </td>
                         <td>
-                          <span className={`status-badge status-${app.status}`}>
-                            {app.status.toUpperCase()}
+                          <span className={`applications-status applications-status--${app.status || 'pending'}`}>
+                            {(app.status || 'pending').replace(/_/g, ' ')}
                           </span>
                         </td>
                         <td>
-                          <button onClick={() => viewDetails(app)} className="button button-outline button-sm">
-                            Review
+                          <button type="button" onClick={() => viewDetails(app)} className="applications-review-button">
+                            Review <ChevronRight size={15} />
                           </button>
                         </td>
                       </tr>
@@ -256,33 +398,93 @@ export default function AdminApplications() {
                   </tbody>
                 </table>
               </div>
+              <nav className="applications-pagination" aria-label="Application inbox pages">
+                <p>
+                  Showing <strong>{(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, pagination?.total || applications.length)}</strong>
+                  {' '}of <strong>{pagination?.total ?? applications.length}</strong> applications
+                </p>
+                <div className="applications-pagination-controls">
+                  <label>
+                    <span>Rows</span>
+                    <select
+                      value={pageSize}
+                      onChange={(event) => {
+                        setPageSize(Number(event.target.value))
+                        setCurrentPage(1)
+                      }}
+                      aria-label="Applications per page"
+                    >
+                      {[10, 25, 50].map(size => <option key={size} value={size}>{size}</option>)}
+                    </select>
+                  </label>
+                  <span className="applications-page-count">Page {currentPage} of {totalPages}</span>
+                  <button
+                    type="button"
+                    className="applications-page-button"
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    disabled={currentPage <= 1 || loading}
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft size={17} /> Previous
+                  </button>
+                  <button
+                    type="button"
+                    className="applications-page-button"
+                    onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                    disabled={currentPage >= totalPages || loading}
+                    aria-label="Next page"
+                  >
+                    Next <ChevronRight size={17} />
+                  </button>
+                </div>
+              </nav>
+              </>
             ) : (
-              <div className="empty-state">
-                <p>No applications found matching the current filters.</p>
+              <div className="applications-state applications-empty-state">
+                <span className="applications-empty-icon"><FileText size={23} /></span>
+                <h2>{appliedSearch || statusFilter !== 'pending' ? 'No matching applications' : 'No pending applications'}</h2>
+                <p>{appliedSearch || statusFilter !== 'pending'
+                  ? 'Try another search or status filter.'
+                  : 'There are no applications waiting for review right now.'}</p>
+                {(appliedSearch || statusFilter !== 'pending') && (
+                  <button
+                    type="button"
+                    className="applications-secondary-button"
+                    onClick={() => { setStatusFilter('pending'); setSearchQuery(''); setAppliedSearch(''); setCurrentPage(1) }}
+                  >
+                    Reset to pending inbox
+                  </button>
+                )}
               </div>
             )}
           </div>
         ) : (
           <div className="application-detail-view">
-            <div className="detail-header">
-              <button onClick={() => setSelectedApp(null)} className="button button-secondary">
-                &larr; Back to Inbox
-              </button>
-              <div className="actions-right">
-                <button onClick={() => handleDelete(selectedApp.id)} className="button button-danger-text">
-                  Delete Application
-                </button>
+            <div className="detail-summary">
+              <div>
+                <span className="detail-reference">{selectedApp.reference_number}</span>
+                <span className={`applications-status applications-status--${selectedApp.status || 'pending'}`}>
+                  {(selectedApp.status || 'pending').replace(/_/g, ' ')}
+                </span>
+                <span className="detail-submitted-date">
+                  <CalendarDays size={15} />
+                  Submitted {formatSubmissionDate(selectedApp.applied_at)}
+                </span>
+                {refreshingDetails && <span className="detail-refreshing">Updating details…</span>}
               </div>
+              <button type="button" onClick={() => handleDelete(selectedApp.id)} className="applications-danger-button">
+                <Trash2 size={15} /> Delete application
+              </button>
             </div>
 
             <div className="detail-grid">
               <div className="detail-main">
                 <section className="detail-card">
                   <div className="card-header">
-                    <h2>Applicant Profile</h2>
-                    <span className={`status-badge status-${selectedApp.status}`}>
-                      {selectedApp.status.toUpperCase()}
-                    </span>
+                    <div>
+                      <p className="applications-eyebrow">Applicant</p>
+                      <h2>Personal profile</h2>
+                    </div>
                   </div>
                   
                   <div className="profile-grid">
@@ -290,60 +492,59 @@ export default function AdminApplications() {
                       {selectedApp.passport_photo_url ? (
                         <img 
                           src={`${import.meta.env.VITE_API_URL}/images/${selectedApp.passport_photo_url.split('/d/')[1]?.split('/')[0] || selectedApp.passport_photo_url.split('id=')[1]}`} 
-                          alt="Applicant Passport" 
+                          alt={`${selectedApp.first_name} ${selectedApp.last_name} passport photo`}
                         />
                       ) : (
-                        <div className="photo-placeholder">No Photo</div>
+                        <div className="photo-placeholder"><UserRound size={28} /><span>No photo</span></div>
                       )}
                     </div>
                     <div className="profile-info">
                       <h3>{selectedApp.first_name} {selectedApp.middle_name} {selectedApp.last_name}</h3>
-                      <p><strong>Ref Number:</strong> {selectedApp.reference_number}</p>
-                      {selectedApp.student_number && (
-                        <p><strong>Student Number:</strong> <code style={{ background: '#e8f5e9', color: '#166534', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>{selectedApp.student_number}</code></p>
-                      )}
-                      <p><strong>Intake:</strong> {selectedApp.intake_name || '—'}</p>
-                      <p><strong>Date of Birth:</strong> {new Date(selectedApp.date_of_birth).toLocaleDateString()}</p>
-                      <p><strong>Gender:</strong> {selectedApp.gender}</p>
-                      <p><strong>Nationality:</strong> {selectedApp.nationality}</p>
-                      <p><strong>ID Number:</strong> {selectedApp.id_number || 'N/A'}</p>
+                      {selectedApp.student_number && <span className="student-number">Student no. {selectedApp.student_number}</span>}
+                      <dl className="profile-facts">
+                        <div><dt>Intake</dt><dd>{selectedApp.intake_name || '—'}</dd></div>
+                        <div><dt>Date of birth</dt><dd>{selectedApp.date_of_birth ? new Date(selectedApp.date_of_birth).toLocaleDateString() : '—'}</dd></div>
+                        <div><dt>Gender</dt><dd>{selectedApp.gender || '—'}</dd></div>
+                        <div><dt>Nationality</dt><dd>{selectedApp.nationality || '—'}</dd></div>
+                        <div><dt>ID number</dt><dd>{selectedApp.id_number || '—'}</dd></div>
+                      </dl>
                     </div>
                   </div>
                 </section>
 
                 <section className="detail-card">
-                  <h2>Contact Information</h2>
+                  <h2>Contact information</h2>
                   <div className="info-grid">
                     <div>
                       <p className="label">Email</p>
-                      <p>{selectedApp.email}</p>
+                      <p>{selectedApp.email || '—'}</p>
                     </div>
                     <div>
                       <p className="label">Phone</p>
-                      <p>{selectedApp.phone}</p>
+                      <p>{selectedApp.phone || '—'}</p>
                     </div>
                     <div>
                       <p className="label">Address</p>
-                      <p>{selectedApp.address}</p>
+                      <p>{selectedApp.address || '—'}</p>
                     </div>
                     <div>
                       <p className="label">Location</p>
-                      <p>{selectedApp.town}, {selectedApp.county}</p>
+                      <p>{[selectedApp.town, selectedApp.county].filter(Boolean).join(', ') || '—'}</p>
                     </div>
                   </div>
                 </section>
 
                 <section className="detail-card">
-                  <h2>Academic Background</h2>
+                  <h2>Academic background</h2>
                   {(() => {
                     const history = typeof selectedApp.academic_history === 'string' 
                       ? JSON.parse(selectedApp.academic_history) 
                       : selectedApp.academic_history
                     
-                    if (!history || history.length === 0) return <p>No academic history provided.</p>
+                    if (!history || history.length === 0) return <p className="detail-empty">No academic history provided.</p>
 
                     return (
-                      <table className="academic-table">
+                      <div className="academic-table-wrap"><table className="academic-table">
                         <thead>
                           <tr>
                             <th>Institution</th>
@@ -362,13 +563,13 @@ export default function AdminApplications() {
                             </tr>
                           ))}
                         </tbody>
-                      </table>
+                      </table></div>
                     )
                   })()}
                 </section>
 
                 <section className="detail-card">
-                  <h2>Next of Kin / Emergency Contact</h2>
+                  <h2>Next of kin / emergency contact</h2>
                   <div className="info-grid">
                     <div>
                       <p className="label">Name</p>
@@ -392,32 +593,33 @@ export default function AdminApplications() {
 
               <div className="detail-sidebar">
                 <div className="detail-card docs-card">
-                  <h3>Document Vault</h3>
-                  <p className="text-muted" style={{fontSize: '0.85rem', marginBottom: '1rem'}}>
+                  <p className="applications-eyebrow">Application files</p>
+                  <h3>Document vault</h3>
+                  <p className="text-muted">
                     These files are securely stored in Google Drive. Click to view.
                   </p>
                   
-                  <div className="drive-link">
-                    <a href={`https://drive.google.com/drive/folders/${selectedApp.drive_folder_id}`} target="_blank" rel="noreferrer" className="button button-outline" style={{width: '100%', marginBottom: '1.5rem'}}>
-                      <i className="icon-folder"></i> Open Drive Folder
+                  {selectedApp.drive_folder_id && (
+                    <a href={`https://drive.google.com/drive/folders/${selectedApp.drive_folder_id}`} target="_blank" rel="noreferrer" className="applications-secondary-button drive-link">
+                      <FolderOpen size={16} /> Open Drive folder
                     </a>
-                  </div>
+                  )}
 
-                  <h4>Uploaded Files</h4>
+                  <h4>Uploaded files</h4>
                   <ul className="doc-list">
                     {(() => {
                       const docs = typeof selectedApp.documents === 'string' 
                         ? JSON.parse(selectedApp.documents) 
                         : selectedApp.documents
 
-                      if (!docs || docs.length === 0) return <li>No files uploaded</li>
+                      if (!docs || docs.length === 0) return <li className="doc-empty">No files uploaded</li>
 
                       return docs.map((doc, idx) => (
                         <li key={idx}>
                           <a href={doc.web_view_link || doc.url} target="_blank" rel="noreferrer">
                             <span className="doc-icon"><FileText size={16} /></span>
                             <span className="doc-name">{doc.name}</span>
-                            <span className="doc-type">{doc.type}</span>
+                            <span className="doc-type">{doc.type || 'Document'}</span>
                           </a>
                         </li>
                       ))
@@ -426,100 +628,86 @@ export default function AdminApplications() {
                 </div>
 
                 <div className="detail-card status-card">
-                  <h3>Payment Status</h3>
-                  <p>
-                    Current:{' '}
-                    <span className={`status-badge status-${selectedApp.payment_status || 'pending'}`}>
-                      {(selectedApp.payment_status || 'pending').toUpperCase()}
+                  <p className="applications-eyebrow">Application fee</p>
+                  <h3>Payment status</h3>
+                  <p className="status-current">
+                    Current status
+                    <span className={`applications-status applications-status--${selectedApp.payment_status || 'pending'}`}>
+                      {(selectedApp.payment_status || 'pending').replace(/_/g, ' ')}
                     </span>
                   </p>
                   {selectedApp.payment_status !== 'paid' ? (
                     <div className="decision-actions">
                       <button
+                        type="button"
                         onClick={() => sendPaymentReminder(selectedApp.id)}
-                        className="button button-outline"
-                        style={{width: '100%', marginBottom: '0.5rem'}}
+                        className="applications-secondary-button"
                       >
-                        Send Payment Reminder
+                        Send payment reminder
                       </button>
                       <button
+                        type="button"
                         onClick={() => handlePaymentStatusUpdate(selectedApp.id, 'paid')}
-                        className="button button-primary"
-                        style={{width: '100%'}}
+                        className="applications-primary-button"
                       >
-                        Mark as Paid
+                        Mark as paid
                       </button>
                     </div>
                   ) : (
-                    <p style={{color: '#2e7d32', fontWeight: 600, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '6px'}}>
+                    <p className="payment-verified">
                       <CheckCircle size={15} /> Payment verified
                     </p>
                   )}
                 </div>
 
                 <div className="detail-card status-card">
-                  <h3>Programme Choices</h3>
+                  <p className="applications-eyebrow">Academic review</p>
+                  <h3>Programme choices</h3>
 
                   {/* If student is already admitted */}
                   {(selectedApp.status === 'admitted' || selectedApp.student_number) ? (
-                    <div style={{
-                      padding: '12px 14px',
-                      background: '#e8f5e9',
-                      border: '1px solid #81c784',
-                      borderRadius: '8px',
-                      marginBottom: '1rem',
-                      color: '#1b5e20'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px' }}>
-                        <CheckCircle size={18} color="#2e7d32" /> Student Admitted &amp; Enrolled
+                    <div className="admission-callout admission-callout--success">
+                      <div className="admission-callout-title">
+                        <CheckCircle size={18} /> Student admitted and enrolled
                       </div>
-                      <div style={{ fontSize: '0.85rem', marginBottom: '8px' }}>
+                      <div className="admission-callout-number">
                         <strong>Student Number:</strong>{' '}
-                        <code style={{ background: '#fff', padding: '2px 8px', borderRadius: '4px', border: '1px solid #a5d6a7', fontWeight: 700, color: '#166534' }}>
-                          {selectedApp.student_number}
-                        </code>
+                        <code>{selectedApp.student_number}</code>
                       </div>
                       <button
+                        type="button"
                         onClick={() => handleDownloadAdmissionLetter(selectedApp.id, selectedApp.reference_number)}
                         disabled={downloadingLetter}
-                        className="button button-outline button-sm"
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                        className="applications-secondary-button"
                       >
-                        <FileText size={15} /> {downloadingLetter ? 'Downloading...' : 'Download Admission Letter'}
+                        <FileText size={15} /> {downloadingLetter ? 'Downloading…' : 'Download admission letter'}
                       </button>
                     </div>
                   ) : (selectedApp.choices || []).some(c => c.status === 'offered') ? (
                     /* An offer has been made but not yet finalized as admitted */
-                    <div style={{
-                      padding: '12px 14px',
-                      background: '#e3f2fd',
-                      border: '1px solid #90caf9',
-                      borderRadius: '8px',
-                      marginBottom: '1rem',
-                      color: '#0d47a1'
-                    }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px' }}>
-                        Offer Extended
+                    <div className="admission-callout admission-callout--offer">
+                      <div className="admission-callout-title">
+                        Offer extended
                       </div>
-                      <div style={{ fontSize: '0.82rem', color: '#1565c0', marginBottom: '8px' }}>
+                      <div className="admission-callout-copy">
                         Applicant can accept from their student portal, or you can finalize enrollment directly:
                       </div>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div className="admission-callout-actions">
                         <button
+                          type="button"
                           onClick={() => handleAdmitStudent(selectedApp.id)}
                           disabled={admitting}
-                          className="button button-primary button-sm"
-                          style={{ flex: 1 }}
+                          className="applications-primary-button"
                         >
-                          {admitting ? 'Admitting...' : 'Admit & Enroll'}
+                          {admitting ? 'Preparing…' : 'Admit & enroll'}
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDownloadAdmissionLetter(selectedApp.id, selectedApp.reference_number)}
                           disabled={downloadingLetter}
-                          className="button button-outline button-sm"
-                          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                          className="applications-secondary-button"
                         >
-                          <FileText size={14} /> Letter PDF
+                          <FileText size={14} /> {downloadingLetter ? 'Downloading…' : 'Letter PDF'}
                         </button>
                       </div>
                     </div>
@@ -527,30 +715,19 @@ export default function AdminApplications() {
 
                   {/* Fee notice if unpaid — DOES NOT HIDE CHOICES */}
                   {selectedApp.payment_status !== 'paid' && (
-                    <div style={{
-                      padding: '10px 12px',
-                      background: '#fff3e0',
-                      border: '1px solid #ffe0b2',
-                      borderRadius: '6px',
-                      color: '#e65100',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '8px',
-                      marginBottom: '1rem',
-                      fontSize: '0.85rem'
-                    }}>
-                      <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div className="fee-warning">
+                      <AlertCircle size={16} />
                       <div>
-                        <strong>Application Fee Unpaid:</strong> Choices are visible below for academic review. Mark the fee as paid before issuing an admission offer.
+                        <strong>Application fee unpaid.</strong> Choices remain available for academic review, but payment must be verified before an offer can be issued.
                       </div>
                     </div>
                   )}
 
-                  <div className="form-group" style={{ marginBottom: '1rem' }}>
-                    <label>Reviewer Notes (Optional)</label>
+                  <div className="reviewer-notes">
+                    <label htmlFor="application-reviewer-notes">Reviewer notes <span>(optional)</span></label>
                     <textarea
+                      id="application-reviewer-notes"
                       rows="3"
-                      className="form-control"
                       value={adminNotes}
                       onChange={(e) => setAdminNotes(e.target.value)}
                       placeholder="Notes applied to evaluated choices..."
@@ -558,48 +735,35 @@ export default function AdminApplications() {
                   </div>
 
                   {(selectedApp.choices || []).map(choice => (
-                    <div key={choice.id} style={{
-                      border: '1px solid #e0e0e0',
-                      borderRadius: '8px',
-                      padding: '12px',
-                      marginBottom: '10px',
-                      background: choice.status === 'offered' ? '#f0fdf4' : choice.status === 'enrolled' ? '#f0fdf4' : '#fafafa'
-                    }}>
-                      <p style={{ fontWeight: 600, marginBottom: '4px', fontSize: '0.95rem' }}>
-                        Choice {choice.preference_order}: {choice.programme_name}
-                        {choice.campus_name && (
-                          <span style={{ fontWeight: 400, fontSize: '0.85rem', color: '#555', marginLeft: '8px' }}>
-                            @ {choice.campus_name}
-                          </span>
-                        )}
-                      </p>
-                      <p style={{ marginBottom: '8px' }}>
-                        <span className={`status-badge status-${choice.status}`}>
-                          {choice.status.toUpperCase()}
+                    <article key={choice.id} className={`programme-choice programme-choice--${choice.status}`}>
+                      <div className="programme-choice-heading">
+                        <div>
+                          <span className="choice-preference">Choice {choice.preference_order}</span>
+                          <h4>{choice.programme_name}</h4>
+                          {choice.campus_name && <p>{choice.campus_name}</p>}
+                        </div>
+                        <span className={`applications-status applications-status--${choice.status}`}>
+                          {choice.status.replace(/_/g, ' ')}
                         </span>
-                      </p>
+                      </div>
 
-                      {choice.reviewer_notes && (
-                        <p style={{ fontSize: '0.8rem', color: '#666', fontStyle: 'italic', marginBottom: '8px' }}>
-                          Notes: {choice.reviewer_notes}
-                        </p>
-                      )}
+                      {choice.reviewer_notes && <p className="choice-reviewer-notes">Reviewer note: {choice.reviewer_notes}</p>}
 
                       {choice.status === 'pending' && (
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div className="choice-actions">
                           {selectedApp.payment_status === 'paid' ? (
                             <>
                               <button
+                                type="button"
                                 onClick={() => handleChoiceEvaluation(choice.id, 'offered')}
-                                className="button button-primary"
-                                style={{ flex: 1, fontSize: '0.8rem', padding: '6px' }}
+                                className="applications-primary-button"
                               >
-                                Offer Admission
+                                Offer admission
                               </button>
                               <button
+                                type="button"
                                 onClick={() => handleChoiceEvaluation(choice.id, 'rejected')}
-                                className="button"
-                                style={{ flex: 1, fontSize: '0.8rem', padding: '6px', background: '#e74c3c', color: '#fff', border: 'none' }}
+                                className="applications-danger-button"
                               >
                                 Reject
                               </button>
@@ -607,17 +771,17 @@ export default function AdminApplications() {
                           ) : (
                             <>
                               <button
+                                type="button"
                                 disabled
-                                className="button button-primary"
-                                style={{ flex: 1, fontSize: '0.8rem', padding: '6px', opacity: 0.5, cursor: 'not-allowed' }}
+                                className="applications-primary-button"
                                 title="Mark application fee as paid to offer admission"
                               >
-                                Offer Admission
+                                Offer admission
                               </button>
                               <button
+                                type="button"
                                 disabled
-                                className="button"
-                                style={{ flex: 1, fontSize: '0.8rem', padding: '6px', background: '#e74c3c', color: '#fff', border: 'none', opacity: 0.5, cursor: 'not-allowed' }}
+                                className="applications-danger-button"
                                 title="Mark application fee as paid to reject"
                               >
                                 Reject
@@ -628,25 +792,83 @@ export default function AdminApplications() {
                       )}
 
                       {choice.status === 'bypassed' && (
-                        <p style={{ fontSize: '0.8rem', color: '#888', margin: 0 }}>
+                        <p className="choice-status-note">
                           Bypassed — offer made on higher preference.
                         </p>
                       )}
                       {choice.status === 'offered' && (
-                        <p style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 600, margin: 0 }}>
-                          ✓ Offer extended to applicant.
+                        <p className="choice-status-note">
+                          Offer extended to applicant.
                         </p>
                       )}
                       {choice.status === 'enrolled' && (
-                        <p style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 600, margin: 0 }}>
-                          ✓ Enrolled in this programme.
+                        <p className="choice-status-note">
+                          Enrolled in this programme.
                         </p>
                       )}
-                    </div>
+                    </article>
                   ))}
+                  {(!selectedApp.choices || selectedApp.choices.length === 0) && (
+                    <p className="detail-empty">No programme choices were included with this application.</p>
+                  )}
                 </div>
               </div>
             </div>
+          </div>
+        )}
+        {confirmation && (
+          <div className="applications-modal-backdrop" onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !confirmingAction) setConfirmation(null)
+          }}>
+            <section
+              className="applications-confirmation-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="application-confirmation-title"
+              aria-describedby="application-confirmation-copy"
+            >
+              <button
+                type="button"
+                className="applications-modal-close"
+                onClick={() => setConfirmation(null)}
+                disabled={confirmingAction}
+                aria-label="Close confirmation"
+              >
+                <X size={18} />
+              </button>
+              <span className={`applications-modal-icon ${confirmation.type === 'delete' ? 'is-danger' : 'is-admit'}`}>
+                {confirmation.type === 'delete' ? <Trash2 size={21} /> : <CheckCircle size={21} />}
+              </span>
+              <p className="applications-eyebrow">Please confirm</p>
+              <h2 id="application-confirmation-title">
+                {confirmation.type === 'delete' ? 'Delete this application?' : 'Admit and enroll this student?'}
+              </h2>
+              <p id="application-confirmation-copy">
+                {confirmation.type === 'delete'
+                  ? 'This permanently removes the application and cannot be undone.'
+                  : 'This creates the student record, generates an official student number, and initializes their first-semester enrollment.'}
+              </p>
+              <div className="applications-modal-actions">
+                <button
+                  type="button"
+                  className="applications-secondary-button"
+                  onClick={() => setConfirmation(null)}
+                  disabled={confirmingAction}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={confirmation.type === 'delete' ? 'applications-danger-button' : 'applications-primary-button'}
+                  onClick={confirmPendingAction}
+                  disabled={confirmingAction}
+                >
+                  {confirmingAction
+                    ? 'Please wait…'
+                    : confirmation.type === 'delete' ? 'Delete application' : 'Confirm admission'}
+                </button>
+              </div>
+            </section>
           </div>
         )}
       </main>

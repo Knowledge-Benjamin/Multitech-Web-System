@@ -4,30 +4,105 @@ import { asyncHandler } from '../utils/helpers.js'
 // Get all enrolled students (Admin)
 export const getStudents = asyncHandler(async (req, res) => {
   const { status, programme_id, search } = req.query
+  const requestedPage = Number.parseInt(req.query.page, 10)
+  const requestedLimit = Number.parseInt(req.query.limit, 10)
+  const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1
+  const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
+    ? Math.min(requestedLimit, 100)
+    : 10
 
-  let query = `
-    SELECT s.id, s.student_number, s.current_status, p.name AS programme_name,
-           a.first_name, a.last_name, sa.email
+  const filters = []
+  const filterParams = []
+  let filterIndex = 1
+
+  if (status) {
+    filters.push(`s.current_status = $${filterIndex++}`)
+    filterParams.push(status)
+  }
+  if (programme_id) {
+    filters.push(`s.programme_id = $${filterIndex++}`)
+    filterParams.push(programme_id)
+  }
+  if (search) {
+    filters.push(`(a.first_name ILIKE $${filterIndex} OR a.last_name ILIKE $${filterIndex} OR s.student_number ILIKE $${filterIndex} OR sa.email ILIKE $${filterIndex})`)
+    filterParams.push(`%${search}%`)
+    filterIndex++
+  }
+
+  const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : ''
+  const offset = (page - 1) * limit
+  const query = `
+    SELECT s.id, s.student_number, s.current_status, s.programme_id,
+           p.name AS programme_name, a.first_name, a.last_name, a.phone,
+           a.passport_photo_url, sa.email,
+           (
+             SELECT t.name
+             FROM student_term_enrollments ste
+             JOIN academic_terms t ON ste.academic_term_id = t.id
+             WHERE ste.student_id = s.id
+             ORDER BY t.start_date DESC
+             LIMIT 1
+           ) AS current_term_name,
+           (
+             SELECT ste.study_year
+             FROM student_term_enrollments ste
+             JOIN academic_terms t ON ste.academic_term_id = t.id
+             WHERE ste.student_id = s.id
+             ORDER BY t.start_date DESC
+             LIMIT 1
+           ) AS current_study_year,
+           (
+             SELECT ste.study_semester
+             FROM student_term_enrollments ste
+             JOIN academic_terms t ON ste.academic_term_id = t.id
+             WHERE ste.student_id = s.id
+             ORDER BY t.start_date DESC
+             LIMIT 1
+           ) AS current_study_semester
     FROM students s
     JOIN programmes p ON s.programme_id = p.id
     JOIN student_accounts sa ON s.student_account_id = sa.id
     JOIN applications a ON sa.application_id = a.id
-    WHERE 1=1
+    ${whereClause}
+    ORDER BY s.created_at DESC, s.id DESC
+    LIMIT $${filterIndex} OFFSET $${filterIndex + 1}
   `
-  const params = []
-  let idx = 1
+  const countQuery = `
+    SELECT COUNT(*) AS total
+    FROM students s
+    JOIN student_accounts sa ON s.student_account_id = sa.id
+    JOIN applications a ON sa.application_id = a.id
+    ${whereClause}
+  `
+  const statusCountsQuery = `
+    SELECT current_status, COUNT(*)::int AS count
+    FROM students
+    GROUP BY current_status
+  `
+  const [result, countResult, statusCountsResult] = await Promise.all([
+    pool.query(query, [...filterParams, limit, offset]),
+    pool.query(countQuery, filterParams),
+    pool.query(statusCountsQuery)
+  ])
+  const total = Number(countResult.rows[0].total)
+  const totalPages = Math.ceil(total / limit)
 
-  if (status) { query += ` AND s.current_status = $${idx++}`; params.push(status) }
-  if (programme_id) { query += ` AND s.programme_id = $${idx++}`; params.push(programme_id) }
-  if (search) {
-    query += ` AND (a.first_name ILIKE $${idx} OR a.last_name ILIKE $${idx} OR s.student_number ILIKE $${idx} OR sa.email ILIKE $${idx})`
-    params.push(`%${search}%`); idx++
-  }
-
-  query += ' ORDER BY s.created_at DESC'
-
-  const result = await pool.query(query, params)
-  res.json({ success: true, data: result.rows })
+  res.json({
+    success: true,
+    data: result.rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1
+    },
+    statusCounts: statusCountsResult.rows.reduce((counts, row) => {
+      counts[row.current_status || 'unknown'] = row.count
+      return counts
+    }, {})
+  })
 })
 
 // Get a single student's complete profile
@@ -36,7 +111,10 @@ export const getStudentById = asyncHandler(async (req, res) => {
 
   // 1. Basic Student Info
   const studentRes = await pool.query(`
-    SELECT s.*, p.name AS programme_name, a.first_name, a.last_name, a.gender, a.date_of_birth, sa.email, a.phone
+    SELECT s.*, p.name AS programme_name, a.first_name, a.last_name, a.gender,
+           a.date_of_birth, a.passport_photo_url, a.nationality,
+           a.country_of_residence, a.address, a.town, a.county,
+           sa.email, a.phone
     FROM students s
     JOIN programmes p ON s.programme_id = p.id
     JOIN student_accounts sa ON s.student_account_id = sa.id
@@ -47,29 +125,68 @@ export const getStudentById = asyncHandler(async (req, res) => {
   if (studentRes.rows.length === 0) return res.status(404).json({ success: false, message: 'Student not found' })
   const student = studentRes.rows[0]
 
-  // 2. Term Enrollments
-  const enrollmentsRes = await pool.query(`
-    SELECT ste.*, t.name AS term_name, y.name AS year_name 
-    FROM student_term_enrollments ste
-    JOIN academic_terms t ON ste.academic_term_id = t.id
-    JOIN academic_years y ON t.academic_year_id = y.id
-    WHERE ste.student_id = $1
-    ORDER BY t.start_date DESC
-  `, [id])
-
-  // 3. Financial Invoices
-  const invoicesRes = await pool.query(`
-    SELECT i.*, t.name AS term_name
-    FROM invoices i
-    JOIN academic_terms t ON i.academic_term_id = t.id
-    WHERE i.student_id = $1
-    ORDER BY i.created_at DESC
-  `, [id])
-
-  // 4. Payments
-  const paymentsRes = await pool.query(`
-    SELECT * FROM payments WHERE student_id = $1 ORDER BY payment_date DESC
-  `, [id])
+  const [enrollmentsRes, invoicesRes, paymentsRes, attendanceRes, academicRes] = await Promise.all([
+    pool.query(`
+      SELECT ste.*, t.name AS term_name, y.name AS year_name
+      FROM student_term_enrollments ste
+      JOIN academic_terms t ON ste.academic_term_id = t.id
+      JOIN academic_years y ON t.academic_year_id = y.id
+      WHERE ste.student_id = $1
+      ORDER BY t.start_date DESC
+    `, [id]),
+    pool.query(`
+      SELECT i.*, t.name AS term_name
+      FROM invoices i
+      LEFT JOIN academic_terms t ON i.academic_term_id = t.id
+      WHERE i.student_id = $1
+      ORDER BY i.created_at DESC
+    `, [id]),
+    pool.query(`
+      SELECT * FROM payments WHERE student_id = $1 ORDER BY payment_date DESC
+    `, [id]),
+    pool.query(`
+      SELECT
+        COUNT(DISTINCT cs.id)::int AS total_sessions,
+        COUNT(DISTINCT ar.session_id)::int AS attended_sessions
+      FROM course_registrations cr
+      JOIN student_term_enrollments ste ON cr.student_term_enrollment_id = ste.id
+      JOIN class_schedules sch ON cr.course_id = sch.course_id
+      JOIN class_sessions cs ON sch.id = cs.schedule_id
+      LEFT JOIN attendance_records ar
+        ON cs.id = ar.session_id AND ar.student_id = $1 AND ar.status = 'Present'
+      WHERE ste.student_id = $1
+        AND (cs.status = 'ended' OR cs.end_time IS NOT NULL)
+    `, [id]),
+    pool.query(`
+      SELECT
+        COUNT(*)::int AS result_count,
+        COALESCE(SUM(COALESCE(NULLIF(c.credits, 0), 3)), 0) AS credits_attempted,
+        COALESCE(SUM(
+          CASE
+            WHEN COALESCE(g.final_score, 0) >= 80 THEN 5.0
+            WHEN COALESCE(g.final_score, 0) >= 70 THEN 4.0
+            WHEN COALESCE(g.final_score, 0) >= 60 THEN 3.0
+            WHEN COALESCE(g.final_score, 0) >= 50 THEN 2.0
+            WHEN COALESCE(g.final_score, 0) >= 40 THEN 1.0
+            ELSE 0.0
+          END * COALESCE(NULLIF(c.credits, 0), 3)
+        ), 0) AS grade_points,
+        COALESCE(SUM(
+          CASE
+            WHEN COALESCE(g.final_score, 0) >= 40 THEN COALESCE(NULLIF(c.credits, 0), 3)
+            ELSE 0
+          END
+        ), 0) AS credits_earned
+      FROM grades g
+      JOIN course_registrations cr ON g.course_registration_id = cr.id
+      JOIN courses c ON cr.course_id = c.id
+      JOIN student_term_enrollments ste ON cr.student_term_enrollment_id = ste.id
+      WHERE ste.student_id = $1
+    `, [id])
+  ])
+  const attendanceTotals = attendanceRes.rows[0]
+  const academicTotals = academicRes.rows[0]
+  const creditsAttempted = Number(academicTotals.credits_attempted)
 
   res.json({
     success: true,
@@ -77,7 +194,22 @@ export const getStudentById = asyncHandler(async (req, res) => {
       profile: student,
       enrollments: enrollmentsRes.rows,
       invoices: invoicesRes.rows,
-      payments: paymentsRes.rows
+      payments: paymentsRes.rows,
+      attendanceSummary: {
+        totalSessions: attendanceTotals.total_sessions,
+        attendedSessions: attendanceTotals.attended_sessions,
+        percentage: attendanceTotals.total_sessions > 0
+          ? Math.round((attendanceTotals.attended_sessions / attendanceTotals.total_sessions) * 100)
+          : null
+      },
+      academicSummary: {
+        gradeRecords: academicTotals.result_count,
+        cgpa: academicTotals.result_count > 0 && creditsAttempted > 0
+          ? (Number(academicTotals.grade_points) / creditsAttempted).toFixed(2)
+          : null,
+        creditsAttempted,
+        creditsEarned: Number(academicTotals.credits_earned)
+      }
     }
   })
 })

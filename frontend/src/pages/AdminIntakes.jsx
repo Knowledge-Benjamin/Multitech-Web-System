@@ -5,7 +5,6 @@ import {
   CalendarDays,
   Check,
   ChevronRight,
-  Clock3,
   Plus,
   Search,
   X

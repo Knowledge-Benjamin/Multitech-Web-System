@@ -123,17 +123,37 @@ export const lecturerOnly = async (req, res, next) => {
     return res.status(401).json({ success: false, message: 'No token provided' })
   }
 
+  let decoded
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+    decoded = jwt.verify(token, process.env.JWT_SECRET, {
       algorithms: [JWT_ALGORITHM]
     })
-    if (decoded.role !== 'lecturer') {
-      return res.status(403).json({ success: false, message: 'Lecturer access required' })
-    }
-    req.lecturer = decoded
-    next()
   } catch (error) {
     res.status(401).json({ success: false, message: 'Invalid or expired token' })
+    return
+  }
+
+  if (decoded.role !== 'lecturer') {
+    return res.status(403).json({ success: false, message: 'Lecturer access required' })
+  }
+
+  try {
+    const result = await pool.query(
+      'SELECT id, email, first_name, last_name, is_active FROM lecturers WHERE id = $1',
+      [decoded.id]
+    )
+    if (result.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Lecturer account not found' })
+    }
+    if (!result.rows[0].is_active) {
+      return res.status(403).json({ success: false, message: 'Lecturer account is deactivated' })
+    }
+
+    req.lecturer = { ...decoded, ...result.rows[0], role: 'lecturer' }
+    next()
+  } catch (error) {
+    console.error('Lecturer account lookup failed:', error)
+    res.status(500).json({ success: false, message: 'Unable to verify lecturer account' })
   }
 }
 
@@ -145,21 +165,40 @@ export const lecturerOrAdmin = async (req, res, next) => {
     return res.status(401).json({ success: false, message: 'No token provided' })
   }
 
+  let decoded
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+    decoded = jwt.verify(token, process.env.JWT_SECRET, {
       algorithms: [JWT_ALGORITHM]
     })
-    if (decoded.role === 'lecturer') {
-      req.lecturer = decoded
-    } else if (decoded.role === 'admin' || decoded.role === 'superadmin') {
-      req.admin = decoded
-    } else {
-      return res.status(403).json({ success: false, message: 'Lecturer or Admin access required' })
-    }
-    next()
   } catch (error) {
     res.status(401).json({ success: false, message: 'Invalid or expired token' })
+    return
   }
+
+  if (decoded.role === 'lecturer') {
+    try {
+      const result = await pool.query(
+        'SELECT id, email, first_name, last_name, is_active FROM lecturers WHERE id = $1',
+        [decoded.id]
+      )
+      if (result.rows.length === 0) {
+        return res.status(401).json({ success: false, message: 'Lecturer account not found' })
+      }
+      if (!result.rows[0].is_active) {
+        return res.status(403).json({ success: false, message: 'Lecturer account is deactivated' })
+      }
+      req.lecturer = { ...decoded, ...result.rows[0], role: 'lecturer' }
+    } catch (error) {
+      console.error('Lecturer account lookup failed:', error)
+      return res.status(500).json({ success: false, message: 'Unable to verify lecturer account' })
+    }
+  } else if (decoded.role === 'admin' || decoded.role === 'superadmin') {
+    req.admin = decoded
+  } else {
+    return res.status(403).json({ success: false, message: 'Lecturer or Admin access required' })
+  }
+
+  next()
 }
 
 /**

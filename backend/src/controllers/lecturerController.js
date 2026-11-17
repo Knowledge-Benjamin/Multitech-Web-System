@@ -208,9 +208,27 @@ export const deleteCourseMaterial = async (req, res) => {
 // Grades Management
 // ---------------------------------------------------------
 
+const getCurrentTermAssignment = async (lecturerId, courseId, queryable = pool) => {
+  const { rows } = await queryable.query(`
+    SELECT ca.academic_term_id
+    FROM course_assignments ca
+    JOIN academic_terms at ON at.id = ca.academic_term_id
+    WHERE ca.lecturer_id = $1
+      AND ca.course_id = $2
+      AND CURRENT_DATE BETWEEN at.start_date AND at.end_date
+    ORDER BY at.start_date DESC
+    LIMIT 1
+  `, [lecturerId, courseId])
+  return rows[0] || null
+}
+
 export const getCourseStudents = async (req, res) => {
   try {
     const { courseId } = req.params
+    const assignment = await getCurrentTermAssignment(req.lecturer.id, courseId)
+    if (!assignment) {
+      return res.status(403).json({ success: false, message: 'You are not assigned to this course for the current term' })
+    }
 
     const { rows } = await pool.query(`
       SELECT 
@@ -227,9 +245,11 @@ export const getCourseStudents = async (req, res) => {
       JOIN students s ON ste.student_id = s.id
       LEFT JOIN applications a ON s.application_id = a.id
       LEFT JOIN grades g ON g.course_registration_id = cr.id
-      WHERE cr.course_id = $1 AND cr.status = 'registered'
+      WHERE cr.course_id = $1
+        AND cr.status = 'registered'
+        AND ste.academic_term_id = $2
       ORDER BY s.student_number ASC
-    `, [courseId])
+    `, [courseId, assignment.academic_term_id])
 
     res.json({ success: true, data: rows })
   } catch (error) {
@@ -254,25 +274,56 @@ function calculateGrade(cw, exam) {
 }
 
 export const saveCourseGrades = async (req, res) => {
+  let client
+  let transactionStarted = false
   try {
     const { courseId } = req.params
     const { grades } = req.body // Array of { course_registration_id, coursework_mark, exam_mark }
 
-    if (!Array.isArray(grades)) {
+    if (!Array.isArray(grades) || grades.length === 0) {
       return res.status(400).json({ success: false, message: 'Invalid grades format' })
     }
 
-    await pool.query('BEGIN')
+    const registrationIds = grades.map(grade => Number(grade?.course_registration_id))
+    if (
+      registrationIds.some(id => !Number.isSafeInteger(id) || id <= 0)
+      || new Set(registrationIds).size !== registrationIds.length
+    ) {
+      return res.status(400).json({ success: false, message: 'Invalid or duplicate course registration IDs' })
+    }
 
-    for (const g of grades) {
-      const { course_registration_id, coursework_mark, exam_mark } = g
-      
-      // We don't overwrite source='online_exam_portal' manually, but the UI should have locked those anyway.
-      // We will ensure that we don't accidentally overwrite online exam portal exam marks if we only want to update coursework.
-      
+    client = await pool.connect()
+    await client.query('BEGIN')
+    transactionStarted = true
+
+    const assignment = await getCurrentTermAssignment(req.lecturer.id, courseId, client)
+    if (!assignment) {
+      await client.query('ROLLBACK')
+      transactionStarted = false
+      return res.status(403).json({ success: false, message: 'You are not assigned to this course for the current term' })
+    }
+
+    const { rows: registeredRows } = await client.query(`
+      SELECT cr.id
+      FROM course_registrations cr
+      JOIN student_term_enrollments ste ON ste.id = cr.student_term_enrollment_id
+      WHERE cr.id = ANY($1::int[])
+        AND cr.course_id = $2
+        AND cr.status = 'registered'
+        AND ste.academic_term_id = $3
+    `, [registrationIds, courseId, assignment.academic_term_id])
+
+    if (registeredRows.length !== registrationIds.length) {
+      await client.query('ROLLBACK')
+      transactionStarted = false
+      return res.status(400).json({ success: false, message: 'One or more students are not registered for this course in the current term' })
+    }
+
+    for (const grade of grades) {
+      const { course_registration_id, coursework_mark, exam_mark } = grade
       const { finalScore, letter } = calculateGrade(coursework_mark, exam_mark)
 
-      await pool.query(`
+      await client.query(`
         INSERT INTO grades (
           course_registration_id, 
           coursework_mark, 
@@ -292,12 +343,21 @@ export const saveCourseGrades = async (req, res) => {
       `, [course_registration_id, coursework_mark || 0, exam_mark || 0, finalScore, letter])
     }
 
-    await pool.query('COMMIT')
+    await client.query('COMMIT')
+    transactionStarted = false
     res.json({ success: true, message: 'Grades saved successfully' })
   } catch (error) {
-    await pool.query('ROLLBACK')
+    if (client && transactionStarted) {
+      try {
+        await client.query('ROLLBACK')
+      } catch (rollbackError) {
+        console.error('Error rolling back grade transaction:', rollbackError)
+      }
+    }
     console.error('Error saving grades:', error)
     res.status(500).json({ success: false, message: 'Failed to save grades' })
+  } finally {
+    if (client) client.release()
   }
 }
 
@@ -308,11 +368,16 @@ export const saveCourseGrades = async (req, res) => {
 export const getCourseAnnouncements = async (req, res) => {
   try {
     const { courseId } = req.params
+    const assignment = await getCurrentTermAssignment(req.lecturer.id, courseId)
+    if (!assignment) {
+      return res.status(403).json({ success: false, message: 'You are not assigned to this course for the current term' })
+    }
+
     const { rows } = await pool.query(`
       SELECT * FROM course_announcements
-      WHERE course_id = $1
+      WHERE course_id = $1 AND academic_term_id = $2
       ORDER BY created_at DESC
-    `, [courseId])
+    `, [courseId, assignment.academic_term_id])
     res.json({ success: true, data: rows })
   } catch (error) {
     console.error('Error fetching course announcements:', error)
@@ -323,20 +388,23 @@ export const getCourseAnnouncements = async (req, res) => {
 export const createCourseAnnouncement = async (req, res) => {
   try {
     const { courseId } = req.params
-    const { title, body } = req.body
+    const title = String(req.body.title || '').trim()
+    const body = String(req.body.body || '').trim()
     const lecturerId = req.lecturer.id
 
-    // Get active term
-    const activeTermRes = await pool.query('SELECT id FROM academic_terms WHERE status = $1', ['active'])
-    const termId = activeTermRes.rows[0]?.id
-
-    if (!termId) return res.status(400).json({ success: false, message: 'No active academic term found' })
+    if (!title || !body) {
+      return res.status(400).json({ success: false, message: 'Announcement title and message are required' })
+    }
+    const assignment = await getCurrentTermAssignment(lecturerId, courseId)
+    if (!assignment) {
+      return res.status(403).json({ success: false, message: 'You are not assigned to this course for the current term' })
+    }
 
     const { rows } = await pool.query(`
       INSERT INTO course_announcements (course_id, lecturer_id, academic_term_id, title, body)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *
-    `, [courseId, lecturerId, termId, title, body])
+    `, [courseId, lecturerId, assignment.academic_term_id, title, body])
 
     res.json({ success: true, data: rows[0], message: 'Announcement posted successfully' })
   } catch (error) {

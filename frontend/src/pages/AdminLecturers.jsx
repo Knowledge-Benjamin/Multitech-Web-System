@@ -1,322 +1,738 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
-import { CheckCircle, Users, AlertCircle } from 'lucide-react'
+import {
+  ArrowLeft, ArrowRight, BookOpen, CalendarDays, CheckCircle2, CircleAlert,
+  Clock3, FileText, GraduationCap, Layers3, Mail, Pencil, Plus, Search,
+  ShieldCheck, Users, X
+} from 'lucide-react'
 import { useApiQuery } from '../hooks/useApiQuery'
 import AdminSidebar from '../components/AdminSidebar'
-import './AdminProgrammes.css'
+import './AdminLecturers.css'
 
 const API = import.meta.env.VITE_API_URL
 
-export default function AdminLecturers() {
-  const [view, setView] = useState('list') // 'list' | 'create' | 'assign'
-  const [selectedLecturer, setSelectedLecturer] = useState(null)
+const formatDate = (value) => {
+  if (!value) return 'Date not recorded'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? 'Date not recorded'
+    : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
 
+const formatCount = value => Number(value || 0).toLocaleString()
+
+const getInitials = (firstName, lastName) => (
+  `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase() || 'LE'
+)
+
+const getRequestError = (error, fallback) => (
+  error.response?.data?.message || fallback
+)
+
+export default function AdminLecturers() {
+  const [selectedLecturer, setSelectedLecturer] = useState(null)
+  const [activeModal, setActiveModal] = useState('')
+  const [statusTarget, setStatusTarget] = useState(null)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '' })
   const [assignForm, setAssignForm] = useState({ course_id: '', academic_term_id: '' })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [saving, setSaving] = useState(false)
 
   const token = localStorage.getItem('adminToken')
-
-  const { data: lecturersData, isLoading: loadingLecturers, refetch: fetchLecturers } = useApiQuery('/admin/lecturers', 'adminLecturers', {
-    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
+  const headers = { Authorization: `Bearer ${token}` }
+  const {
+    data: lecturersData,
+    isLoading: loadingLecturers,
+    error: lecturersError,
+    refetch: fetchLecturers
+  } = useApiQuery('/admin/lecturers', 'adminLecturers', {
+    axiosOptions: { headers }
   })
-  
-  const { data: termsData, isLoading: loadingTerms } = useApiQuery('/calendar/terms', 'adminTerms', {
-    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
-  })
-  
-  const { data: coursesData, isLoading: loadingCourses } = useApiQuery('/course-units', 'adminCourseUnits', {
-    axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
-  })
-
-  const { data: assignmentsData, refetch: fetchAssignments } = useApiQuery(
-    selectedLecturer ? `/admin/lecturers/${selectedLecturer.id}/assignments` : '/admin/lecturers',
-    'adminLecturerAssignments',
+  const {
+    data: termsData,
+    isLoading: loadingTerms,
+    error: termsError,
+    refetch: refetchTerms
+  } = useApiQuery(
+    '/calendar/terms',
+    'adminTerms',
+    { axiosOptions: { headers } }
+  )
+  const {
+    data: coursesData,
+    isLoading: loadingCourses,
+    error: coursesError,
+    refetch: refetchCourses
+  } = useApiQuery(
+    '/course-units',
+    'adminCourseUnits',
+    { axiosOptions: { headers } }
+  )
+  const {
+    data: assignmentsData,
+    isLoading: loadingAssignments,
+    error: assignmentsError,
+    refetch: fetchAssignments
+  } = useApiQuery(
+    selectedLecturer ? `/admin/lecturers/${selectedLecturer.id}/assignments` : null,
+    ['adminLecturerAssignments', selectedLecturer?.id],
     {
-      axiosOptions: { headers: { Authorization: `Bearer ${token}` } },
+      axiosOptions: { headers },
       queryOptions: { enabled: !!selectedLecturer }
     }
   )
 
   const lecturers = lecturersData?.data || []
+  const summary = lecturersData?.summary || {}
   const terms = termsData?.data || []
   const courses = coursesData?.data || []
   const assignments = assignmentsData?.data || []
 
-  const loading = loadingLecturers || loadingTerms || loadingCourses
+  const filteredLecturers = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return lecturers.filter(lecturer => {
+      const name = `${lecturer.first_name || ''} ${lecturer.last_name || ''}`.toLowerCase()
+      const matchesSearch = !query || name.includes(query) || lecturer.email?.toLowerCase().includes(query)
+      const matchesStatus = statusFilter === 'all'
+        || (statusFilter === 'active' ? lecturer.is_active : !lecturer.is_active)
+      return matchesSearch && matchesStatus
+    })
+  }, [lecturers, search, statusFilter])
 
-  const handleCreate = async (e) => {
-    e.preventDefault()
-    setError(''); setSuccess('')
+  const availableCourses = courses.filter(course => !assignments.some(assignment => (
+    String(assignment.course_id) === String(course.id)
+    && String(assignment.academic_term_id) === String(assignForm.academic_term_id)
+  )))
+
+  useEffect(() => {
+    if (!activeModal) return undefined
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape' && !saving) closeModal()
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [activeModal, saving])
+
+  const closeModal = () => {
+    setActiveModal('')
+    setStatusTarget(null)
+    setError('')
+  }
+
+  const refreshLecturerRecord = async (lecturerId) => {
+    const result = await fetchLecturers()
+    const updatedLecturer = result.data?.data?.find(lecturer => lecturer.id === lecturerId)
+    if (updatedLecturer) setSelectedLecturer(updatedLecturer)
+  }
+
+  const openCreateModal = () => {
+    setForm({ first_name: '', last_name: '', email: '', password: '' })
+    setError('')
+    setSuccess('')
+    setActiveModal('create')
+  }
+
+  const openEditModal = () => {
+    if (!selectedLecturer) return
+    setForm({
+      first_name: selectedLecturer.first_name || '',
+      last_name: selectedLecturer.last_name || '',
+      email: selectedLecturer.email || '',
+      password: ''
+    })
+    setError('')
+    setSuccess('')
+    setActiveModal('edit')
+  }
+
+  const openAssignModal = () => {
+    setAssignForm({ course_id: '', academic_term_id: '' })
+    setError('')
+    setSuccess('')
+    setActiveModal('assign')
+  }
+
+  const handleCreate = async (event) => {
+    event.preventDefault()
+    setSaving(true)
+    setError('')
+    setSuccess('')
     try {
-      await axios.post(`${API}/admin/lecturers`, form, { headers: { Authorization: `Bearer ${token}` } })
-      setSuccess('Lecturer created successfully.')
-      setForm({ first_name: '', last_name: '', email: '', password: '' })
-      fetchLecturers()
-      setView('list')
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create lecturer.')
+      const response = await axios.post(`${API}/admin/lecturers`, form, { headers })
+      setSuccess(response.data.message || 'Lecturer account created.')
+      closeModal()
+      await fetchLecturers()
+    } catch (requestError) {
+      setError(getRequestError(requestError, 'Unable to create the lecturer account.'))
+    } finally {
+      setSaving(false)
     }
   }
 
-  const handleToggleActive = async (lecturer) => {
+  const handleUpdate = async (event) => {
+    event.preventDefault()
+    if (!selectedLecturer) return
+    setSaving(true)
+    setError('')
+    setSuccess('')
     try {
-      await axios.put(`${API}/admin/lecturers/${lecturer.id}`, {
-        ...lecturer,
-        is_active: !lecturer.is_active
-      }, { headers: { Authorization: `Bearer ${token}` } })
-      fetchLecturers()
-    } catch (err) {
-      setError('Failed to update lecturer.')
+      const response = await axios.put(
+        `${API}/admin/lecturers/${selectedLecturer.id}`,
+        {
+          first_name: form.first_name,
+          last_name: form.last_name,
+          email: form.email,
+          is_active: selectedLecturer.is_active
+        },
+        { headers }
+      )
+      setSelectedLecturer(previous => ({ ...previous, ...response.data.data }))
+      setSuccess(response.data.message || 'Lecturer profile updated.')
+      closeModal()
+      await fetchLecturers()
+    } catch (requestError) {
+      setError(getRequestError(requestError, 'Unable to update the lecturer profile.'))
+    } finally {
+      setSaving(false)
     }
   }
 
-  const openAssign = (lecturer) => {
+  const handleAssign = async (event) => {
+    event.preventDefault()
+    if (!selectedLecturer) return
+    setSaving(true)
+    setError('')
+    setSuccess('')
+    try {
+      const response = await axios.post(
+        `${API}/admin/lecturers/assignments`,
+        {
+          lecturer_id: selectedLecturer.id,
+          course_id: assignForm.course_id,
+          academic_term_id: assignForm.academic_term_id
+        },
+        { headers }
+      )
+      setSuccess(response.data.message || 'Course allocation added.')
+      closeModal()
+      await Promise.all([fetchAssignments(), refreshLecturerRecord(selectedLecturer.id)])
+    } catch (requestError) {
+      setError(getRequestError(requestError, 'Unable to add this course allocation.'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleToggleActive = async () => {
+    if (!statusTarget) return
+    setSaving(true)
+    setError('')
+    setSuccess('')
+    try {
+      const response = await axios.put(
+        `${API}/admin/lecturers/${statusTarget.id}`,
+        {
+          first_name: statusTarget.first_name,
+          last_name: statusTarget.last_name,
+          email: statusTarget.email,
+          is_active: !statusTarget.is_active
+        },
+        { headers }
+      )
+      if (selectedLecturer?.id === statusTarget.id) {
+        setSelectedLecturer(previous => ({ ...previous, ...response.data.data }))
+      }
+      setSuccess(response.data.message || `Lecturer account ${statusTarget.is_active ? 'deactivated' : 'activated'}.`)
+      closeModal()
+      await fetchLecturers()
+    } catch (requestError) {
+      setError(getRequestError(requestError, 'Unable to update this lecturer account.'))
+      setActiveModal('status')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const openLecturer = (lecturer) => {
     setSelectedLecturer(lecturer)
-    setView('assign')
+    setError('')
+    setSuccess('')
   }
 
-  const handleAssign = async (e) => {
-    e.preventDefault()
-    setError(''); setSuccess('')
-    try {
-      await axios.post(`${API}/admin/lecturers/assignments`, {
-        lecturer_id: selectedLecturer.id,
-        course_id: assignForm.course_id,
-        academic_term_id: assignForm.academic_term_id
-      }, { headers: { Authorization: `Bearer ${token}` } })
-      setSuccess('Course assigned!')
-      setAssignForm({ course_id: '', academic_term_id: '' })
-      fetchAssignments()
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to assign course.')
-    }
+  const returnToDirectory = () => {
+    setSelectedLecturer(null)
+    setError('')
+    setSuccess('')
   }
 
-  const handleRemoveAssignment = async (assignmentId) => {
-    if (!window.confirm('Remove this assignment?')) return
-    try {
-      await axios.delete(`${API}/admin/lecturers/assignments/${assignmentId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      fetchAssignments()
-    } catch (err) {
-      setError('Failed to remove assignment.')
-    }
+  const renderModal = () => {
+    if (!activeModal) return null
+
+    const isCreate = activeModal === 'create'
+    const isEdit = activeModal === 'edit'
+    const isAssign = activeModal === 'assign'
+    const isStatus = activeModal === 'status'
+    const title = isCreate
+      ? 'Add lecturer'
+      : isEdit
+        ? 'Edit lecturer profile'
+        : isAssign
+          ? 'Allocate a course'
+          : `${statusTarget?.is_active ? 'Deactivate' : 'Activate'} lecturer access`
+
+    return (
+      <div
+        className="lecturers-modal-backdrop"
+        onMouseDown={event => {
+          if (event.target === event.currentTarget && !saving) closeModal()
+        }}
+      >
+        <section className="lecturers-modal" role="dialog" aria-modal="true" aria-labelledby="lecturers-modal-title">
+          <button type="button" className="lecturers-modal-close" onClick={closeModal} disabled={saving} aria-label="Close dialog">
+            <X size={18} />
+          </button>
+          <p className="lecturers-eyebrow">Faculty management</p>
+          <h2 id="lecturers-modal-title">{title}</h2>
+
+          {(isCreate || isEdit) && (
+            <form className="lecturers-form" onSubmit={isCreate ? handleCreate : handleUpdate}>
+              <div className="lecturers-form-grid">
+                <label>
+                  <span>First name</span>
+                  <input value={form.first_name} onChange={event => setForm(previous => ({ ...previous, first_name: event.target.value }))} autoComplete="given-name" required />
+                </label>
+                <label>
+                  <span>Last name</span>
+                  <input value={form.last_name} onChange={event => setForm(previous => ({ ...previous, last_name: event.target.value }))} autoComplete="family-name" required />
+                </label>
+              </div>
+              <label>
+                <span>Institutional email</span>
+                <input type="email" value={form.email} onChange={event => setForm(previous => ({ ...previous, email: event.target.value }))} autoComplete="email" required />
+              </label>
+              {isCreate && (
+                <label>
+                  <span>Temporary password</span>
+                  <input type="password" value={form.password} onChange={event => setForm(previous => ({ ...previous, password: event.target.value }))} autoComplete="new-password" required />
+                  <small>Share this credential securely with the lecturer.</small>
+                </label>
+              )}
+              {error && <div className="lecturers-feedback lecturers-feedback--error" role="alert"><CircleAlert size={16} /><span>{error}</span></div>}
+              <div className="lecturers-modal-actions">
+                <button type="button" className="lecturers-secondary-button" onClick={closeModal} disabled={saving}>Cancel</button>
+                <button type="submit" className="lecturers-primary-button" disabled={saving}>
+                  {saving ? 'Saving…' : isCreate ? 'Create account' : 'Save profile'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {isAssign && (
+            <form className="lecturers-form" onSubmit={handleAssign}>
+              <p className="lecturers-modal-copy">
+                Assign a course unit and term to {selectedLecturer?.first_name} {selectedLecturer?.last_name}. Existing allocations are retained.
+              </p>
+              {termsError || coursesError ? (
+                <div className="lecturers-options-error">
+                  <div className="lecturers-feedback lecturers-feedback--error" role="alert">
+                    <CircleAlert size={16} />
+                    <span>Course or term options could not be loaded. Try again before creating an allocation.</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="lecturers-secondary-button"
+                    onClick={() => Promise.all([refetchTerms(), refetchCourses()])}
+                  >
+                    Retry course and term options
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <label>
+                    <span>Academic term</span>
+                    <select
+                      value={assignForm.academic_term_id}
+                      onChange={event => setAssignForm({ course_id: '', academic_term_id: event.target.value })}
+                      required
+                      disabled={loadingTerms}
+                    >
+                      <option value="">{loadingTerms ? 'Loading academic terms…' : 'Choose an academic term'}</option>
+                      {terms.map(term => (
+                        <option key={term.id} value={term.id}>
+                          {term.academic_year_name ? `${term.academic_year_name} · ` : ''}{term.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Course unit</span>
+                    <select
+                      value={assignForm.course_id}
+                      onChange={event => setAssignForm(previous => ({ ...previous, course_id: event.target.value }))}
+                      required
+                      disabled={loadingCourses || !assignForm.academic_term_id || !availableCourses.length}
+                    >
+                      <option value="">
+                        {!assignForm.academic_term_id
+                          ? 'Choose a term first'
+                          : loadingCourses
+                            ? 'Loading course units…'
+                            : availableCourses.length
+                              ? 'Choose a course unit'
+                              : 'All course units already allocated'}
+                      </option>
+                      {availableCourses.map(course => (
+                        <option key={course.id} value={course.id}>
+                          {course.course_code} · {course.name} · {course.programme_name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {assignForm.academic_term_id && availableCourses.length === 0 && !loadingCourses && (
+                    <p className="lecturers-form-note">No additional course units are available for this lecturer in the selected term.</p>
+                  )}
+                  {error && <div className="lecturers-feedback lecturers-feedback--error" role="alert"><CircleAlert size={16} /><span>{error}</span></div>}
+                  <div className="lecturers-modal-actions">
+                    <button type="button" className="lecturers-secondary-button" onClick={closeModal} disabled={saving}>Cancel</button>
+                    <button type="submit" className="lecturers-primary-button" disabled={saving || loadingTerms || loadingCourses || !availableCourses.length}>
+                      {saving ? 'Allocating…' : 'Add allocation'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </form>
+          )}
+
+          {isStatus && (
+            <div className="lecturers-status-confirm">
+              <p>
+                {statusTarget?.is_active
+                  ? `Deactivating ${statusTarget?.first_name} ${statusTarget?.last_name} prevents them from signing in. Their course allocations, materials, and grades will remain unchanged.`
+                  : `Reactivating ${statusTarget?.first_name} ${statusTarget?.last_name} restores lecturer sign-in without changing their records.`}
+              </p>
+              {error && <div className="lecturers-feedback lecturers-feedback--error" role="alert"><CircleAlert size={16} /><span>{error}</span></div>}
+              <div className="lecturers-modal-actions">
+                <button type="button" className="lecturers-secondary-button" onClick={closeModal} disabled={saving}>Cancel</button>
+                <button
+                  type="button"
+                  className={statusTarget?.is_active ? 'lecturers-warning-button' : 'lecturers-primary-button'}
+                  onClick={handleToggleActive}
+                  disabled={saving}
+                >
+                  {saving ? 'Updating…' : statusTarget?.is_active ? 'Deactivate access' : 'Activate access'}
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+    )
   }
 
   return (
     <div className="scope-adminlecturers admin-layout">
       <AdminSidebar />
-      <main className="admin-content" style={{ padding: '2rem' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 700, color: '#1e1b4b' }}>
-              {view === 'list' ? 'Lecturers' : view === 'create' ? 'Add New Lecturer' : `Assignments — ${selectedLecturer?.first_name} ${selectedLecturer?.last_name}`}
-            </h1>
-            <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: '0.9rem' }}>
-              {view === 'list' ? 'Manage all teaching staff and course assignments.' : ''}
-            </p>
-          </div>
-          {view === 'list' && (
-            <button className="btn-primary" onClick={() => { setView('create'); setError(''); setSuccess('') }}>
-              + Add Lecturer
-            </button>
-          )}
-          {view !== 'list' && (
-            <button className="btn-secondary" onClick={() => { setView('list'); setError(''); setSuccess('') }}>
-              ← Back
-            </button>
-          )}
-        </div>
+      <main className="admin-content admin-lecturers-content">
+        {!selectedLecturer ? (
+          <>
+            <header className="lecturers-page-header">
+              <div>
+                <p className="lecturers-eyebrow">Academic operations</p>
+                <h1>Lecturers</h1>
+                <p className="lecturers-page-intro">
+                  Review teaching allocations and related academic activity, then manage lecturer accounts from one place.
+                </p>
+              </div>
+              <button type="button" className="lecturers-primary-button" onClick={openCreateModal}>
+                <Plus size={17} /> Add lecturer
+              </button>
+            </header>
 
-        {error && <div className="alert-error" style={{ marginBottom: '1rem', padding: '12px 16px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '10px', color: '#991b1b' }}>{error}</div>}
-        {success && <div style={{ marginBottom: '1rem', padding: '12px 16px', background: '#d1fae5', border: '1px solid #6ee7b7', borderRadius: '10px', color: '#065f46', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={16} /> {success}</div>}
+            {success && <div className="lecturers-feedback lecturers-feedback--success" role="status"><CheckCircle2 size={17} /><span>{success}</span></div>}
+            {lecturersData && !lecturersData.examIntegrationAvailable && (
+            <div className="lecturers-info-banner" role="status">
+              Online exam totals are unavailable because the exam portal integration is not configured in this database.
+            </div>
+            )}
 
-        {/* ── CREATE FORM ──────────────────────────────────────────────────── */}
-        {view === 'create' && (
-          <form onSubmit={handleCreate} style={{ background: 'white', borderRadius: '16px', padding: '28px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', maxWidth: '560px' }}>
-            <h3 style={{ marginTop: 0, color: '#1e1b4b' }}>Lecturer Details</h3>
-            {['first_name', 'last_name', 'email', 'password'].map(field => (
-              <div key={field} style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
-                  {field.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())} *
+            <section className="lecturers-stat-grid" aria-label="Lecturer overview">
+              <article className="lecturers-stat-card">
+                <span className="lecturers-stat-icon"><Users size={18} /></span>
+                <span className="lecturers-stat-label">Lecturers</span>
+                <strong>{formatCount(summary.totalLecturers ?? lecturers.length)}</strong>
+                <span className="lecturers-stat-note">Accounts on file</span>
+              </article>
+              <article className="lecturers-stat-card">
+                <span className="lecturers-stat-icon lecturers-stat-icon--active"><ShieldCheck size={18} /></span>
+                <span className="lecturers-stat-label">Active access</span>
+                <strong>{formatCount(summary.activeLecturers ?? lecturers.filter(lecturer => lecturer.is_active).length)}</strong>
+                <span className="lecturers-stat-note">Eligible to sign in</span>
+              </article>
+              <article className="lecturers-stat-card">
+                <span className="lecturers-stat-icon lecturers-stat-icon--courses"><BookOpen size={18} /></span>
+                <span className="lecturers-stat-label">Course allocations</span>
+                <strong>{formatCount(summary.totalAssignments ?? lecturers.reduce((total, lecturer) => total + Number(lecturer.total_assignments || 0), 0))}</strong>
+                <span className="lecturers-stat-note">Across academic terms</span>
+              </article>
+              <article className="lecturers-stat-card">
+                <span className="lecturers-stat-icon lecturers-stat-icon--materials"><FileText size={18} /></span>
+                <span className="lecturers-stat-label">Course materials</span>
+                <strong>{formatCount(summary.totalMaterials ?? lecturers.reduce((total, lecturer) => total + Number(lecturer.total_materials || 0), 0))}</strong>
+                <span className="lecturers-stat-note">Uploaded by lecturers</span>
+              </article>
+            </section>
+
+            <section className="lecturers-directory-card">
+              <div className="lecturers-directory-header">
+                <div>
+                  <h2>Teaching staff directory</h2>
+                  <p>Search by name or institutional email. Open a record to review allocations and teaching activity.</p>
+                </div>
+                <div className="lecturers-directory-total">{formatCount(filteredLecturers.length)} shown</div>
+              </div>
+
+              <div className="lecturers-filters">
+                <label className="lecturers-search">
+                  <Search size={17} aria-hidden="true" />
+                  <span className="lecturers-visually-hidden">Search lecturers</span>
+                  <input type="search" placeholder="Search name or email" value={search} onChange={event => setSearch(event.target.value)} />
                 </label>
-                <input
-                  type={field === 'password' ? 'password' : field === 'email' ? 'email' : 'text'}
-                  value={form[field]}
-                  onChange={e => setForm({ ...form, [field]: e.target.value })}
-                  required
-                  style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}
-                />
-              </div>
-            ))}
-            <button type="submit" className="btn-primary">Create Lecturer</button>
-          </form>
-        )}
-
-        {/* ── ASSIGN FORM ──────────────────────────────────────────────────── */}
-        {view === 'assign' && (
-          <div>
-            <form onSubmit={handleAssign} style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '24px' }}>
-              <h3 style={{ marginTop: 0, color: '#1e1b4b' }}>Assign a Course to this Lecturer</h3>
-              <p style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '16px' }}>
-                Select a course unit (subject) and the academic term to allocate teaching responsibilities.
-              </p>
-
-              {courses.length === 0 && (
-                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '14px 18px', marginBottom: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1e40af', fontSize: '0.875rem' }}>
-                    <AlertCircle size={18} style={{ flexShrink: 0 }} />
-                    <span>No course units found in the system. Course units must first be created under <strong>Programmes &rarr; Course Units</strong> before they can be assigned.</span>
-                  </div>
-                  <Link to="/admin/programmes" style={{ background: 'var(--color-primary, #0052cc)', color: '#ffffff', textDecoration: 'none', padding: '7px 14px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                    Add Course Units
-                  </Link>
-                </div>
-              )}
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '12px', alignItems: 'end' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Course Unit *</label>
-                  <select
-                    value={assignForm.course_id}
-                    onChange={e => setAssignForm({ ...assignForm, course_id: e.target.value })}
-                    required
-                    disabled={courses.length === 0}
-                    style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box', background: courses.length === 0 ? '#f8fafc' : '#ffffff' }}
-                  >
-                    <option value="">{courses.length === 0 ? '-- No course units available --' : '-- Select Course Unit --'}</option>
-                    {courses.map(c => (
-                      <option key={c.id} value={c.id}>
-                        {c.course_code} - {c.name}{c.programme_name ? ` (${c.programme_name})` : ''}
-                      </option>
-                    ))}
+                <label className="lecturers-status-filter">
+                  <span className="lecturers-visually-hidden">Filter by account status</span>
+                  <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}>
+                    <option value="all">All account statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Academic Term *</label>
-                  <select
-                    value={assignForm.academic_term_id}
-                    onChange={e => setAssignForm({ ...assignForm, academic_term_id: e.target.value })}
-                    required
-                    style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}
-                  >
-                    <option value="">Select Term</option>
-                    {terms.map(t => (
-                      <option key={t.id} value={t.id}>{t.academic_year_name} — {t.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <button type="submit" className="btn-primary">Assign</button>
+                </label>
               </div>
-            </form>
 
-            {/* Existing assignments */}
-            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-              <h3 style={{ marginTop: 0, color: '#1e1b4b' }}>Current Assignments</h3>
-              {assignments.length === 0 ? (
-                <p style={{ color: '#9ca3af', textAlign: 'center', padding: '24px' }}>No assignments yet.</p>
+              {lecturersError ? (
+                <div className="lecturers-feedback lecturers-feedback--error" role="alert">
+                  <CircleAlert size={17} />
+                  <span>Lecturer records could not be loaded. Check your connection and try again.</span>
+                  <button type="button" onClick={() => fetchLecturers()}>Retry</button>
+                </div>
+              ) : loadingLecturers ? (
+                <div className="lecturers-loading" role="status">Loading lecturer records…</div>
+              ) : filteredLecturers.length === 0 ? (
+                <div className="lecturers-empty">
+                  <span className="lecturers-empty-icon"><Users size={22} /></span>
+                  <h3>{lecturers.length ? 'No matching lecturers' : 'No lecturer accounts yet'}</h3>
+                  <p>{lecturers.length ? 'Adjust the search or status filter.' : 'Add a lecturer account to begin allocating teaching responsibilities.'}</p>
+                  {lecturers.length === 0 && <button type="button" className="lecturers-secondary-button" onClick={openCreateModal}><Plus size={16} /> Add lecturer</button>}
+                </div>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
-                      {['Course', 'Programme', 'Term', 'Action'].map(h => (
-                        <th key={h} style={{ textAlign: 'left', padding: '10px 12px', fontWeight: 600, color: '#374151' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {assignments.map(a => (
-                      <tr key={a.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                        <td style={{ padding: '12px' }}><strong>{a.course_code}</strong> — {a.course_name}</td>
-                        <td style={{ padding: '12px', color: '#6b7280' }}>{a.programme_name}</td>
-                        <td style={{ padding: '12px', color: '#6b7280' }}>{a.year_name} / {a.term_name}</td>
-                        <td style={{ padding: '12px' }}>
-                          <button
-                            onClick={() => handleRemoveAssignment(a.id)}
-                            style={{ background: '#fee2e2', border: 'none', color: '#991b1b', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
-                          >
-                            Remove
-                          </button>
-                        </td>
+                <div className="lecturers-table-wrap">
+                  <table className="lecturers-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Lecturer</th>
+                        <th scope="col">Teaching activity</th>
+                        <th scope="col">Course materials</th>
+                        <th scope="col">Account</th>
+                        <th scope="col"><span className="lecturers-visually-hidden">Actions</span></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredLecturers.map(lecturer => (
+                        <tr key={lecturer.id}>
+                          <td>
+                            <div className="lecturers-identity">
+                              <span className="lecturers-avatar">{getInitials(lecturer.first_name, lecturer.last_name)}</span>
+                              <span className="lecturers-identity-copy">
+                                <strong>{lecturer.first_name} {lecturer.last_name}</strong>
+                                <span><Mail size={13} />{lecturer.email}</span>
+                              </span>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="lecturers-activity-primary">
+                              {formatCount(lecturer.total_assignments)} allocation{Number(lecturer.total_assignments) === 1 ? '' : 's'}
+                            </span>
+                            <span className="lecturers-table-subtext">
+                              {formatCount(lecturer.total_students)} unique students · {lecturer.total_exams == null ? 'Exam data unavailable' : `${formatCount(lecturer.total_exams)} online exams`}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="lecturers-activity-primary">{formatCount(lecturer.total_materials)} uploaded</span>
+                            <span className="lecturers-table-subtext">
+                              {formatCount(lecturer.total_grade_records)} grade records · {formatCount(lecturer.total_scheduled_classes)} scheduled classes
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`lecturers-status-pill ${lecturer.is_active ? 'is-active' : 'is-inactive'}`}>
+                              {lecturer.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                            <span className="lecturers-table-subtext">
+                              {formatCount(lecturer.current_assignments)} current-term allocations
+                            </span>
+                          </td>
+                          <td className="lecturers-table-actions">
+                            <button type="button" className="lecturers-view-button" onClick={() => openLecturer(lecturer)}>
+                              View record <ArrowRight size={15} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
-            </div>
-          </div>
-        )}
+            </section>
+          </>
+        ) : (
+          <section className="lecturer-record-view">
+            <button type="button" className="lecturers-back-button" onClick={returnToDirectory}>
+              <ArrowLeft size={16} /> Back to lecturers
+            </button>
 
-        {/* ── LECTURERS LIST ────────────────────────────────────────────────── */}
-        {view === 'list' && (
-          loading ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>Loading...</div>
-          ) : lecturers.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px' }}>
-              <Users size={48} style={{ color: '#9ca3af' }} />
-              <p style={{ color: '#9ca3af', marginTop: '12px' }}>No lecturers found. Add one above.</p>
-            </div>
-          ) : (
-            <div style={{ background: 'white', borderRadius: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                <thead>
-                  <tr style={{ background: '#f8f8ff', borderBottom: '2px solid #e0e7ff' }}>
-                    {['Name', 'Email', 'Assignments', 'Status', 'Actions'].map(h => (
-                      <th key={h} style={{ textAlign: 'left', padding: '14px 16px', fontWeight: 700, color: '#1e1b4b', fontSize: '0.83rem' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {lecturers.map(l => (
-                    <tr key={l.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                      <td style={{ padding: '14px 16px', fontWeight: 600 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#818cf8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0 }}>
-                            {l.first_name[0]}{l.last_name[0]}
-                          </div>
-                          {l.first_name} {l.last_name}
+            {success && <div className="lecturers-feedback lecturers-feedback--success" role="status"><CheckCircle2 size={17} /><span>{success}</span></div>}
+
+            <header className="lecturer-profile-hero">
+              <div className="lecturer-profile-main">
+                <span className="lecturer-profile-avatar">{getInitials(selectedLecturer.first_name, selectedLecturer.last_name)}</span>
+                <div>
+                  <p className="lecturers-eyebrow">Lecturer record</p>
+                  <h1>{selectedLecturer.first_name} {selectedLecturer.last_name}</h1>
+                  <a className="lecturer-profile-email" href={`mailto:${selectedLecturer.email}`}><Mail size={15} />{selectedLecturer.email}</a>
+                </div>
+              </div>
+              <div className="lecturer-profile-actions">
+                <span className={`lecturers-status-pill ${selectedLecturer.is_active ? 'is-active' : 'is-inactive'}`}>
+                  {selectedLecturer.is_active ? 'Active account' : 'Inactive account'}
+                </span>
+                <button type="button" className="lecturers-secondary-button" onClick={openEditModal}><Pencil size={15} /> Edit profile</button>
+                <button
+                  type="button"
+                  className={selectedLecturer.is_active ? 'lecturers-danger-outline-button' : 'lecturers-secondary-button'}
+                  onClick={() => {
+                    setStatusTarget(selectedLecturer)
+                    setError('')
+                    setActiveModal('status')
+                  }}
+                >
+                  {selectedLecturer.is_active ? 'Deactivate access' : 'Activate access'}
+                </button>
+              </div>
+              <div className="lecturer-profile-created">
+                <span>Account created</span><strong>{formatDate(selectedLecturer.created_at)}</strong>
+              </div>
+            </header>
+
+            {error && !activeModal && <div className="lecturers-feedback lecturers-feedback--error" role="alert"><CircleAlert size={17} /><span>{error}</span></div>}
+
+            <section className="lecturer-metrics-grid" aria-label="Lecturer teaching summary">
+              <article className="lecturer-metric-card">
+                <span className="lecturer-metric-icon"><BookOpen size={18} /></span>
+                <span>All-term allocations</span><strong>{formatCount(selectedLecturer.total_assignments)}</strong>
+              </article>
+              <article className="lecturer-metric-card">
+                <span className="lecturer-metric-icon"><CalendarDays size={18} /></span>
+                <span>Current-term allocations</span><strong>{formatCount(selectedLecturer.current_assignments)}</strong>
+              </article>
+              <article className="lecturer-metric-card">
+                <span className="lecturer-metric-icon"><Users size={18} /></span>
+                <span>Unique students</span><strong>{formatCount(selectedLecturer.total_students)}</strong>
+              </article>
+              <article className="lecturer-metric-card">
+                <span className="lecturer-metric-icon lecturer-metric-icon--green"><FileText size={18} /></span>
+                <span>Course materials</span><strong>{formatCount(selectedLecturer.total_materials)}</strong>
+              </article>
+              <article className="lecturer-metric-card">
+                <span className="lecturer-metric-icon lecturer-metric-icon--purple"><GraduationCap size={18} /></span>
+                <span>Graded course records</span><strong>{formatCount(selectedLecturer.total_grade_records)}</strong>
+              </article>
+              <article className="lecturer-metric-card">
+                <span className="lecturer-metric-icon lecturer-metric-icon--amber"><Layers3 size={18} /></span>
+                <span>Online exams</span><strong>{selectedLecturer.total_exams == null ? 'Unavailable' : formatCount(selectedLecturer.total_exams)}</strong>
+              </article>
+              <article className="lecturer-metric-card">
+                <span className="lecturer-metric-icon"><Clock3 size={18} /></span>
+                <span>Class schedules</span><strong>{formatCount(selectedLecturer.total_scheduled_classes)}</strong>
+              </article>
+              <article className="lecturer-metric-card">
+                <span className="lecturer-metric-icon lecturer-metric-icon--purple"><GraduationCap size={18} /></span>
+                <span>Programmes taught</span><strong>{formatCount(selectedLecturer.total_programmes)}</strong>
+              </article>
+            </section>
+
+            <section className="lecturers-assignments-card">
+              <div className="lecturers-assignments-header">
+                <div>
+                  <p className="lecturers-eyebrow">Teaching load</p>
+                  <h2>Course allocations</h2>
+                  <p>Course, programme, term, and supported learning activity from the academic records.</p>
+                </div>
+                <button
+                  type="button"
+                  className="lecturers-primary-button"
+                  onClick={openAssignModal}
+                  disabled={loadingAssignments || Boolean(assignmentsError)}
+                >
+                  <Plus size={16} /> Allocate course
+                </button>
+              </div>
+
+              {assignmentsError ? (
+                <div className="lecturers-feedback lecturers-feedback--error" role="alert">
+                  <CircleAlert size={17} />
+                  <span>Course allocations could not be loaded.</span>
+                  <button type="button" onClick={() => fetchAssignments()}>Retry</button>
+                </div>
+              ) : loadingAssignments ? (
+                <div className="lecturers-loading" role="status">Loading course allocations…</div>
+              ) : assignments.length === 0 ? (
+                <div className="lecturers-empty lecturers-empty--compact">
+                  <span className="lecturers-empty-icon"><BookOpen size={21} /></span>
+                  <h3>No course allocations</h3>
+                  <p>Allocate an existing course unit to this lecturer for an academic term.</p>
+                </div>
+              ) : (
+                <div className="lecturers-allocation-list">
+                  {assignments.map(assignment => (
+                    <article className="lecturer-allocation-card" key={assignment.id}>
+                      <div className="lecturer-allocation-main">
+                        <span className="lecturer-course-code">{assignment.course_code}</span>
+                        <div>
+                          <h3>{assignment.course_name}</h3>
+                          <p>{assignment.programme_name} · Year {assignment.target_year} · Semester {assignment.target_semester}</p>
+                          {Array.isArray(assignment.modules) && assignment.modules.length > 0 && (
+                            <p className="lecturer-allocation-modules">
+                              Curriculum: {assignment.modules.join(' · ')}
+                            </p>
+                          )}
                         </div>
-                      </td>
-                      <td style={{ padding: '14px 16px', color: '#6b7280' }}>{l.email}</td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <span style={{ background: '#e0e7ff', color: '#3730a3', padding: '3px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>
-                          {l.total_assignments} course{l.total_assignments !== 1 ? 's' : ''}
+                      </div>
+                      <div className="lecturer-allocation-term">
+                        <CalendarDays size={15} />
+                        <span>
+                          <strong>{assignment.year_name}</strong>
+                          <small>{assignment.term_name}</small>
+                          {assignment.term_start_date && assignment.term_end_date && (
+                            <small>{formatDate(assignment.term_start_date)} – {formatDate(assignment.term_end_date)}</small>
+                          )}
                         </span>
-                      </td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <span style={{ background: l.is_active ? '#d1fae5' : '#fee2e2', color: l.is_active ? '#065f46' : '#991b1b', padding: '3px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>
-                          {l.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button
-                            onClick={() => openAssign(l)}
-                            style={{ background: '#e0e7ff', border: 'none', color: '#3730a3', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
-                          >
-                            Manage Courses
-                          </button>
-                          <button
-                            onClick={() => handleToggleActive(l)}
-                            style={{ background: l.is_active ? '#fee2e2' : '#d1fae5', border: 'none', color: l.is_active ? '#991b1b' : '#065f46', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
-                          >
-                            {l.is_active ? 'Deactivate' : 'Activate'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                      </div>
+                      <div className="lecturer-allocation-stats">
+                        <span><Users size={14} /><strong>{formatCount(assignment.enrolled_students)}</strong><small>students</small></span>
+                        <span><FileText size={14} /><strong>{formatCount(assignment.materials_count)}</strong><small>materials</small></span>
+                        <span><GraduationCap size={14} /><strong>{formatCount(assignment.grade_records)}</strong><small>grade records</small></span>
+                        <span><Layers3 size={14} /><strong>{assignment.exams_count == null ? '—' : formatCount(assignment.exams_count)}</strong><small>online exams</small></span>
+                        <span><Clock3 size={14} /><strong>{formatCount(assignment.scheduled_classes)}</strong><small>class schedules</small></span>
+                      </div>
+                    </article>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )
+                </div>
+              )}
+            </section>
+          </section>
         )}
       </main>
+      {renderModal()}
     </div>
   )
 }

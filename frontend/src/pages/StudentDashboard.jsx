@@ -171,6 +171,18 @@ export default function StudentDashboard() {
   const studentNumber = data?.profile?.student_number || studentUser?.student_number || data?.profile?.reference_number || 'Enrolled'
   const enrollment = data?.currentEnrollment
   const financials = data?.financials
+  const financialBalances = financials?.balances || []
+  const hasOutstandingFees = financialBalances.length
+    ? financialBalances.some(balance => balance.outstandingBalance > 0)
+    : Number(financials?.totalDue || 0) > 0
+  const financialBalanceLabel = financialBalances.length
+    ? financialBalances
+      .filter(balance => balance.outstandingBalance > 0)
+      .map(balance => `${balance.currency} ${Number(balance.outstandingBalance).toLocaleString('en-UG')}`)
+      .join(' · ') || 'Cleared'
+    : financials
+      ? `${financials.currency} ${Number(financials.totalDue).toLocaleString('en-UG')}`
+      : 'Cleared'
 
   return (
     <div className="scope-studentdashboard scope-admindashboard admin-layout">
@@ -537,11 +549,11 @@ export default function StudentDashboard() {
                   <h3>Tuition &amp; Fees</h3>
                   <div className="stat-value-row">
                     <p className="stat-number" style={{ fontSize: '1.35rem' }}>
-                      {financials ? `${financials.currency} ${Number(financials.totalDue).toLocaleString()}` : 'Cleared'}
+                      {financialBalanceLabel}
                     </p>
                   </div>
-                  <span className={`trend ${financials?.totalDue > 0 ? 'neutral' : 'positive'}`} style={{ marginTop: '0.35rem' }}>
-                    {financials?.totalDue > 0 ? 'Balance Outstanding' : 'Fees Cleared'}
+                  <span className={`trend ${hasOutstandingFees ? 'neutral' : 'positive'}`} style={{ marginTop: '0.35rem' }}>
+                    {hasOutstandingFees ? 'Balance Outstanding' : 'Fees Cleared'}
                   </span>
                 </div>
               </Link>
@@ -648,8 +660,8 @@ export default function StudentDashboard() {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Fees Status</span>
-                      <span className={`status-pill status-${financials?.totalDue > 0 ? 'pending' : 'admitted'}`}>
-                        {financials?.totalDue > 0 ? 'Balance Pending' : 'Cleared for Examinations'}
+                      <span className={`status-pill status-${hasOutstandingFees ? 'pending' : 'admitted'}`}>
+                        {hasOutstandingFees ? 'Balance Pending' : 'Cleared for Examinations'}
                       </span>
                     </div>
                   </div>

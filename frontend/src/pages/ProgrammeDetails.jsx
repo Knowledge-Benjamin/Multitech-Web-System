@@ -66,8 +66,8 @@ export default function ProgrammeDetails() {
   const customTotalLocal = activeCustomFees.reduce((sum, f) => sum + parseFloat(f.national_amount), 0)
   const customTotalIntl = activeCustomFees.reduce((sum, f) => sum + parseFloat(f.international_amount), 0)
 
-  const totalLocal = (parseFloat(programme.national_tuition_fee) || 0) + localFuncTotal + customTotalLocal
-  const totalIntl = (parseFloat(programme.international_tuition_fee) || 0) + intlFuncTotal + customTotalIntl
+  const totalLocal = (parseFloat(programme.national_tuition_fee ?? programme.tuition_fee) || 0) + localFuncTotal + customTotalLocal
+  const totalIntl = (parseFloat(programme.international_tuition_fee ?? programme.tuition_fee) || 0) + intlFuncTotal + customTotalIntl
 
   const renderStatusBadge = () => {
     if (programme.live_intake_status === 'open') {
@@ -215,7 +215,7 @@ export default function ProgrammeDetails() {
               <h4>National Students (UGX)</h4>
               <div className="fee-row">
                 <span>Tuition</span>
-                <span>{(parseFloat(programme.national_tuition_fee) || 0).toLocaleString()}</span>
+                <span>{(parseFloat(programme.national_tuition_fee ?? programme.tuition_fee) || 0).toLocaleString()}</span>
               </div>
               {activeFuncFees.map(f => (
                 <div className="fee-row" key={`func-nat-${f.id}`}>
@@ -239,7 +239,7 @@ export default function ProgrammeDetails() {
               <h4>International Students (USD)</h4>
               <div className="fee-row">
                 <span>Tuition</span>
-                <span>$ {(parseFloat(programme.international_tuition_fee) || 0).toLocaleString()}</span>
+                <span>$ {(parseFloat(programme.international_tuition_fee ?? programme.tuition_fee) || 0).toLocaleString()}</span>
               </div>
               {activeFuncFees.map(f => (
                 <div className="fee-row" key={`func-intl-${f.id}`}>

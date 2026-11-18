@@ -1,21 +1,24 @@
 import { useApiQuery } from '../hooks/useApiQuery'
 import StudentSidebar from '../components/StudentSidebar'
-import { ShieldCheck, AlertCircle, Printer, CreditCard } from 'lucide-react'
+import { ShieldCheck, AlertCircle, Printer, CreditCard, RefreshCw } from 'lucide-react'
 import './AdminDashboard.css'
+
+const formatMoney = (currency, amount) => (
+  `${currency || 'UGX'} ${Number(amount || 0).toLocaleString('en-UG', { maximumFractionDigits: 2 })}`
+)
 
 export default function StudentFinances() {
   const token = localStorage.getItem('studentToken')
-  const { data, isLoading } = useApiQuery(`${import.meta.env.VITE_API_URL}/student-profile/invoices`, 'studentInvoices', {
+  const { data, isLoading, isError, refetch } = useApiQuery(`${import.meta.env.VITE_API_URL}/student-profile/invoices`, 'studentInvoices', {
     axiosOptions: { headers: { Authorization: `Bearer ${token}` } }
   })
 
   const invoices = data?.data?.invoices || []
   const summary = data?.data?.summary || {
-    totalBilled: 0,
-    totalPaid: 0,
-    outstandingBalance: 0,
+    currencies: [],
     isClearedForExams: false
   }
+  const currencies = summary.currencies || []
 
   const getStatusBadge = (status) => {
     switch(status) {
@@ -43,6 +46,16 @@ export default function StudentFinances() {
             <div className="spinner"></div>
             <p>Loading financial records...</p>
           </div>
+        ) : isError ? (
+          <div className="recent-section" role="alert">
+            <div className="section-header">
+              <h2>Financial records unavailable</h2>
+              <button type="button" className="button button-outline" onClick={() => refetch()}>
+                <RefreshCw size={15} /> Retry
+              </button>
+            </div>
+            <p>Your invoice information could not be loaded. Please try again.</p>
+          </div>
         ) : (
           <>
             {/* Financial Summary & Exam Clearance */}
@@ -50,33 +63,29 @@ export default function StudentFinances() {
               
               {/* Balances Grid */}
               <div style={{ flex: '2', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.25rem' }}>
-                <div className="stat-card" style={{ padding: '1.25rem' }}>
-                  <div className="stat-content">
-                    <h3>Total Invoiced</h3>
-                    <p className="stat-number" style={{ fontSize: '1.4rem' }}>UGX {summary.totalBilled.toLocaleString()}</p>
-                    <span className="trend neutral" style={{ marginTop: '0.35rem' }}>Full Assessment</span>
+                {currencies.map(balance => (
+                  <div className="stat-card" style={{ padding: '1.25rem' }} key={balance.currency}>
+                    <div className="stat-content">
+                      <h3>{balance.currency} · Total invoiced</h3>
+                      <p className="stat-number" style={{ fontSize: '1.4rem' }}>{formatMoney(balance.currency, balance.totalBilled)}</p>
+                      <span className="trend neutral" style={{ marginTop: '0.35rem' }}>
+                        {formatMoney(balance.currency, balance.totalPaid)} allocated to invoices
+                      </span>
+                      <span className={`trend ${balance.outstandingBalance > 0 ? 'neutral' : 'positive'}`} style={{ marginTop: '0.35rem' }}>
+                        {formatMoney(balance.currency, balance.outstandingBalance)} outstanding
+                      </span>
+                    </div>
                   </div>
-                </div>
-
-                <div className="stat-card" style={{ padding: '1.25rem' }}>
-                  <div className="stat-content">
-                    <h3>Total Paid</h3>
-                    <p className="stat-number" style={{ fontSize: '1.4rem', color: '#059669' }}>UGX {summary.totalPaid.toLocaleString()}</p>
-                    <span className="trend positive" style={{ marginTop: '0.35rem' }}>Verified Payments</span>
+                ))}
+                {currencies.length === 0 && (
+                  <div className="stat-card" style={{ padding: '1.25rem' }}>
+                    <div className="stat-content">
+                      <h3>Invoice balance</h3>
+                      <p className="stat-number" style={{ fontSize: '1.1rem' }}>No invoices recorded</p>
+                      <span className="trend neutral" style={{ marginTop: '0.35rem' }}>Your account has no active charges.</span>
+                    </div>
                   </div>
-                </div>
-
-                <div className="stat-card" style={{ padding: '1.25rem' }}>
-                  <div className="stat-content">
-                    <h3>Outstanding Balance</h3>
-                    <p className="stat-number" style={{ fontSize: '1.4rem', color: summary.outstandingBalance > 0 ? '#d97706' : '#059669' }}>
-                      UGX {summary.outstandingBalance.toLocaleString()}
-                    </p>
-                    <span className={`trend ${summary.outstandingBalance > 0 ? 'neutral' : 'positive'}`} style={{ marginTop: '0.35rem' }}>
-                      {summary.outstandingBalance > 0 ? 'Pay Prior to Exams' : 'Fully Settled'}
-                    </span>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Digital Exam Pass Status Card */}
@@ -150,6 +159,8 @@ export default function StudentFinances() {
                       <th>Academic Term</th>
                       <th>Description</th>
                       <th>Amount</th>
+                      <th>Paid</th>
+                      <th>Balance</th>
                       <th>Due Date</th>
                       <th>Status</th>
                     </tr>
@@ -161,14 +172,16 @@ export default function StudentFinances() {
                           <td>{new Date(i.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                           <td><strong>{i.term_name || 'General Term'}</strong></td>
                           <td>{i.description}</td>
-                          <td><strong>{i.currency} {Number(i.amount).toLocaleString()}</strong></td>
+                          <td><strong>{formatMoney(i.currency, i.amount)}</strong></td>
+                          <td>{formatMoney(i.currency, i.amount_paid)}</td>
+                          <td>{formatMoney(i.currency, i.balance)}</td>
                           <td>{i.due_date ? new Date(i.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'End of Term'}</td>
-                          <td>{getStatusBadge(i.status)}</td>
+                          <td>{getStatusBadge(i.ledger_status)}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="empty-state">
+                        <td colSpan="8" className="empty-state">
                           <p>No invoices found on your account.</p>
                         </td>
                       </tr>

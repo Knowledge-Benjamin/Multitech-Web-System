@@ -49,18 +49,14 @@ function StudentAvatar({ photoUrl, firstName, lastName, className }) {
   )
 }
 
-const summarizeFinancials = (invoices = [], payments = []) => {
+const summarizeFinancials = (invoices = []) => {
   const totals = {}
   invoices.forEach((invoice) => {
     if (invoice.status === 'void') return
     const currency = invoice.currency || 'UGX'
     totals[currency] = totals[currency] || { billed: 0, paid: 0 }
     totals[currency].billed += Number(invoice.amount) || 0
-  })
-  payments.forEach((payment) => {
-    const currency = payment.currency || 'UGX'
-    totals[currency] = totals[currency] || { billed: 0, paid: 0 }
-    totals[currency].paid += Number(payment.amount) || 0
+    totals[currency].paid += Number(invoice.amount_paid) || 0
   })
   return Object.entries(totals).map(([currency, values]) => ({
     currency,
@@ -120,7 +116,7 @@ export default function AdminStudents() {
     ? allCourses.filter(course => String(course.programme_id) === String(profile.programme_id))
     : []
   const financialSummary = studentDetails
-    ? summarizeFinancials(studentDetails.invoices, studentDetails.payments)
+    ? summarizeFinancials(studentDetails.invoices)
     : []
 
   useEffect(() => {
@@ -717,7 +713,7 @@ export default function AdminStudents() {
                   <div className="student-course-table-wrap">
                     <table className="student-course-table student-ledger-table">
                       <thead>
-                        <tr><th>Date issued</th><th>Term &amp; description</th><th>Amount</th><th>Status</th></tr>
+                        <tr><th>Date issued</th><th>Term &amp; description</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th></tr>
                       </thead>
                       <tbody>
                         {studentDetails.invoices.map(invoice => (
@@ -728,11 +724,13 @@ export default function AdminStudents() {
                               <span>{invoice.description}{invoice.fee_type ? ` · ${invoice.fee_type}` : ''}</span>
                             </td>
                             <td>{formatMoney(invoice.currency, invoice.amount)}</td>
-                            <td><span className={`student-course-status student-course-status--${invoice.status}`}>{invoice.status}</span></td>
+                            <td>{formatMoney(invoice.currency, invoice.amount_paid)}</td>
+                            <td>{formatMoney(invoice.currency, invoice.balance)}</td>
+                            <td><span className={`student-course-status student-course-status--${invoice.ledger_status}`}>{invoice.ledger_status}</span></td>
                           </tr>
                         ))}
                         {studentDetails.invoices.length === 0 && (
-                          <tr><td className="student-course-empty" colSpan="4">No invoices recorded.</td></tr>
+                          <tr><td className="student-course-empty" colSpan="6">No invoices recorded.</td></tr>
                         )}
                       </tbody>
                     </table>
